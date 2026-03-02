@@ -5,26 +5,25 @@ on:
     types: [published]
 
 jobs:
-  # 发布到 npm
+  # 发布到 npm（使用 Trusted Publisher，无需 NPM_TOKEN）
   publish-npm:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Publish to NPM
-        run: npm publish --access public
+      
+      - run: npm install
+      
+      - run: npm publish --access public --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
   # 发布到 GitHub Packages
   publish-github:
@@ -34,14 +33,15 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'
-
+          scope: '@sansenjian'
+      
       - run: npm install
-
+      
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
