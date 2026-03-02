@@ -11,6 +11,7 @@ module.exports = ({ options = {}, method = 'get' }) => {
 			cookie: userInfoConfig.cookie,
 		},
 	});
-	console.log('https://u.y.qq.com/cgi-bin/musicu.fcg', { opts });
+	const logOpts = { ...opts, headers: { ...opts.headers, cookie: '[REDACTED]' } };
+	console.log('https://u.y.qq.com/cgi-bin/musicu.fcg', { opts: logOpts });
 	return request('https://u.y.qq.com/cgi-bin/musicu.fcg', method, opts, 'u');
 };
