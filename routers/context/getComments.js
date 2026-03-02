@@ -45,7 +45,7 @@ module.exports = async (ctx, next) => {
 		ctx.body = {
 			data: {
 				message: "Don't have id or rootcommentid",
-			}
+			},
 		};
 	}
 };

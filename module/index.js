@@ -78,5 +78,5 @@ module.exports = {
 	getTopLists,
 	// login
 	getQQLoginQr,
-	checkQQLoginQr
+	checkQQLoginQr,
 };

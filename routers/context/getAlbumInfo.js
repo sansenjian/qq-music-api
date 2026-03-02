@@ -20,7 +20,7 @@ module.exports = async (ctx, next) => {
 		ctx.status = 400;
 		ctx.body = {
 			data: {
-				message: 'no albummid'
+				message: 'no albummid',
 			},
 		};
 	}

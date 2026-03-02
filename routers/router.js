@@ -1,4 +1,4 @@
-const Router = require('koa-router');
+const Router = require('@koa/router');
 const router = new Router();
 const context = require('./context');
 
@@ -106,7 +106,7 @@ router.get('/getTicketInfo', context.getTicketInfo);
 router.get('/getImageUrl', context.getImageUrl);
 
 // getQQLoginQr
-router.get('/user/getQQLoginQr', context.getQQLoginQr);
-router.post('/user/checkQQLoginQr', context.checkQQLoginQr);
+router.get('/getQQLoginQr', context.getQQLoginQr);
+router.get('/checkQQLoginQr', context.checkQQLoginQr);
 
 module.exports = router;

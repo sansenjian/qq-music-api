@@ -1,4 +1,4 @@
-const moment = require('moment');
+const dayjs = require('dayjs');
 const y_common = require('../y_common');
 
 module.exports = ({ method = 'get', params = {}, option = {} }) => {
@@ -6,7 +6,7 @@ module.exports = ({ method = 'get', params = {}, option = {} }) => {
 		format: 'json',
 		outCharset: 'utf-8',
 		utf8: 1,
-		rnd: moment().valueOf(),
+		rnd: dayjs().valueOf(),
 	});
 	const options = Object.assign(option, {
 		params: data,

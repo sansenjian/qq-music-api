@@ -1,7 +1,7 @@
 const { checkQQLoginQr } = require('../../module');
 
 module.exports = async (ctx, next) => {
-	const { ptqrtoken, qrsig } = ctx.request.body;
+	const { ptqrtoken, qrsig } = ctx.query;
 
 	const params = { ptqrtoken, qrsig };
 

@@ -1,5 +1,5 @@
 const { UCommon } = require('../../module');
-const { _guid, commonParams } = require('../../module/config');
+const { commonParams } = require('../../module/config');
 
 // -100 默认值 all
 // area [1 - 6]
@@ -8,7 +8,6 @@ const { _guid, commonParams } = require('../../module/config');
 // index a-z # 1-27
 module.exports = async (ctx, next) => {
 	const { area = -100, sex = -100, genre = -100, index = -100, page = 1 } = ctx.query;
-	const guid = _guid ? _guid + '' : '1429839143';
 	const data = {
 		comm: {
 			ct: 24,

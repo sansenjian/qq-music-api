@@ -2,16 +2,20 @@
   "env": {
     "browser": true,
     "commonjs": true,
-    "es2020": true
+    "es2021": true,
+    "node": true
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "standard"],
   "parserOptions": {
-    "ecmaVersion": 11
+    "ecmaVersion": "latest"
   },
+  "plugins": ["n"],
   "rules": {
-    "indent": ["error", 2],
+    "indent": ["error", "tab"],
+    "no-tabs": "off",
     "linebreak-style": ["error", "unix"],
     "quotes": ["error", "single"],
-    "semi": ["error", "always"]
+    "semi": ["error", "always"],
+    "camelcase": "off"
   }
 }

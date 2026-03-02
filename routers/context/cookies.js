@@ -28,9 +28,9 @@ module.exports = {
 			data: {
 				code: 200,
 				message: '操作成功',
-			}
+			},
 		};
 
 		await next();
 	},
-}
+};

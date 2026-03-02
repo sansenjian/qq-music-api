@@ -3,6 +3,9 @@ node_modules
 *.log
 
 .idea/
-# package-lock.json
+package-lock.json
 
 .vscode
+
+# 用户配置文件（包含敏感信息）
+config/user-info.json

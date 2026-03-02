@@ -4,15 +4,17 @@
 
 <img src='music.png' />
 
-![GitHub watchers](https://img.shields.io/github/watchers/rain120/qq-music-api?style=social) ![GitHub stars](https://img.shields.io/github/stars/rain120/qq-music-api?style=social) ![GitHub forks](https://img.shields.io/github/forks/rain120/qq-music-api?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/sansenjian/qq-music-api?style=social) ![GitHub stars](https://img.shields.io/github/stars/sansenjian/qq-music-api?style=social) ![GitHub forks](https://img.shields.io/github/forks/sansenjian/qq-music-api?style=social)
 <br />
-![node](https://img.shields.io/node/v/koa?style=flat-square)
+![node](https://img.shields.io/badge/node-%3E%3D18.0.0-green?style=flat-square)
 <br />
-![GitHub repo size](https://img.shields.io/github/repo-size/rain120/qq-music-api?style=flat-square) ![GitHub package.json version](https://img.shields.io/github/package-json/v/rain120/qq-music-api?style=flat-square) ![GitHub](https://img.shields.io/github/license/rain120/qq-music-api?style=flat-square) ![GitHub open issues](https://img.shields.io/github/issues/rain120/qq-music-api?style=flat-square) ![GitHub closed issues](https://img.shields.io/github/issues-closed/rain120/qq-music-api) ![GitHub last commit](https://img.shields.io/github/last-commit/rain120/qq-music-api?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/rain120/qq-music-api?style=flat-square)
+![GitHub repo size](https://img.shields.io/github/repo-size/sansenjian/qq-music-api?style=flat-square) ![GitHub package.json version](https://img.shields.io/github/package-json/v/sansenjian/qq-music-api?style=flat-square) ![GitHub](https://img.shields.io/github/license/sansenjian/qq-music-api?style=flat-square) ![GitHub open issues](https://img.shields.io/github/issues/sansenjian/qq-music-api?style=flat-square) ![GitHub closed issues](https://img.shields.io/github/issues-closed/sansenjian/qq-music-api) ![GitHub last commit](https://img.shields.io/github/last-commit/sansenjian/qq-music-api?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/sansenjian/qq-music-api?style=flat-square)
 
 </div>
 
-> QQ音乐API koa2 版本, 通过Web网页版请求QQ音乐接口数据, 有问题请提 [issue](https://github.com/Rain120/qq-music-api/issues)
+> 🍴 本项目 Fork 自 [Rain120/qq-music-api](https://github.com/Rain120/qq-music-api)，原项目已停止维护，此版本持续更新中
+
+> QQ音乐API koa2 版本, 通过Web网页版请求QQ音乐接口数据, 有问题请提 [issue](https://github.com/sansenjian/qq-music-api/issues)
 
 > 当前代码仅供学习，不可做商业用途
 
@@ -24,20 +26,40 @@
 
 ### 环境要求
 
-> 因为本项目采用的是`koa2`, 所以请确保你的`node`版本是7.6.0+
+> 本项目采用 `koa2`，需要 Node.js 18.0.0+
 
 ```
 node -v
 ```
+
 ### 📦 安装
 
+**方式一：克隆仓库**
 ```
-git clone git@github.com:Rain120/qq-music-api.git
+git clone git@github.com:sansenjian/qq-music-api.git
 cd qq-music-api
 npm install
 ```
 
-### 🔨项目启动
+**方式二：NPM 安装**
+```
+npm install @sansenjian/qq-music-api
+```
+
+在项目中使用：
+```javascript
+// 启动 API 服务
+const { spawn } = require('child_process');
+const path = require('path');
+
+const qqMusicPath = path.join(__dirname, 'node_modules', '@sansenjian/qq-music-api', 'app.js');
+spawn('node', [qqMusicPath], { 
+  env: { ...process.env, PORT: '3200' },
+  stdio: 'inherit'
+});
+```
+
+### 🔨 项目启动
 ```
 // npm i -g nodemon
 npm run start
@@ -45,26 +67,40 @@ npm run start
 // or don't install nodemon
 node app.js
 ```
-项目监听端口是`3200`
+项目监听端口是 `3200`
 
-### 🐳 Docker
+### 📋 依赖更新 (2026-03)
 
-```sh
-# local local build
-npm run build:local-images
+本项目已完成依赖现代化升级，主要变更如下：
 
-# local remote build
-npm run build:remote-images
+**生产依赖**
+| 依赖 | 版本 | 说明 |
+|-----|------|-----|
+| axios | ^1.6.0 | 修复安全漏洞 CVE-2021-3749 |
+| koa | ^2.15.0 | 框架更新 |
+| koa-bodyparser | ^4.4.0 | 解析器更新 |
+| @koa/router | ^12.0.0 | 替代 koa-router |
+| koa-static | ^5.0.0 | 静态文件服务 |
+| dayjs | ^1.11.10 | 替代 moment.js (更轻量) |
 
-# build images
-npm run build:images
+**开发依赖**
+| 依赖 | 版本 | 说明 |
+|-----|------|-----|
+| eslint | ^8.56.0 | 代码检查 |
+| eslint-config-standard | ^17.0.0 | 标准配置 |
+| prettier | ^3.0.0 | 代码格式化 |
+| husky | ^9.0.0 | Git 钩子 |
+| lint-staged | ^15.0.0 | 暂存区检查 |
+| @commitlint/* | ^18.0.0 | 提交信息规范 |
+| @babel/* | ^7.23.0 | 编译工具 |
+| nodemon | ^3.0.0 | 开发热重载 |
 
-# local run
-npm run run:images
-
-# remote run
-docker pull qq-music-api
-```
+**已移除的依赖**
+- `colors` - 存在安全问题，已用 chalk 替代
+- `moment` - 已用 dayjs 替代
+- `lodash.get` - 已用原生可选链 `?.` 替代
+- `eslint-plugin-node` - 已用 eslint-plugin-n 替代
+- `eslint-plugin-standard` - 已集成到 eslint-config-standard
 
 ### 功能特性
 
@@ -160,11 +196,15 @@ docker pull qq-music-api
 
 #### 🤝 贡献 ![PR](https://img.shields.io/badge/PRs-Welcome-orange?style=flat-square&logo=appveyor)
 
-We welcome all contributions. You can submit any ideas as [pull requests](https://github.com/Rain120/qq-music-api/pulls) or as a GitHub [issue](https://github.com/Rain120/qq-music-api/issues). 
+We welcome all contributions. You can submit any ideas as [pull requests](https://github.com/sansenjian/qq-music-api/pulls) or as a GitHub [issue](https://github.com/sansenjian/qq-music-api/issues). 
 
-#### 👨‍🏭 作者
+#### 👨‍🏭 维护者
 
-> Front-End development engineer, technology stack: React + Typescript + Mobx, also used Vue + Vuex for a while
+- [Github](https://github.com/sansenjian)
+
+#### 🙏 原作者
+
+本项目基于 [Rain120](https://github.com/Rain120) 的开源项目，感谢原作者的贡献！
 
 - [Github](https://github.com/Rain120)
 - [知乎](https://www.zhihu.com/people/yan-yang-nian-hua-120/activities)
@@ -172,6 +212,7 @@ We welcome all contributions. You can submit any ideas as [pull requests](https:
 
 #### 📝 License
 
-[MIT](https://github.com/Rain120/qq-music-api/blob/master/LICENSE)
+[MIT](https://github.com/sansenjian/qq-music-api/blob/master/LICENSE)
 
-Copyright © 2019-present [Rain120](https://github.com/Rain120).
+Copyright © 2019-present [Rain120](https://github.com/Rain120).  
+Fork maintained by [sansenjian](https://github.com/sansenjian).

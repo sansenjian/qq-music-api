@@ -15,7 +15,7 @@ module.exports = ({ method = 'get', params = {}, option = {} }) => {
 		options,
 	})
 		.then(res => {
-			const response = res.data;
+			let response = res.data;
 			if (typeof response === 'string') {
 				const reg = /^\w+\(({[^()]+})\)$/;
 				const matches = response.match(reg);
