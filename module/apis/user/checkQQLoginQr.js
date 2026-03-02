@@ -1,28 +1,49 @@
 const { getGtk, getGuid } = require('../../../util/loginUtils');
 const { refreshData } = require('../../../config/user-info');
 
+const parseSetCookie = setCookieHeader => {
+	if (!setCookieHeader) return [];
+	const cookies = [];
+	const parts = setCookieHeader.split(/,(?=\s*[a-zA-Z_]+=)/);
+	for (const part of parts) {
+		const cookiePair = part.split(';')[0].trim();
+		if (cookiePair && cookiePair.includes('=') && cookiePair.split('=')[1]) {
+			cookies.push(cookiePair);
+		}
+	}
+	return cookies;
+};
+
 module.exports = async ({ method = 'get', params = {}, option = {} }) => {
 	const { ptqrtoken, qrsig } = params;
 	if (!ptqrtoken || !qrsig) return { body: '参数错误' };
 	const url = `https://ssl.ptlogin2.qq.com/ptqrlogin?u1=https%3A%2F%2Fgraph.qq.com%2Foauth2.0%2Flogin_jump&ptqrtoken=${ptqrtoken}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=0-0-1711022193435&js_ver=23111510&js_type=1&login_sig=du-YS1h8*0GqVqcrru0pXkpwVg2DYw-DtbFulJ62IgPf6vfiJe*4ONVrYc5hMUNE&pt_uistyle=40&aid=716027609&daid=383&pt_3rd_aid=100497308&&o1vId=3674fc47871e9c407d8838690b355408&pt_js_version=v1.48.1`;
 	const response = await fetch(url, { headers: { Cookie: `qrsig=${qrsig}` } });
 	const data = await response.text() || '';
-	let allCookie = [];
-	const setCookie = cookies => {
-		allCookie = [...allCookie, ...cookies.map(i => i.split(';')[0]).filter(i => i.split('=')[1])];
+
+	const cookieMap = new Map();
+	const setCookie = setCookieHeader => {
+		const cookies = parseSetCookie(setCookieHeader);
+		for (const cookie of cookies) {
+			const [name] = cookie.split('=');
+			cookieMap.set(name, cookie);
+		}
 	};
+
+	setCookie(response.headers.get('Set-Cookie'));
+
 	const refresh = data.includes('已失效');
 	if (!data.includes('登录成功'))
 		return { status: 200, isOk: false, refresh, message: (refresh && '二维码已失效') || '未扫描二维码' };
 
-	// 获取p_skey 与gtk
+	const allCookie = () => Array.from(cookieMap.values());
+
 	const checkSigUrl = data.match(/(?:'((?:https?|ftp):\/\/[^\s/$.?#].[^\s]*)')/g)[0].replaceAll("'", '');
-	const checkSigRes = await fetch(checkSigUrl, { redirect: 'manual', headers: { Cookie: allCookie.join('; ') } });
+	const checkSigRes = await fetch(checkSigUrl, { redirect: 'manual', headers: { Cookie: allCookie().join('; ') } });
 	const p_skey = checkSigRes.headers.get('Set-Cookie').match(/p_skey=([^;]+)/)[1];
 	const gtk = getGtk(p_skey);
-	setCookie(checkSigRes.headers.get('Set-Cookie').split(';, '));
+	setCookie(checkSigRes.headers.get('Set-Cookie'));
 
-	// authorize
 	const authorizeUrl = 'https://graph.qq.com/oauth2.0/authorize';
 	const getAuthorizeData = gtk => {
 		const data = new FormData();
@@ -47,12 +68,12 @@ module.exports = async ({ method = 'get', params = {}, option = {} }) => {
 		method: 'POST',
 		body: getAuthorizeData(gtk),
 		headers: {
-			Cookie: allCookie.join('; '),
+			Cookie: allCookie().join('; '),
 		},
 	});
+	setCookie(authorizeRes.headers.get('Set-Cookie'));
 	const code = authorizeRes.headers.get('Location').match(/[?&]code=([^&]+)/)[1];
 
-	// login
 	const getFcgReqData = (g_tk, code) => {
 		const data = {
 			comm: {
@@ -78,11 +99,11 @@ module.exports = async ({ method = 'get', params = {}, option = {} }) => {
 		body: getFcgReqData(gtk, code),
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
-			Cookie: allCookie.join('; '),
+			Cookie: allCookie().join('; '),
 		},
 	});
-	setCookie(loginRes.headers.get('Set-Cookie').split(';, '));
-	global.userInfo = { ...refreshData(allCookie.join('; ')) };
+	setCookie(loginRes.headers.get('Set-Cookie'));
+	global.userInfo = { ...refreshData(allCookie().join('; ')) };
 
 	return { status: 200, isOk: true, message: '登录成功' };
 };
