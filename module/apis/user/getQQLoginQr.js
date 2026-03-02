@@ -6,7 +6,12 @@ module.exports = async ({ method = 'get', params = {}, option = {} }) => {
 	const response = await fetch(url, { responseType: 'arraybuffer' });
 	const data = await response.arrayBuffer();
 	const img = 'data:image/png;base64,' + (data && Buffer.from(data).toString('base64'));
-	const qrsig = response.headers.get('Set-Cookie')?.match(/qrsig=([^;]+)/)[1];
+	const cookieHeader = response.headers.get('Set-Cookie');
+	const match = cookieHeader?.match(/qrsig=([^;]+)/);
+	if (!match) {
+		return { status: 502, body: { error: 'Failed to get qrsig from response' } };
+	}
+	const qrsig = match[1];
 
 	return { status: 200, body: { img, ptqrtoken: hash33(qrsig), qrsig } };
 };

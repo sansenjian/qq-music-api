@@ -9,6 +9,9 @@ module.exports = ({ url, method = 'get', options = {}, hasCommonParams = true })
 			host: 'c.y.qq.com',
 		},
 	});
-	console.log(url, { opts });
+	if (process.env.DEBUG === 'true') {
+		const logOpts = { ...opts, headers: { ...opts.headers } };
+		console.log(url, { opts: logOpts });
+	}
 	return request(url, method, opts);
 };

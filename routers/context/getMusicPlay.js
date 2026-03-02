@@ -1,15 +1,21 @@
 const { UCommon } = require('../../module');
 const { _guid } = require('../../module/config');
 
-// songmid=003rJSwm3TechU
-// songmid=001yNIo41SJjuC,001wPuVc4ZiMhj
+const ALLOWED_QUALITIES = ['m4a', 128, 320, 'ape', 'flac'];
+const DEFAULT_QUALITY = 128;
+
+const parseQuality = quality => {
+	const parsed = parseInt(quality) || quality;
+	return ALLOWED_QUALITIES.includes(parsed) ? parsed : DEFAULT_QUALITY;
+};
+
 module.exports = async (ctx, next) => {
 	const uin = global.userInfo.uin || '0';
 	const songmid = ctx.query.songmid + '';
-	// response data only need play url value (all play)
 	const justPlayUrl = (ctx.query.resType || 'play') === 'play';
 	const guid = _guid ? _guid + '' : '1429839143';
-	const { quality = 128, mediaId } = ctx.query;
+	const { mediaId } = ctx.query;
+	const quality = parseQuality(ctx.query.quality);
 	const fileType = {
 		m4a: {
 			s: 'C400',

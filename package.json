@@ -1,6 +1,6 @@
 {
   "name": "@sansenjian/qq-music-api",
-  "version": "1.1.7",
+  "version": "2.0.0",
   "description": "QQ Music API - QQ音乐API koa2实现",
   "main": "index.js",
   "scripts": {

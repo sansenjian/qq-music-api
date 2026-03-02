@@ -107,6 +107,10 @@ router.get('/getImageUrl', context.getImageUrl);
 
 // getQQLoginQr
 router.get('/getQQLoginQr', context.getQQLoginQr);
+// @deprecated Use /getQQLoginQr instead
+router.get('/user/getQQLoginQr', context.getQQLoginQr);
 router.post('/checkQQLoginQr', context.checkQQLoginQr);
+// @deprecated Use POST /checkQQLoginQr instead
+router.post('/user/checkQQLoginQr', context.checkQQLoginQr);
 
 module.exports = router;

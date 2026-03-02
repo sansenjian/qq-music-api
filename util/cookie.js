@@ -1,18 +1,18 @@
 module.exports = () => async (ctx, next) => {
-	if (global.userInfo.cookie) {
+	if (global.userInfo?.cookie) {
 		ctx.request.cookie = global.userInfo.cookie;
 	}
 
 	const cookieHeader = ctx.request.headers;
 
-	if (cookieHeader) {
+	if (cookieHeader && Array.isArray(global.userInfo?.cookieList)) {
 		global.userInfo.cookieList.forEach(cookie => {
 			const [key, value = ''] = cookie.split('=');
 
 			if (value) {
 				ctx.cookies.set(key, value.trim(), {
 					//   maxAge: 24 * 60 * 60 * 1000,
-					overwirte: true,
+					overwrite: true,
 				});
 			}
 		});
