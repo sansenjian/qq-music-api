@@ -5,9 +5,12 @@ on:
     types: [published]
 
 jobs:
-  # 发布到 npm
+  # 发布到 npm（Trusted Publisher，无需 TOKEN）
   publish-npm:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       
@@ -18,9 +21,8 @@ jobs:
       
       - run: npm install
       
+      # Trusted Publisher 自动处理认证
       - run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # 发布到 GitHub Packages
   publish-github:
