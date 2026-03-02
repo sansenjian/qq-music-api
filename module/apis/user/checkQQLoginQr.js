@@ -6,7 +6,7 @@ module.exports = async ({ method = 'get', params = {}, option = {} }) => {
 	if (!ptqrtoken || !qrsig) return { body: '参数错误' };
 	const url = `https://ssl.ptlogin2.qq.com/ptqrlogin?u1=https%3A%2F%2Fgraph.qq.com%2Foauth2.0%2Flogin_jump&ptqrtoken=${ptqrtoken}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=0-0-1711022193435&js_ver=23111510&js_type=1&login_sig=du-YS1h8*0GqVqcrru0pXkpwVg2DYw-DtbFulJ62IgPf6vfiJe*4ONVrYc5hMUNE&pt_uistyle=40&aid=716027609&daid=383&pt_3rd_aid=100497308&&o1vId=3674fc47871e9c407d8838690b355408&pt_js_version=v1.48.1`;
 	const response = await fetch(url, { headers: { Cookie: `qrsig=${qrsig}` } });
-	const { data = '' } = await response.text();
+	const data = await response.text() || '';
 	let allCookie = [];
 	const setCookie = cookies => {
 		allCookie = [...allCookie, ...cookies.map(i => i.split(';')[0]).filter(i => i.split('=')[1])];

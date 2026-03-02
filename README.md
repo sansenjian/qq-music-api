@@ -200,13 +200,13 @@ We welcome all contributions. You can submit any ideas as [pull requests](https:
 
 #### 👨‍🏭 维护者
 
-- [Github](https://github.com/sansenjian)
+- [GitHub](https://github.com/sansenjian)
 
 #### 🙏 原作者
 
 本项目基于 [Rain120](https://github.com/Rain120) 的开源项目，感谢原作者的贡献！
 
-- [Github](https://github.com/Rain120)
+- [GitHub](https://github.com/Rain120)
 - [知乎](https://www.zhihu.com/people/yan-yang-nian-hua-120/activities)
 - [掘金](https://juejin.im/user/57c616496be3ff00584f54db)
 

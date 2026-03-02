@@ -107,6 +107,6 @@ router.get('/getImageUrl', context.getImageUrl);
 
 // getQQLoginQr
 router.get('/getQQLoginQr', context.getQQLoginQr);
-router.get('/checkQQLoginQr', context.checkQQLoginQr);
+router.post('/checkQQLoginQr', context.checkQQLoginQr);
 
 module.exports = router;

@@ -10,7 +10,7 @@ const chalk = require('chalk');
 const cors = require('./middlewares/koa-cors');
 const router = require('./routers/router');
 const cookie = require('./util/cookie');
-require('./util/colors');
+const colors = require('./util/colors');
 const userInfo = require('./config/user-info');
 const package = require('./package.json');
 global.userInfo = Object.assign({}, userInfo);
@@ -29,7 +29,7 @@ exec('npm info QQ-Music-API version', (err, stdout, stderr) => {
   if(!err){
     let version = stdout.trim();
     if(package.version < version){
-      console.log(`Current Version: ${version}, Current Version: ${package.version}, Please update it.`.prompt);
+      console.log(colors.prompt(`Current Version: ${version}, Current Version: ${package.version}, Please update it.`));
     }
   }
 });
@@ -44,7 +44,7 @@ app.use(static(
 app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.get('X-Response-Time');
-  console.log(`${ctx.method} ${ctx.url} - ${rt}`.prompt);
+  console.log(colors.prompt(`${ctx.method} ${ctx.url} - ${rt}`));
 });
 
 // cors
@@ -71,5 +71,5 @@ app.use(router.routes())
 const PORT = process.env.PORT || 3200;
 
 app.listen(PORT, () => {
-  console.log(`server running @ http://localhost:${PORT}`.prompt);
+  console.log(colors.prompt(`server running @ http://localhost:${PORT}`));
 });
