@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  # 发布到 npm（使用 Trusted Publisher，无需 NPM_TOKEN）
+  # 发布到 npm
   publish-npm:
     runs-on: ubuntu-latest
     permissions:
@@ -21,9 +21,13 @@ jobs:
       
       - run: npm install
       
-      - run: npm publish --access public --provenance
+      # 使用 npm publish --access public 确保作用域包公开发布
+      # --provenance 生成发布证明
+      - run: |
+          echo "Publishing to npm..."
+          npm publish --access public --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # 发布到 GitHub Packages
   publish-github:
