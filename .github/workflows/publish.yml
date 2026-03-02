@@ -1,11 +1,8 @@
 name: Publish to NPM
 
 on:
-  push:
-    tags:
-      - 'v*'
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build-and-publish:
@@ -19,7 +16,6 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
