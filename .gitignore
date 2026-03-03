@@ -4,8 +4,25 @@ node_modules
 
 .idea/
 package-lock.json
+pnpm-lock.yaml
 
 .vscode
+
+# Trae IDE 配置
+.trae/
+
+# VitePress 缓存和构建产物
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# 旧版 Docsify 文档文件（已迁移到 VitePress）
+docs/index.html
+docs/sw.js
+docs/_coverpage.md
+docs/_navbar.md
+docs/README.md
+docs/chao.png
+docs/logo.png
 
 # 用户配置文件（包含敏感信息）
 config/user-info.json

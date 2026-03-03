@@ -34,16 +34,19 @@ class Lyric {
 	_initLines() {
 		const lines = this.lyric.split('\n');
 		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			const result = timeExp.exec(line);
-			if (result) {
+			const line = lines[i].trim();
+			timeExp.lastIndex = 0;
+			const matches = [...line.matchAll(timeExp)];
+			if (matches.length > 0) {
 				const txt = line.replace(timeExp, '').trim();
-				const time = result[1] * 60 * 1000 + result[2] * 1000 + (result[3] || 0) * 10;
 				if (txt) {
-					this.lines.push({
-						time,
-						txt,
-					});
+					for (const result of matches) {
+						const time = result[1] * 60 * 1000 + result[2] * 1000 + (result[3] || 0) * 10;
+						this.lines.push({
+							time,
+							txt,
+						});
+					}
 				}
 			}
 		}

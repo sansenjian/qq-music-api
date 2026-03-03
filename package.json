@@ -1,15 +1,21 @@
 {
   "name": "@sansenjian/qq-music-api",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "publishConfig": {
     "access": "public"
   },
   "description": "QQ Music API - QQ音乐API koa2实现",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon app.js & npm run docs",
+    "dev": "nodemon app.js & npm run docs:dev",
     "start": "node app.js",
-    "docs": "docsify serve docs -p 9611",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "docs:dev": "vitepress dev docs --port 9611",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "commit-push": "./scripts/commit-push.sh",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
     "eslint": "eslint --fix --color module/**/** routers/**/** util/**/**",
@@ -43,11 +49,11 @@
     ]
   },
   "dependencies": {
-    "@koa/router": "^12.0.0",
-    "axios": "^1.6.0",
-    "dayjs": "^1.11.10",
+    "@koa/router": "^15.3.1",
+    "axios": "^1.13.6",
+    "date-fns": "^4.1.0",
     "koa": "^2.15.0",
-    "koa-bodyparser": "^4.4.0",
+    "koa-bodyparser": "^4.4.1",
     "koa-static": "^5.0.0"
   },
   "devDependencies": {
@@ -56,20 +62,26 @@
     "@babel/register": "^7.23.0",
     "@commitlint/cli": "^18.0.0",
     "@commitlint/config-conventional": "^18.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^7.2.0",
     "chalk": "^4.1.0",
     "conventional-changelog-cli": "^4.0.0",
-    "docsify-cli": "^4.4.4",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-n": "^16.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "husky": "^9.0.0",
+    "jest": "^30.2.0",
     "lint-staged": "^15.0.0",
-    "nodemon": "^3.0.0",
-    "prettier": "^3.0.0"
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.1",
+    "sinon": "^21.0.1",
+    "supertest": "^7.2.2",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.29"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

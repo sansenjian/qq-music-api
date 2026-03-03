@@ -1,4 +1,3 @@
-const dayjs = require('dayjs');
 const y_common = require('../y_common');
 
 module.exports = ({ method = 'get', params = {}, option = {} }) => {
@@ -7,7 +6,7 @@ module.exports = ({ method = 'get', params = {}, option = {} }) => {
 		format: 'xml',
 		outCharset: 'utf-8',
 		utf8: 1,
-		r: dayjs().valueOf(),
+		r: Date.now(),
 	});
 	const options = Object.assign(option, {
 		params: data,

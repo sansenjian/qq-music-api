@@ -1,21 +1,34 @@
 const { UCommon } = require('../../module');
 const { commonParams } = require('../../module/config');
-const dayjs = require('dayjs');
-const isoWeek = require('dayjs/plugin/isoWeek');
-const isoWeekYear = require('dayjs/plugin/isoWeekYear');
-dayjs.extend(isoWeek);
-dayjs.extend(isoWeekYear);
+
+// 缓存 date-fns 模块（避免每次请求都导入）
+let dateFnsCache = null;
+async function getDateFns() {
+	if (!dateFnsCache) {
+		dateFnsCache = await import('date-fns');
+	}
+	return dateFnsCache;
+}
 
 module.exports = async (ctx, next) => {
-	// Desc: https://github.com/Rain120/qq-music-api/issues/14
+	// 异步加载 date-fns (ESM 模块，带缓存)
+	const { getISOWeekYear, getISOWeek, parseISO } = await getDateFns();
+	
+	// Desc: https://github.com/sansenjian/qq-music-api/issues/14
 	// 1. topId is useless
 	// 2. qq api period is change not YYYY-MM-DD
 	const topId = +ctx.query.topId || 4;
 	const num = +ctx.query.limit || 20;
 	const offset = +ctx.query.page || 0;
-	const date = ctx.query.period || dayjs();
-	const week = dayjs(date).isoWeek();
-	const isoWeekYearVal = dayjs(date).isoWeekYear();
+	// 支持日期格式：YYYY-MM-DD 或 ISO 8601 格式，无效时自动使用当前日期
+	// 使用 parseISO 确保日期字符串被解析为本地时间，避免 UTC 偏移问题
+	let date = ctx.query.period ? parseISO(ctx.query.period) : new Date();
+	// 验证日期是否有效，无效则使用当前日期
+	if (Number.isNaN(date.getTime())) {
+		date = new Date();
+	}
+	const week = getISOWeek(date);
+	const isoWeekYearVal = getISOWeekYear(date);
 	const period = `${isoWeekYearVal}_${week}`;
 
 	const data = {

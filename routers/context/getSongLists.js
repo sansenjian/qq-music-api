@@ -10,7 +10,7 @@ const { songLists } = require('../../module');
  */
 module.exports = async (ctx, next) => {
 	const { limit = 20, page = 0, sortId = 5, categoryId = 10000000 } = ctx.query;
-	// BUGFIX: https://github.com/Rain120/qq-music-api/issues/16
+	// BUGFIX: https://github.com/sansenjian/qq-music-api/issues/16
 	const sin = +page * +limit;
 	const ein = +limit * (+page + 1) - 1;
 	const params = Object.assign({

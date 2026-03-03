@@ -1,12 +1,11 @@
 const { lyricParse } = require('../../../util/lyricParse');
-const dayjs = require('dayjs');
 const y_common = require('../y_common');
 
 module.exports = ({ method = 'get', params = {}, option = {}, isFormat = false }) => {
 	const data = Object.assign(params, {
 		format: 'json',
 		outCharset: 'utf-8',
-		pcachetime: dayjs().valueOf(),
+		pcachetime: Date.now(),
 	});
 	const options = Object.assign(option, {
 		params: data,
