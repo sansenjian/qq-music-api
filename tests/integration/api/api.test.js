@@ -5,7 +5,7 @@ const router = require('../../../routers/router');
 const cors = require('../../../middlewares/koa-cors');
 
 jest.mock('axios', () => {
-	const mockFn = jest.fn();
+	const mockFn = jest.fn().mockResolvedValue({ data: { code: 0, data: {} } });
 	return {
 		get: mockFn,
 		post: mockFn,
@@ -35,91 +35,63 @@ describe('API Integration Tests', () => {
 	let app;
 	let callback;
 
-	beforeEach(() => {
-		jest.clearAllMocks();
-		global.userInfo = { cookie: 'test_cookie=123' };
-	});
-
 	beforeAll(() => {
 		app = createTestApp();
 		callback = app.callback();
 	});
 
+	beforeEach(() => {
+		jest.clearAllMocks();
+		axios.get.mockResolvedValue({ data: { code: 0, data: {} } });
+		axios.post.mockResolvedValue({ data: { code: 0, data: {} } });
+		global.userInfo = { cookie: 'test_cookie=123' };
+	});
+
 	describe('GET /getHotkey', () => {
 		test('should return hot search keywords', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, data: { hotkey: ['test1', 'test2'] } },
-			});
-
 			const response = await request(callback).get('/getHotkey').expect(200);
-
 			expect(response.body).toBeDefined();
 		}, 10000);
 	});
 
 	describe('GET /getTopLists', () => {
 		test('should return top lists', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, data: { topList: [] } },
-			});
-
 			const response = await request(callback).get('/getTopLists').expect(200);
-
 			expect(response.body).toBeDefined();
 		}, 10000);
 	});
 
 	describe('GET /getSearchByKey', () => {
 		test('should search with query param', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, data: { song: { list: [] } } },
-			});
-
 			const response = await request(callback)
 				.get('/getSearchByKey')
-				.query({ key: '周杰伦' })
+				.query({ key: 'test' })
 				.expect(200);
-
 			expect(response.body).toBeDefined();
 		}, 10000);
 
 		test('should search with path param (backward compatibility)', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, data: { song: { list: [] } } },
-			});
-
-			const response = await request(callback).get('/getSearchByKey/周杰伦').expect(200);
-
+			const response = await request(callback).get('/getSearchByKey/test').expect(200);
 			expect(response.body).toBeDefined();
 		}, 10000);
 	});
 
 	describe('GET /getLyric', () => {
 		test('should return lyric with query param', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, lyric: '[00:01.00]Test' },
-			});
-
 			const response = await request(callback)
 				.get('/getLyric')
-				.query({ songmid: '001ABCdeFgHIJk' })
+				.query({ songmid: 'test123' })
 				.expect(200);
-
 			expect(response.body).toBeDefined();
 		}, 10000);
 	});
 
 	describe('POST /batchGetSongInfo', () => {
 		test('should batch get song info', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, data: [] },
-			});
-
 			const response = await request(callback)
 				.post('/batchGetSongInfo')
-				.send({ songmids: '001ABCdeFgHIJk,002DEFghIJKLMn' })
+				.send({ songmids: 'test1,test2' })
 				.expect(200);
-
 			expect(response.body).toBeDefined();
 		}, 10000);
 	});
@@ -131,19 +103,13 @@ describe('API Integration Tests', () => {
 
 		test('should return 400 for missing search key', async () => {
 			const response = await request(callback).get('/getSearchByKey').expect(400);
-
 			expect(response.body.response).toBe('search key is null');
 		});
 	});
 
 	describe('CORS middleware', () => {
 		test('should set CORS headers', async () => {
-			axios.get.mockResolvedValue({
-				data: { code: 0, data: { hotkey: [] } },
-			});
-
 			const response = await request(callback).get('/getHotkey').expect(200);
-
 			expect(response.headers['access-control-allow-origin']).toBeDefined();
 		});
 	});
