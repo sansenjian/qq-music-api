@@ -12,30 +12,30 @@ router.get('/downloadQQMusic', context.getDownloadQQMusic);
 router.get('/getHotkey', context.getHotKey);
 
 // @deprecated Use query params instead: /getSearchByKey?key=xxx
-// Supports both path param and query param (backward compatible)
-router.get('/getSearchByKey/:key?', context.getSearchByKey);
+// Backward compatible: path param route
+router.get('/getSearchByKey/:key', context.getSearchByKey);
 router.get('/getSearchByKey', context.getSearchByKey);
 
 // search smartbox
 // @deprecated Use query params instead: /getSmartbox?key=xxx
-// Supports both path param and query param (backward compatible)
-router.get('/getSmartbox/:key?', context.getSmartbox);
+// Backward compatible: path param route
+router.get('/getSmartbox/:key', context.getSmartbox);
 router.get('/getSmartbox', context.getSmartbox);
 
 // 1
 router.get('/getSongListCategories', context.getSongListCategories);
 
 // @deprecated Use query params instead: /getSongLists?page=1&limit=20&categoryId=10000000&sortId=5
-// Supports both old positional params and new query params
-router.get('/getSongLists/:page?/:limit?/:categoryId?/:sortId?', context.getSongLists);
+// Backward compatible: positional params route
+router.get('/getSongLists/:page/:limit/:categoryId/:sortId', context.getSongLists);
 router.get('/getSongLists', context.getSongLists);
 
 router.post('/batchGetSongLists', context.batchGetSongLists);
 
 // getSongInfo
 // @deprecated Use query params instead: /getSongInfo?songmid=xxx
-// Supports both path param and query param (backward compatible)
-router.get('/getSongInfo/:songmid?', context.getSongInfo);
+// Backward compatible: path param route
+router.get('/getSongInfo/:songmid', context.getSongInfo);
 router.get('/getSongInfo', context.getSongInfo);
 router.post('/batchGetSongInfo', context.batchGetSongInfo);
 
@@ -88,21 +88,21 @@ router.get('/getDigitalAlbumLists', context.getDigitalAlbumLists);
 // getLyric
 // songmid=003rJSwm3TechU
 // @deprecated Use query params instead: /getLyric?songmid=xxx
-// Supports both path param and query param (backward compatible)
-router.get('/getLyric/:songmid?', context.getLyric);
+// Backward compatible: path param route
+router.get('/getLyric/:songmid', context.getLyric);
 router.get('/getLyric', context.getLyric);
 
 // songmid=003rJSwm3TechU
 // @deprecated Use query params instead: /getMusicPlay?songmid=xxx
-// Supports both path param and query param (backward compatible)
-router.get('/getMusicPlay/:songmid?', context.getMusicPlay);
+// Backward compatible: path param route
+router.get('/getMusicPlay/:songmid', context.getMusicPlay);
 router.get('/getMusicPlay', context.getMusicPlay);
 
 // album
 // albummid=0016l2F430zMux
 // @deprecated Use query params instead: /getAlbumInfo?albummid=xxx
-// Supports both path param and query param (backward compatible)
-router.get('/getAlbumInfo/:albummid?', context.getAlbumInfo);
+// Backward compatible: path param route
+router.get('/getAlbumInfo/:albummid', context.getAlbumInfo);
 router.get('/getAlbumInfo', context.getAlbumInfo);
 
 router.get('/getComments', context.getComments);
