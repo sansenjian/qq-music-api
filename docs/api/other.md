@@ -72,8 +72,14 @@ curl "http://localhost:3200/getMvByTag?tag=流行&limit=20"
 **示例：**
 
 ```bash
-curl "http://localhost:3200/getImageUrl?url=http://..."
+# 当 URL 包含特殊字符时，使用 -G 和 --data-urlencode 进行 URL 编码
+curl -G --data-urlencode "url=http://example.com/image.jpg?key=value&foo=bar" \
+  "http://localhost:3200/getImageUrl"
 ```
+
+::: tip 提示
+使用 `-G --data-urlencode` 可以自动对 URL 参数进行编码，避免参数中包含特殊字符（如 `&`, `=`, `?` 等）导致请求被截断。
+:::
 
 ## 数字专辑
 
