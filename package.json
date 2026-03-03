@@ -7,7 +7,7 @@
   "description": "QQ Music API - QQ音乐API koa2实现",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon app.js & npm run docs",
+    "dev": "nodemon app.js & npm run docs:dev",
     "start": "node app.js",
     "docs:dev": "vitepress dev docs --port 9611",
     "docs:build": "vitepress build docs",

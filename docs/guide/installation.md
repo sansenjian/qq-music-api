@@ -12,7 +12,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/Rain120/qq-music-api.git
+git clone https://github.com/sansenjian/qq-music-api.git
 cd qq-music-api
 ```
 

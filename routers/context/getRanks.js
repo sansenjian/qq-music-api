@@ -3,13 +3,17 @@ const { commonParams } = require('../../module/config');
 const { getISOWeekYear, getISOWeek } = require('date-fns');
 
 module.exports = async (ctx, next) => {
-	// Desc: https://github.com/Rain120/qq-music-api/issues/14
+	// Desc: https://github.com/sansenjian/qq-music-api/issues/14
 	// 1. topId is useless
 	// 2. qq api period is change not YYYY-MM-DD
 	const topId = +ctx.query.topId || 4;
 	const num = +ctx.query.limit || 20;
 	const offset = +ctx.query.page || 0;
-	const date = ctx.query.period ? new Date(ctx.query.period) : new Date();
+	let date = ctx.query.period ? new Date(ctx.query.period) : new Date();
+	// 验证日期是否有效，无效则使用当前日期
+	if (Number.isNaN(date.getTime())) {
+		date = new Date();
+	}
 	const week = getISOWeek(date);
 	const isoWeekYearVal = getISOWeekYear(date);
 	const period = `${isoWeekYearVal}_${week}`;

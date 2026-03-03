@@ -17,7 +17,7 @@ hero:
       link: /api/music
     - theme: alt
       text: GitHub
-      link: https://github.com/Rain120/qq-music-api
+      link: https://github.com/sansenjian/qq-music-api
 
 features:
   - title: 🎵 音乐播放

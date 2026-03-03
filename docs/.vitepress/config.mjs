@@ -54,7 +54,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/sansenjian/qq-music-api/edit/master/docs/:path',
+      pattern: 'https://github.com/sansenjian/qq-music-api/edit/main/docs/:path',
       text: '在 GitHub 上编辑此页面',
     },
 
