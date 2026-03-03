@@ -297,7 +297,6 @@ const userInfo = {
     6.13
       "categoryId": 16,
       "categoryName": "校园",
-  </summary>
 </details>
 
 示例截图:
@@ -354,7 +353,7 @@ const userInfo = {
 
 调用例子: `/batchGetSongLists`
 
-```body
+```json
 {
   "limit": 19,
   "page": 0,
@@ -962,7 +961,7 @@ songs: [
 
 调用例子: `/batchGetSongInfo`
 
-```body
+```json
 {
   "songs": [
     ["001CLC7W2Gpz4J"],
