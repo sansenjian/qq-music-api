@@ -45,7 +45,7 @@ cp config/user-info.js.example config/user-info.js
 ### 开发模式
 
 ```bash
-npm run dev
+npm run start
 ```
 
 服务将在 `http://localhost:3200` 启动。

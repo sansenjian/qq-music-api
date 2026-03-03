@@ -1,8 +1,10 @@
 const { UCommon } = require('../../module');
 const { commonParams } = require('../../module/config');
-const { getISOWeekYear, getISOWeek } = require('date-fns');
 
 module.exports = async (ctx, next) => {
+	// 异步加载 date-fns (ESM 模块)
+	const { getISOWeekYear, getISOWeek, parseISO } = await import('date-fns');
+	
 	// Desc: https://github.com/sansenjian/qq-music-api/issues/14
 	// 1. topId is useless
 	// 2. qq api period is change not YYYY-MM-DD
@@ -10,7 +12,8 @@ module.exports = async (ctx, next) => {
 	const num = +ctx.query.limit || 20;
 	const offset = +ctx.query.page || 0;
 	// 支持日期格式：YYYY-MM-DD 或 ISO 8601 格式，无效时自动使用当前日期
-	let date = ctx.query.period ? new Date(ctx.query.period) : new Date();
+	// 使用 parseISO 确保日期字符串被解析为本地时间，避免 UTC 偏移问题
+	let date = ctx.query.period ? parseISO(ctx.query.period) : new Date();
 	// 验证日期是否有效，无效则使用当前日期
 	if (Number.isNaN(date.getTime())) {
 		date = new Date();

@@ -13,9 +13,7 @@
 </div>
 
 > 🍴 本项目 Fork 自 [Rain120/qq-music-api](https://github.com/Rain120/qq-music-api)，原项目已停止维护，此版本持续更新中
-
 > QQ 音乐 API koa2 版本，通过 Web 网页版请求 QQ 音乐接口数据，有问题请提 [issue](https://github.com/sansenjian/qq-music-api/issues)
-
 > 当前代码仅供学习，不可做商业用途
 
 ### API 结构图
