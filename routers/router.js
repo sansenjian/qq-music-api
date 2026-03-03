@@ -16,15 +16,16 @@ router.get('/getSearchByKey/:key', context.getSearchByKey);
 router.get('/getSearchByKey', context.getSearchByKey);
 
 // search smartbox
-// @deprecated Use query params instead: /getSmartbox?id=xxx
-router.get('/getSmartbox/:id', context.getSmartbox);
+// @deprecated Use query params instead: /getSmartbox?key=xxx
+router.get('/getSmartbox/:key', context.getSmartbox);
 router.get('/getSmartbox', context.getSmartbox);
 
 // 1
 router.get('/getSongListCategories', context.getSongListCategories);
 
-// @deprecated Use query params instead: /getSongLists?id=xxx
-router.get('/getSongLists/:id', context.getSongLists);
+// @deprecated Use query params instead: /getSongLists?page=1&limit=20&categoryId=10000000&sortId=5
+// Supports both old positional params and new query params
+router.get('/getSongLists/:page?/:limit?/:categoryId?/:sortId?', context.getSongLists);
 router.get('/getSongLists', context.getSongLists);
 
 router.post('/batchGetSongLists', context.batchGetSongLists);

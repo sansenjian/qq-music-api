@@ -9,6 +9,7 @@ module.exports = async (ctx, next) => {
 	const topId = +ctx.query.topId || 4;
 	const num = +ctx.query.limit || 20;
 	const offset = +ctx.query.page || 0;
+	// 支持日期格式：YYYY-MM-DD 或 ISO 8601 格式，无效时自动使用当前日期
 	let date = ctx.query.period ? new Date(ctx.query.period) : new Date();
 	// 验证日期是否有效，无效则使用当前日期
 	if (Number.isNaN(date.getTime())) {
