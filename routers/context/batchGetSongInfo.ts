@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { UCommon } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
 	const { songs } = ctx.request.body || {};
@@ -21,7 +22,7 @@ const controller: Controller = async (ctx, next) => {
   const data = await Promise.all(
     (songs || []).map(async song => {
       const [song_mid, song_id = ''] = song;
-      return await (require('../../module').UCommon)({
+      return await UCommon({
         ...props,
         params: {
           ...params,
@@ -46,9 +47,12 @@ const controller: Controller = async (ctx, next) => {
   );
   
   Object.assign(ctx, {
+    status: 200,
     body: {
-      status: 200,
-      data
+      response: {
+        code: 0,
+        data
+      }
     }
   });
 };

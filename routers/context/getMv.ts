@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { UCommon } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const { area_id = 15, version_id = 7, limit = 20, page = 0 } = ctx.query;
@@ -38,7 +39,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (version_id && area_id) {
-    await (require('../../module').UCommon)(props)
+    await UCommon(props)
       .then(res => {
         const response = res.data;
         ctx.status = 200;

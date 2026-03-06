@@ -1,11 +1,12 @@
 import { KoaContext, Controller } from '../types';
+import { getQQLoginQr } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const props = {
     method: 'get'
   };
   
-  const { status, body } = await (require('../../module').getQQLoginQr)(props);
+  const { status, body } = await getQQLoginQr(props);
   Object.assign(ctx, {
     status,
     body

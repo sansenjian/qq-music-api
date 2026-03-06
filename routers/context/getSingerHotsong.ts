@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { UCommon } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const singermid = ctx.query.singermid as string;
@@ -35,7 +36,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (singermid) {
-    await (require('../../module').UCommon)(props)
+    await UCommon(props)
       .then(res => {
         const response = res.data;
         ctx.status = 200;

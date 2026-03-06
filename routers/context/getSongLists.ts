@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { songLists } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const { limit = 20, page = 0, sortId = 5, categoryId = 10000000 } = ctx.query;
@@ -19,7 +20,7 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  const { status, body } = await (require('../../module').songLists)(props);
+  const { status, body } = await songLists(props);
   Object.assign(ctx, {
     status,
     body

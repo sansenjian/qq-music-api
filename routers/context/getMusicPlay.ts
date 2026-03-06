@@ -1,4 +1,6 @@
 import { KoaContext, Controller } from '../types';
+import { UCommon } from '../../module';
+import { _guid } from '../../module/config';
 
 const ALLOWED_QUALITIES = ['m4a', 128, 320, 'ape', 'flac'];
 const DEFAULT_QUALITY = 128;
@@ -12,7 +14,7 @@ const controller: Controller = async (ctx, next) => {
   const uin = (global as any).userInfo?.uin || '0';
   const songmid = ctx.query.songmid + '';
   const justPlayUrl = (ctx.query.resType || 'play') === 'play';
-  const guid = (require('../../module/config')._guid as string) || '1429839143';
+  const guid = _guid || '1429839143';
   const { mediaId } = ctx.query;
   const quality = parseQuality(ctx.query.quality);
   
@@ -64,7 +66,7 @@ const controller: Controller = async (ctx, next) => {
   };
 
   if (songmid) {
-    await (require('../../module').UCommon)(props)
+    await UCommon(props)
       .then(res => {
         const response = res.data;
         const domain =

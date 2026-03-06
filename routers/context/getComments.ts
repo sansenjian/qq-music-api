@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { getComments } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const {
@@ -32,7 +33,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (id && checkrootcommentid) {
-    const { status, body } = await (require('../../module').getComments)(props);
+    const { status, body } = await getComments(props);
     Object.assign(ctx, {
       status,
       body

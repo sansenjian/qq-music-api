@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { getRadioLists } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const props = {
@@ -7,7 +8,7 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  const { status, body } = await (require('../../module').getRadioLists)(props);
+  const { status, body } = await getRadioLists(props);
   Object.assign(ctx, {
     status,
     body

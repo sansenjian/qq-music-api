@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, Method } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import http from 'http';
 import https from 'https';
 import colors from './colors';
@@ -64,32 +64,39 @@ service.interceptors.response.use(
 const yURL = 'https://y.qq.com';
 const cURL = 'https://c.y.qq.com';
 
-export interface RequestConfig {
-  url?: string;
-  method?: string;
-  options?: any;
-  isUUrl?: string;
-  headers?: Record<string, any>;
+export type RequestBaseUrl = 'c' | 'y' | 'u';
+
+export interface RequestConfig<TOptions extends AxiosRequestConfig = AxiosRequestConfig> {
+	url?: string;
+	method?: Method | Lowercase<Method>;
+	options?: TOptions;
+	isUUrl?: RequestBaseUrl;
+	headers?: Record<string, string>;
 }
 
-function request(configOrUrl: string | RequestConfig, method?: string, options?: any, isUUrl?: string): Promise<any> {
-  let url: string;
-  let reqMethod: string;
-  let reqOptions: any;
-  let reqIsUUrl: string;
-  
-  if (typeof configOrUrl === 'object') {
-    url = configOrUrl.url || '';
-    reqMethod = configOrUrl.method || 'GET';
-    reqOptions = configOrUrl.options || {};
-    reqIsUUrl = configOrUrl.isUUrl || 'c';
-  } else {
-    url = configOrUrl;
-    reqMethod = method || 'GET';
-    reqOptions = options || {};
-    reqIsUUrl = isUUrl || 'c';
-  }
-  
+function request<TResponse = any, TOptions extends AxiosRequestConfig = AxiosRequestConfig>(
+	configOrUrl: string | RequestConfig<TOptions>,
+	method?: Method | Lowercase<Method>,
+	options?: TOptions,
+	isUUrl: RequestBaseUrl = 'c'
+): Promise<AxiosResponse<TResponse>> {
+	let url: string;
+	let reqMethod: Method | Lowercase<Method>;
+	let reqOptions: TOptions | undefined;
+	let reqIsUUrl: RequestBaseUrl;
+
+	if (typeof configOrUrl === 'object') {
+		url = configOrUrl.url || '';
+		reqMethod = configOrUrl.method || 'GET';
+		reqOptions = configOrUrl.options;
+		reqIsUUrl = configOrUrl.isUUrl || 'c';
+	} else {
+		url = configOrUrl;
+		reqMethod = method || 'GET';
+		reqOptions = options;
+		reqIsUUrl = isUUrl;
+	}
+
 	let baseURL = '';
 	switch (reqIsUUrl) {
 	case 'y':
@@ -106,25 +113,29 @@ function request(configOrUrl: string | RequestConfig, method?: string, options?:
 		break;
 	}
 
-	const config: any = { ...reqOptions };
-	config.url = baseURL;
-	config.method = reqMethod.toLowerCase();
+	const config: AxiosRequestConfig = {
+		...(reqOptions || {}),
+		url: baseURL,
+		method: reqMethod.toLowerCase() as Method
+	};
 
 	const headers = config.headers || {};
-	if (!headers.Cookie && !headers.cookie) {
-		if (global.userInfo && global.userInfo.cookie) {
-			headers.Cookie = global.userInfo.cookie;
+	if ((headers as any).cookies) {
+		if (!(headers as any).Cookie) {
+			(headers as any).Cookie = (headers as any).cookies;
 		}
+		delete (headers as any).cookies;
 	}
 
-	if (headers.cookies) {
-		if (!headers.Cookie) headers.Cookie = headers.cookies;
-		delete headers.cookies;
+	if (!(headers as any).Cookie && !(headers as any).cookie) {
+		if (global.userInfo && global.userInfo.cookie) {
+			(headers as any).Cookie = global.userInfo.cookie;
+		}
 	}
 
 	config.headers = headers;
 
-	return service(config);
+	return service<TResponse>(config);
 }
 
 export default request;

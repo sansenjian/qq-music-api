@@ -25,6 +25,15 @@ export interface ApiOptions {
   [key: string]: any;
 }
 
+export interface HandleApiOptions<TInput = any, TOutput = any> {
+  /** 成功时的数据转换函数 */
+  transformData?: (data: TInput) => TOutput;
+  /** 自定义状态码 */
+  customStatus?: number;
+  /** 是否记录错误日志 */
+  logError?: boolean;
+}
+
 /**
  * API 函数类型定义
  */
@@ -65,16 +74,9 @@ export function createErrorResponse(
 /**
  * API Promise 处理器 - 自动处理成功和错误情况
  */
-export async function handleApi<T = any>(
-  promise: Promise<T>,
-  options?: {
-    /** 成功时的数据转换函数 */
-    transformData?: (data: T) => any;
-    /** 自定义状态码 */
-    customStatus?: number;
-    /** 是否记录错误日志 */
-    logError?: boolean;
-  }
+export async function handleApi<TInput = any, TOutput = TInput>(
+  promise: Promise<TInput>,
+  options?: HandleApiOptions<TInput, TOutput>
 ): Promise<ApiResponse> {
   try {
     const result = await promise;

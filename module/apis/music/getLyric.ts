@@ -17,11 +17,11 @@ export default async ({ method = 'get', params = {}, option = {}, isFormat = fal
   return handleApi(
     request({
       url: '/lyric/fcgi-bin/fcg_query_lyric_new.fcg',
-      method,
+      method: method as import('axios').Method,
       options
     }),
     {
-      transformData: (resData) => {
+      transformData: (resData: Record<string, any>) => {
         const lyricString = resData && resData.lyric && Buffer.from(resData.lyric, 'base64').toString();
         const lyric = isFormat && lyricString ? lyricParse(lyricString) : lyricString;
         return {

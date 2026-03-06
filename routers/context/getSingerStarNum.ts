@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { getSingerStarNum } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const { singermid } = ctx.query;
@@ -12,7 +13,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (singermid) {
-    const { status, body } = await (require('../../module').getSingerStarNum)(props);
+    const { status, body } = await getSingerStarNum(props);
     Object.assign(ctx, {
       status,
       body

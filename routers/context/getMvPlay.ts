@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { UCommon } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const { vid } = ctx.query;
@@ -57,7 +58,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (vid) {
-    await (require('../../module').UCommon)(props)
+    await UCommon(props)
       .then(res => {
         const response = res.data;
         const mvurls = response?.getMVUrl?.data;

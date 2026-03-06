@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { UCommon } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const data = {
@@ -75,7 +76,7 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  await (require('../../module').UCommon)(props)
+  await UCommon(props)
     .then(res => {
       const response = res.data;
       ctx.status = 200;

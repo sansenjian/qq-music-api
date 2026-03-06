@@ -45,6 +45,12 @@ import getQQLoginQr from './apis/user/getQQLoginQr';
 // checkQQLoginQr
 import checkQQLoginQr from './apis/user/checkQQLoginQr';
 
+// getUserPlaylists
+import { getUserPlaylists } from './apis/user/getUserPlaylists';
+
+// getUserAvatar
+import { getUserAvatar } from './apis/user/getUserAvatar';
+
 export {
 	downloadQQMusic,
 	// search
@@ -78,5 +84,8 @@ export {
 	getTopLists,
 	// login
 	getQQLoginQr,
-	checkQQLoginQr
+	checkQQLoginQr,
+	// user
+	getUserPlaylists,
+	getUserAvatar
 };

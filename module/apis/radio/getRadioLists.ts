@@ -20,7 +20,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
   return handleApi(
     request({
       url: '/v8/fcg-bin/fcg_v8_radiolist.fcg',
-      method,
+      method: method as import('axios').Method,
       options
     })
   );

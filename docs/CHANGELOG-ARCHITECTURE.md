@@ -8,7 +8,7 @@
 
 ### 1. 统一的类型系统
 
-创建了 [`types/api.ts`](types/api.ts) 文件，定义了所有 API 函数使用的通用类型：
+创建了 [`types/api.ts`](../types/api.ts) 文件，定义了所有 API 函数使用的通用类型：
 
 - `ApiResponse` - API 响应结构
 - `ApiOptions` - API 函数参数选项
@@ -16,7 +16,7 @@
 
 ### 2. API 响应工具函数
 
-创建了 [`util/apiResponse.ts`](util/apiResponse.ts) 文件，提供了统一的 API 响应处理工具：
+创建了 [`util/apiResponse.ts`](../util/apiResponse.ts) 文件，提供了统一的 API 响应处理工具：
 
 - `successResponse()` - 创建成功响应
 - `errorResponse()` - 创建错误响应
@@ -26,7 +26,7 @@
 
 ### 3. Controller 工厂函数
 
-创建了 [`routers/util.ts`](routers/util.ts) 文件，提供了创建 Controller 的工厂函数：
+创建了 [`routers/util.ts`](../routers/util.ts) 文件，提供了创建 Controller 的工厂函数：
 
 - `createController()` - 创建 GET 请求的 Controller
 - `createPostController()` - 创建 POST 请求的 Controller
@@ -36,7 +36,7 @@
 
 ### 4. 统一的全局类型
 
-创建了 [`types/global.d.ts`](types/global.d.ts) 文件，定义了全局 `userInfo` 对象的类型。
+创建了 [`types/global.d.ts`](../types/global.d.ts) 文件，定义了全局 `userInfo` 对象的类型。
 
 ## 重构成果
 

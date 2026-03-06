@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { songLists } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
 	const { limit: ein = 19, page: sin = 0, sortId = 5, categoryIds = [10000000] } = ctx.request.body || {};
@@ -18,7 +19,7 @@ const controller: Controller = async (ctx, next) => {
   const data = await Promise.all(
     categoryIds.map(
       async categoryId =>
-        await (require('../../module').songLists)({
+        await songLists({
           ...props,
           params: {
             ...params,

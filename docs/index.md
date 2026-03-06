@@ -13,11 +13,11 @@ hero:
       text: 安装与启动
       link: /guide/installation
     - theme: alt
-      text: 快速开始
-      link: /guide/quickstart
+      text: API 总览
+      link: /api/
     - theme: alt
-      text: API 文档
-      link: /api/music
+      text: 用户能力
+      link: /api/user
 
 features:
   - title: 🎵 音乐播放
@@ -28,8 +28,8 @@ features:
     details: 支持歌单分类、歌单详情、排行榜、推荐内容等能力
   - title: 🔍 搜索能力
     details: 支持热词、联想搜索、关键词搜索等常用场景
-  - title: 🔐 扫码登录
-    details: 提供 QQ 登录二维码获取与登录状态轮询接口
+  - title: 👤 用户能力
+    details: 提供用户歌单、用户头像、扫码登录与登录态相关能力
   - title: 🛠️ 工程化
     details: 已完成 TypeScript 迁移，内置 Jest 测试与 VitePress 文档站点
 ---

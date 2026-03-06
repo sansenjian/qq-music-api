@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { getAlbumInfo } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const { albummid } = ctx.query;
@@ -12,7 +13,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (albummid) {
-    const { status, body } = await (require('../../module').getAlbumInfo)(props);
+    const { status, body } = await getAlbumInfo(props);
     Object.assign(ctx, {
       status,
       body

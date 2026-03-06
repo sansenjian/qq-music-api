@@ -17,12 +17,12 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
   return handleApi(
     request({
       url: '/v8/fcg-bin/fcg_myqq_toplist.fcg',
-      method,
+      method: method as import('axios').Method,
       options,
       isUUrl: 'c'
     }),
     {
-      transformData: (response) => {
+      transformData: (response: unknown) => {
         if (typeof response === 'string') {
           const reg = /^\w+\(({[^()]+})\)$/;
           const matches = response.match(reg);

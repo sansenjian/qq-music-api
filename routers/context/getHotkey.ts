@@ -7,7 +7,17 @@ export default async (ctx: Context, next: Next) => {
 		params: {},
 		option: {}
 	};
+
+	if (process.env.DEBUG === 'true') {
+		console.log('[getHotkey] controller props:', props);
+	}
+
 	const { status, body } = await getHotKey(props);
+
+	if (process.env.DEBUG === 'true') {
+		console.log('[getHotkey] controller response status:', status);
+	}
+
 	Object.assign(ctx, {
 		status,
 		body

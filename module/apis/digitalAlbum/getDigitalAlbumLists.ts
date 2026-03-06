@@ -16,7 +16,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
   return handleApi(
     request({
       url: '/v8/fcg-bin/musicmall.fcg',
-      method,
+      method: method as import('axios').Method,
       options
     })
   );

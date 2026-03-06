@@ -17,7 +17,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
   return handleApi(
     request({
       url: '/splcloud/fcgi-bin/fcg_get_singer_desc.fcg',
-      method,
+      method: method as import('axios').Method,
       options,
       isUUrl: 'c'
     })

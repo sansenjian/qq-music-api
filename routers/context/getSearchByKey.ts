@@ -1,4 +1,5 @@
 import { KoaContext, Controller } from '../types';
+import { getSearchByKey } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
   const w = ctx.query.key || ctx.params.key;
@@ -17,7 +18,7 @@ const controller: Controller = async (ctx, next) => {
   };
   
   if (w) {
-    const { status, body } = await (require('../../module').getSearchByKey)(props);
+    const { status, body } = await getSearchByKey(props);
     Object.assign(ctx, {
       status,
       body

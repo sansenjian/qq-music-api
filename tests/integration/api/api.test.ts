@@ -81,6 +81,18 @@ function createTestUserInfo(): UserInfo {
   };
 }
 
+const expectSuccessResponse = (responseBody: Record<string, any>) => {
+  expect(responseBody).toHaveProperty('response');
+  expect(responseBody).not.toHaveProperty('error');
+  expect(responseBody.response).toHaveProperty('code');
+  expect(responseBody.response).toHaveProperty('data');
+};
+
+const expectErrorResponse = (responseBody: Record<string, any>) => {
+  expect(responseBody).toHaveProperty('error');
+  expect(responseBody).not.toHaveProperty('response');
+};
+
 describe('API Integration Tests', () => {
   let app: Koa;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,9 +109,7 @@ describe('API Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockService.mockResolvedValue({ data: { code: 0, data: {} } });
-    // 使用完整的 UserInfo 对象
     global.userInfo = createTestUserInfo();
-    // Mock fetch 使用类型断言
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).fetch = jest.fn();
   });
@@ -112,14 +122,14 @@ describe('API Integration Tests', () => {
   describe('GET /getHotkey', () => {
     test('should return hot search keywords', async () => {
       const response = await request(callback).get('/getHotkey').expect(200);
-      expect(response.body).toBeDefined();
+      expectSuccessResponse(response.body);
     }, 10000);
   });
 
   describe('GET /getTopLists', () => {
     test('should return top lists', async () => {
       const response = await request(callback).get('/getTopLists').expect(200);
-      expect(response.body).toBeDefined();
+      expectSuccessResponse(response.body);
     }, 10000);
   });
 
@@ -129,13 +139,18 @@ describe('API Integration Tests', () => {
         .get('/getSearchByKey')
         .query({ key: 'test' })
         .expect(200);
-      expect(response.body).toBeDefined();
+      expectSuccessResponse(response.body);
     }, 10000);
 
     test('should search with path param (backward compatibility)', async () => {
       const response = await request(callback).get('/getSearchByKey/test').expect(200);
-      expect(response.body).toBeDefined();
+      expectSuccessResponse(response.body);
     }, 10000);
+
+    test('should return 400 for missing search key', async () => {
+      const response = await request(callback).get('/getSearchByKey').expect(400);
+      expect(response.body.response).toBe('search key is null');
+    });
   });
 
   describe('GET /getLyric', () => {
@@ -144,29 +159,120 @@ describe('API Integration Tests', () => {
         .get('/getLyric')
         .query({ songmid: 'test123' })
         .expect(200);
-      expect(response.body).toBeDefined();
+      expectSuccessResponse(response.body);
     }, 10000);
   });
 
   describe('POST /batchGetSongInfo', () => {
     test('should batch get song info', async () => {
+      mockService
+        .mockResolvedValueOnce({ data: { code: 0, data: [{ mid: 'test1' }] } })
+        .mockResolvedValueOnce({ data: { code: 0, data: [{ mid: 'test2' }] } });
+
       const response = await request(callback)
         .post('/batchGetSongInfo')
         .send({ songs: [['test1', '1'], ['test2', '2']] })
         .expect(200);
-      expect(response.body).toBeDefined();
+
+      expectSuccessResponse(response.body);
+      expect(Array.isArray(response.body.response.data)).toBe(true);
+      expect(response.body.response.data).toHaveLength(2);
       expect(mockService).toHaveBeenCalledTimes(2);
     }, 10000);
+  });
+
+  describe('GET /user/getUserPlaylists', () => {
+    test('should return 400 when uin is missing', async () => {
+      const response = await request(callback).get('/user/getUserPlaylists').expect(400);
+
+      expectErrorResponse(response.body);
+      expect(response.body.error).toBe('缺少 uin 参数');
+    });
+
+    test('should return playlists when upstream payload contains playlist field', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          code: 0,
+          data: {
+            playlists: [{ dissid: '1', dissname: 'test playlist' }]
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/user/getUserPlaylists')
+        .query({ uin: '123456789' })
+        .expect(200);
+
+      expectSuccessResponse(response.body);
+      expect(response.body.response.data.playlists).toEqual([{ dissid: '1', dissname: 'test playlist' }]);
+    });
+
+    test('should return playlists when upstream payload contains creator.playlist field', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          code: 0,
+          data: {
+            creator: {
+              playlist: [{ dissid: '2', dissname: 'creator playlist' }]
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/user/getUserPlaylists')
+        .query({ uin: '123456789' })
+        .expect(200);
+
+      expectSuccessResponse(response.body);
+      expect(response.body.response.data.playlists).toEqual([{ dissid: '2', dissname: 'creator playlist' }]);
+    });
+
+    test('should return 502 when upstream payload does not contain playlist field', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          code: 0,
+          data: {
+            profile: { uin: '123456789' }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/user/getUserPlaylists')
+        .query({ uin: '123456789' })
+        .expect(502);
+
+      expectErrorResponse(response.body);
+      expect(response.body.error).toBe('用户歌单响应中未找到歌单列表字段');
+    });
+  });
+
+  describe('GET /user/getUserAvatar', () => {
+    test('should return 400 when k and uin are both missing', async () => {
+      const response = await request(callback).get('/user/getUserAvatar').expect(400);
+
+      expectErrorResponse(response.body);
+      expect(response.body.error).toBe('缺少 k 或 uin 参数');
+    });
+
+    test('should return avatar url when uin is provided', async () => {
+      const response = await request(callback)
+        .get('/user/getUserAvatar')
+        .query({ uin: '123456789', size: 140 })
+        .expect(200);
+
+      expectSuccessResponse(response.body);
+      expect(response.body.response.data.avatarUrl).toBe(
+        'https://q.qlogo.cn/headimg_dl?dst_uin=123456789&spec=140'
+      );
+    });
   });
 
   describe('Error handling', () => {
     test('should return 404 for unknown route', async () => {
       await request(callback).get('/unknown-route').expect(404);
-    });
-
-    test('should return 400 for missing search key', async () => {
-      const response = await request(callback).get('/getSearchByKey').expect(400);
-      expect(response.body.response).toBe('search key is null');
     });
 
     test('should return 500 when downstream request rejects', async () => {
@@ -260,6 +366,63 @@ describe('API Integration Tests', () => {
         uin: 'o123456789',
         p_skey: 'mockPSkey',
         qm_keyst: 'finalValue'
+      });
+    });
+
+    test('POST /checkQQLoginQr should return 504 and 登录检查超时 on fetch timeout', async () => {
+      const abortError = new Error('Aborted');
+      abortError.name = 'AbortError';
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest.fn().mockRejectedValueOnce(abortError);
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(504);
+
+      expect(response.body).toEqual({
+        error: '登录检查超时'
+      });
+    });
+
+    test('POST /checkQQLoginQr should map non-success polling result to 未扫描二维码', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest.fn().mockResolvedValueOnce(
+        createFetchResponse({
+          text: 'ptuiCB("66","0","","0","二维码未失效","","");'
+        })
+      );
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        isOk: false,
+        refresh: false,
+        message: '未扫描二维码'
+      });
+    });
+
+    test('POST /checkQQLoginQr should map expired polling result to 二维码已失效', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest.fn().mockResolvedValueOnce(
+        createFetchResponse({
+          text: 'ptuiCB("65","0","二维码已失效","0","二维码已失效","","");'
+        })
+      );
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        isOk: false,
+        refresh: true,
+        message: '二维码已失效'
       });
     });
 

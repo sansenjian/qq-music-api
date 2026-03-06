@@ -17,7 +17,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
   return handleApi(
     request({
       url: '/mv/fcgi-bin/getmv_by_tag',
-      method,
+      method: method as import('axios').Method,
       options
     })
   );

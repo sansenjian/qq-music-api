@@ -20,7 +20,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
 			options
 		}),
 		{
-			transformData: (response) => {
+			transformData: (response: unknown) => {
 				if (typeof response === 'string') {
 					const reg = /^\w+\(([^()]+)\)$/;
 					const matches = response.match(reg);

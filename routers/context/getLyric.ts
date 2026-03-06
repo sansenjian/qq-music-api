@@ -1,7 +1,9 @@
 import { KoaContext, Controller } from '../types';
+import { getLyric } from '../../module';
 
 const controller: Controller = async (ctx, next) => {
-  const { songmid, isFormat } = ctx.query;
+  const songmid = Array.isArray(ctx.query.songmid) ? ctx.query.songmid[0] : ctx.query.songmid;
+  const rawIsFormat = Array.isArray(ctx.query.isFormat) ? ctx.query.isFormat[0] : ctx.query.isFormat;
   
   const props = {
     method: 'get',
@@ -9,11 +11,11 @@ const controller: Controller = async (ctx, next) => {
       songmid
     },
     option: {},
-    isFormat
+    isFormat: rawIsFormat
   };
   
   if (songmid) {
-    const { status, body } = await (require('../../module').getLyric)(props);
+    const { status, body } = await getLyric(props);
     Object.assign(ctx, {
       status,
       body
@@ -27,3 +29,4 @@ const controller: Controller = async (ctx, next) => {
 };
 
 export default controller;
+
