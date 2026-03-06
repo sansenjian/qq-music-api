@@ -33,9 +33,33 @@ curl -X POST http://localhost:3200/batchGetSongLists \
 
 ```json
 {
-  "code": 0,
-  "msg": "success",
-  "data": {}
+  "status": 200,
+  "body": {
+    "response": {},
+    "error": null
+  }
+}
+```
+
+**成功响应：**
+```json
+{
+  "status": 200,
+  "body": {
+    "response": {
+      "data": {}
+    }
+  }
+}
+```
+
+**错误响应：**
+```json
+{
+  "status": 500,
+  "body": {
+    "error": "错误信息"
+  }
 }
 ```
 

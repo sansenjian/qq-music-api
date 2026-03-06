@@ -11,6 +11,9 @@ pnpm-lock.yaml
 # Trae IDE 配置
 .trae/
 
+# TypeScript 编译产物
+dist/
+
 # VitePress 缓存和构建产物
 docs/.vitepress/cache/
 docs/.vitepress/dist/

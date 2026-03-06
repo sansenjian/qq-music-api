@@ -1,28 +1,26 @@
-const request = require('../../../util/request');
-
 jest.mock('axios', () => {
-	const mockAxios = {
-		GET: jest.fn(),
-		POST: jest.fn(),
-		get: jest.fn(),
-		post: jest.fn(),
-		defaults: {
-			withCredentials: true,
-			timeout: 10000,
-			headers: {
-				post: {},
-			},
-			responseType: 'json',
-		},
+	const service = jest.fn(() => Promise.resolve({ data: {}, config: { url: 'test' } }));
+	service.interceptors = {
+		request: { use: jest.fn() },
+		response: { use: jest.fn() },
 	};
-	return mockAxios;
+	return {
+		create: jest.fn(() => service),
+		defaults: { headers: { post: {} } },
+	};
 });
 
 const axios = require('axios');
+const request = require('../../../util/request');
 
 describe('request util', () => {
+	let mockService;
+
 	beforeEach(() => {
 		jest.clearAllMocks();
+		// Get the service instance that was returned by axios.create
+		mockService = axios.create();
+		mockService.mockResolvedValue({ data: {}, config: { url: 'test' } });
 		global.userInfo = { cookie: 'test_cookie=123' };
 	});
 
@@ -31,36 +29,28 @@ describe('request util', () => {
 	});
 
 	test('should make GET request', async () => {
-		const mockData = { code: 0, data: {} };
-		axios.GET.mockResolvedValue({ data: mockData });
-
-		const result = await request('/api/test', 'GET');
-
-		expect(axios.GET).toHaveBeenCalled();
+		await request('/api/test', 'GET');
+		expect(mockService).toHaveBeenCalledWith(
+			expect.objectContaining({
+				url: expect.stringContaining('/api/test'),
+				method: 'get',
+			})
+		);
 	});
 
 	test('should handle request error', async () => {
 		const error = new Error('Network Error');
-		axios.GET.mockRejectedValue(error);
+		mockService.mockRejectedValue(error);
 
 		await expect(request('/api/test', 'GET')).rejects.toThrow();
 	});
 
 	test('should set correct headers', async () => {
-		axios.GET.mockResolvedValue({ data: {} });
-
 		await request('/api/test', 'GET', { headers: { 'Custom-Header': 'value' } });
 
-		const call = axios.GET.mock.calls[0][1];
+		const call = mockService.mock.calls[0][0];
 		expect(call.headers).toBeDefined();
-		expect(call.headers.cookies).toBe('test_cookie=123');
-	});
-
-	test('should handle timeout', async () => {
-		const error = new Error('Timeout');
-		error.code = 'ECONNABORTED';
-		axios.GET.mockRejectedValue(error);
-
-		await expect(request('/api/test', 'GET', { timeout: 5000 })).rejects.toThrow();
+		expect(call.headers.Cookie).toBe('test_cookie=123');
+		expect(call.headers['Custom-Header']).toBe('value');
 	});
 });

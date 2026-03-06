@@ -1,21 +1,22 @@
 {
-  "env": {
-    "browser": true,
-    "commonjs": true,
-    "es2021": true,
-    "node": true
-  },
-  "extends": ["eslint:recommended", "standard"],
-  "parserOptions": {
-    "ecmaVersion": "latest"
-  },
-  "plugins": ["n"],
-  "rules": {
-    "indent": ["error", "tab"],
-    "no-tabs": "off",
-    "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single"],
-    "semi": ["error", "always"],
-    "camelcase": "off"
-  }
+	"env": {
+		"browser": true,
+		"commonjs": true,
+		"es2021": true,
+		"node": true
+	},
+	"extends": ["eslint:recommended", "standard"],
+	"parserOptions": {
+		"ecmaVersion": "latest"
+	},
+	"plugins": ["n"],
+	"rules": {
+		"indent": ["error", "tab"],
+		"no-tabs": "off",
+		"linebreak-style": ["error", "unix"],
+		"quotes": ["error", "single"],
+		"semi": ["error", "always"],
+		"camelcase": "off"
+	},
+	"ignorePatterns": ["jest.config.js"]
 }

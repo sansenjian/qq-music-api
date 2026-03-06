@@ -4,17 +4,18 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'QQ Music API',
   description: 'QQ 音乐 API 接口文档',
+  base: '/qq-music-api/',
   lastUpdated: true,
-  
+
   head: [
-    ['link', { rel: 'icon', href: '/logo.png' }],
-    ['meta', { name: 'theme-color', content: '#3eaf7c' }],
+    ['link', { rel: 'icon', href: '/logo.svg' }],
+    ['meta', { name: 'theme-color', content: '#12b7f5' }],
   ],
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo: '/logo.png',
-    
+    logo: '/logo.svg',
+
     nav: [
       { text: '首页', link: '/' },
       { text: 'API 文档', link: '/api/' },

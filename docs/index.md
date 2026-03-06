@@ -6,7 +6,7 @@ hero:
   text: QQ 音乐 API 接口文档
   tagline: 基于 Node.js 的 QQ 音乐 API 接口封装
   image:
-    src: /logo.png
+    src: /logo.svg
     alt: QQ Music API
   actions:
     - theme: brand

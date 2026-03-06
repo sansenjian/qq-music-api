@@ -6,11 +6,14 @@ const cors = require('../../../middlewares/koa-cors');
 
 jest.mock('axios', () => {
 	const mockFn = jest.fn().mockResolvedValue({ data: { code: 0, data: {} } });
+	mockFn.interceptors = {
+		request: { use: jest.fn() },
+		response: { use: jest.fn() },
+	};
 	return {
 		get: mockFn,
 		post: mockFn,
-		GET: mockFn,
-		POST: mockFn,
+		create: jest.fn(() => mockFn),
 		defaults: {
 			withCredentials: true,
 			timeout: 10000,
@@ -34,16 +37,17 @@ function createTestApp() {
 describe('API Integration Tests', () => {
 	let app;
 	let callback;
+	let mockService;
 
 	beforeAll(() => {
 		app = createTestApp();
 		callback = app.callback();
+		mockService = axios.create();
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		axios.get.mockResolvedValue({ data: { code: 0, data: {} } });
-		axios.post.mockResolvedValue({ data: { code: 0, data: {} } });
+		mockService.mockResolvedValue({ data: { code: 0, data: {} } });
 		global.userInfo = { cookie: 'test_cookie=123' };
 	});
 
