@@ -1,12 +1,16 @@
-module.exports = {
+import type { Config } from 'jest';
+
+const config: Config = {
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/tests/**/*.test.js'],
+  testMatch: ['**/tests/**/*.test.ts'],
   collectCoverageFrom: [
-    'module/**/*.js',
-    'routers/**/*.js',
-    'util/**/*.js',
+    'module/**/*.ts',
+    'routers/**/*.ts',
+    'util/**/*.ts',
     '!**/node_modules/**',
-    '!**/tests/**'
+    '!**/tests/**',
+    '!**/dist/**'
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
@@ -18,7 +22,7 @@ module.exports = {
       statements: 50
     }
   },
-  setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
   testTimeout: 10000,
   verbose: true,
@@ -26,5 +30,12 @@ module.exports = {
     '^@module/(.*)$': '<rootDir>/module/$1',
     '^@routers/(.*)$': '<rootDir>/routers/$1',
     '^@util/(.*)$': '<rootDir>/util/$1'
+  },
+  transform: {
+    '^.+\.ts$': ['ts-jest', {
+      tsconfig: 'tsconfig.test.json'
+    }]
   }
 };
+
+export default config;

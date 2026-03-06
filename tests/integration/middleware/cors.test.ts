@@ -1,5 +1,6 @@
-const corsModule = require('../../../middlewares/koa-cors');
-const cors = corsModule.default || corsModule;
+// CORS 中间件单元测试
+
+import cors from '../../../middlewares/koa-cors';
 
 describe('CORS Middleware', () => {
   test('should set CORS headers', async () => {
@@ -10,7 +11,8 @@ describe('CORS Middleware', () => {
       vary: jest.fn(),
       status: 200,
       body: {}
-    };
+    } as unknown as Parameters<ReturnType<typeof cors>>[0];
+    
     const next = jest.fn().mockResolvedValue(undefined);
 
     await cors()(ctx, next);
@@ -27,7 +29,8 @@ describe('CORS Middleware', () => {
       get: jest.fn().mockReturnValue('GET'),
       vary: jest.fn(),
       status: 200
-    };
+    } as unknown as Parameters<ReturnType<typeof cors>>[0];
+    
     const next = jest.fn().mockResolvedValue(undefined);
 
     await cors()(ctx, next);
