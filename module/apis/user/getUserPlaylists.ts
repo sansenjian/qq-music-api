@@ -15,6 +15,7 @@ const debugLog = (message: string, payload?: unknown) => {
 };
 
 const getNamedCandidateEntries = (payload: Record<string, any>) => [
+  ['data.mydiss.list', payload?.data?.mydiss?.list],
   ['data.mymusic', payload?.data?.mymusic],
   ['data.createdDissList', payload?.data?.createdDissList],
   ['data.createdList', payload?.data?.createdList],
@@ -23,6 +24,7 @@ const getNamedCandidateEntries = (payload: Record<string, any>) => [
   ['data.creator.playlists', payload?.data?.creator?.playlists],
   ['data.playlist', payload?.data?.playlist],
   ['data.playlists', payload?.data?.playlists],
+  ['mydiss.list', payload?.mydiss?.list],
   ['mymusic', payload?.mymusic],
   ['createdDissList', payload?.createdDissList],
   ['createdList', payload?.createdList],
@@ -75,36 +77,10 @@ export const getUserPlaylists = async (params: {
 }): Promise<ApiResponse> => {
   const { uin, offset = 0, limit = 30 } = params;
 
-  // 使用 u.y.qq.com 的 musicu.fcg 统一网关
-  const url = '/cgi-bin/musicu.fcg';
-  const page = Math.floor(offset / limit) + 1;
+  // 使用 c6.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg 接口
+  // 这是通过 Chrome DevTools 抓包发现的实际使用的接口
+  const url = 'https://c6.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg';
   const pageOffset = offset % limit;
-
-  // 构造 JSON-RPC 风格的请求 - 参考官方文档
-  const requestData = {
-    comm: {
-      ct: 24,
-      cv: 0,
-      format: 'json',
-      inCharset: 'utf-8',
-      outCharset: 'utf-8',
-      notice: 0,
-      platform: 'yqq.json',
-      needNewCode: 1,
-      uin: Number.parseInt(uin, 10),
-      g_tk: 0
-    },
-    req_1: {
-      module: 'music.musiclist.MusicListServer',
-      method: 'get_music_lists',
-      param: {
-        uin: Number.parseInt(uin, 10),
-        page,
-        num: limit,
-        type: 1 // 1 表示创建的歌单
-      }
-    }
-  };
 
   try {
     debugLog('request meta', {
@@ -112,7 +88,6 @@ export const getUserPlaylists = async (params: {
       uin,
       offset,
       limit,
-      page,
       pageOffset,
       hasGlobalCookie: Boolean(global.userInfo?.cookie),
       cookieLength: global.userInfo?.cookie?.length || 0
@@ -121,16 +96,27 @@ export const getUserPlaylists = async (params: {
     const response = await request<Record<string, any>>({
       url,
       method: 'GET',
-      isUUrl: 'y',
+      isUUrl: 'u',
       options: {
         params: {
+          _: Date.now(),
+          cv: 4747474,
+          ct: 24,
           format: 'json',
           inCharset: 'utf-8',
           outCharset: 'utf-8',
           notice: 0,
           platform: 'yqq.json',
-          needNewCode: 1,
-          data: JSON.stringify(requestData)
+          needNewCode: 0,
+          uin: Number.parseInt(uin, 10),
+          g_tk_new_20200303: 0,
+          g_tk: 0,
+          cid: 205360838,
+          userid: Number.parseInt(uin, 10),
+          reqfrom: 1,
+          reqtype: 0,
+          hostUin: 0,
+          loginUin: Number.parseInt(uin, 10)
         },
         headers: {
           Referer: `https://y.qq.com/portal/profile.html?uin=${uin}`,

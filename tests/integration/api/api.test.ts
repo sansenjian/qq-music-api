@@ -38,6 +38,37 @@ interface FetchResponseOptions {
   status?: number;
 }
 
+type ResponseBody = Record<string, unknown> & {
+  response?: {
+    code?: number;
+    data?: Record<string, unknown> & {
+      playlists?: Array<Record<string, unknown>>;
+      avatarUrl?: string;
+    };
+    error?: string;
+    playLists?: Record<string, string[]>;
+  } | string;
+  error?: string;
+  isOk?: boolean;
+  refresh?: boolean;
+  message?: string;
+  img?: string;
+  ptqrtoken?: string;
+  qrsig?: string;
+  session?: {
+    loginUin: string;
+    cookie: string;
+    cookieList: string[];
+    cookieObject: Record<string, string>;
+  };
+  data?: unknown[];
+  status?: number;
+};
+
+interface MockMvUrlEntry {
+  freeflow_url: string[];
+}
+
 const createFetchResponse = ({
   ok = true,
   text = '',
@@ -81,14 +112,14 @@ function createTestUserInfo(): UserInfo {
   };
 }
 
-const expectSuccessResponse = (responseBody: Record<string, any>) => {
+const expectSuccessResponse = (responseBody: ResponseBody) => {
   expect(responseBody).toHaveProperty('response');
   expect(responseBody).not.toHaveProperty('error');
   expect(responseBody.response).toHaveProperty('code');
   expect(responseBody.response).toHaveProperty('data');
 };
 
-const expectErrorResponse = (responseBody: Record<string, any>) => {
+const expectErrorResponse = (responseBody: ResponseBody) => {
   expect(responseBody).toHaveProperty('error');
   expect(responseBody).not.toHaveProperty('response');
 };
@@ -98,6 +129,8 @@ describe('API Integration Tests', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let callback: any;
   let mockService: jest.Mock;
+  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
 
   beforeAll(() => {
     app = createTestApp();
@@ -112,9 +145,13 @@ describe('API Integration Tests', () => {
     global.userInfo = createTestUserInfo();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).fetch = jest.fn();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
+    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (global as any).fetch;
   });
@@ -179,6 +216,29 @@ describe('API Integration Tests', () => {
       expect(response.body.response.data).toHaveLength(2);
       expect(mockService).toHaveBeenCalledTimes(2);
     }, 10000);
+
+    test('should return empty array when songs is missing', async () => {
+      const response = await request(callback)
+        .post('/batchGetSongInfo')
+        .send({})
+        .expect(200);
+
+      expectSuccessResponse(response.body);
+      expect(response.body.response.data).toEqual([]);
+      expect(mockService).not.toHaveBeenCalled();
+    });
+
+    test('should use empty string as default song_id when it is omitted', async () => {
+      mockService.mockResolvedValueOnce({ data: { code: 0, data: [{ mid: 'test1' }] } });
+
+      await request(callback)
+        .post('/batchGetSongInfo')
+        .send({ songs: [['test1']] })
+        .expect(200);
+
+      const firstCallConfig = mockService.mock.calls[0][0] as { params: { data: { songinfo: { param: { song_id: string } } } } };
+      expect(firstCallConfig.params.data.songinfo.param.song_id).toBe('');
+    });
   });
 
   describe('GET /user/getUserPlaylists', () => {
@@ -257,6 +317,20 @@ describe('API Integration Tests', () => {
       expect(response.body.error).toBe('缺少 k 或 uin 参数');
     });
 
+    test.each([
+      ['non-numeric size', 'abc'],
+      ['zero size', '0'],
+      ['negative size', '-1']
+    ])('should return 400 for %s', async (_caseName, size) => {
+      const response = await request(callback)
+        .get('/user/getUserAvatar')
+        .query({ uin: '123456789', size })
+        .expect(400);
+
+      expectErrorResponse(response.body);
+      expect(response.body.error).toBe('size 参数无效');
+    });
+
     test('should return avatar url when uin is provided', async () => {
       const response = await request(callback)
         .get('/user/getUserAvatar')
@@ -267,6 +341,219 @@ describe('API Integration Tests', () => {
       expect(response.body.response.data.avatarUrl).toBe(
         'https://q.qlogo.cn/headimg_dl?dst_uin=123456789&spec=140'
       );
+    });
+
+    test('should only use the first query value when duplicated params are provided', async () => {
+      const response = await request(callback)
+        .get('/user/getUserAvatar?uin=123456789&uin=987654321&size=140&size=640')
+        .expect(200);
+
+      expectSuccessResponse(response.body);
+      expect(response.body.response.data.avatarUrl).toBe(
+        'https://q.qlogo.cn/headimg_dl?dst_uin=123456789&spec=140'
+      );
+    });
+
+    test('should prefer k over uin when both are provided', async () => {
+      const response = await request(callback)
+        .get('/user/getUserAvatar')
+        .query({ k: 'mock-k', uin: '123456789', size: 640 })
+        .expect(200);
+
+      expectSuccessResponse(response.body);
+      expect(response.body.response.data.avatarUrl).toBe(
+        'https://thirdqq.qlogo.cn/g?b=sdk&k=mock-k&s=640'
+      );
+    });
+  });
+
+  describe('GET /getMvPlay', () => {
+    test('should return 400 when vid is missing', async () => {
+      const response = await request(callback).get('/getMvPlay').expect(400);
+
+      expect(response.body.response).toBe('vid is null');
+    });
+
+    test('should return grouped playLists when upstream returns nested freeflow urls', async () => {
+      const createMvUrlEntry = (...urls: string[]): MockMvUrlEntry => ({
+        freeflow_url: urls
+      });
+
+      mockService.mockResolvedValueOnce({
+        data: {
+          getMVUrl: {
+            data: {
+              testVid: {
+                mp4: [
+                  createMvUrlEntry('https://cdn.example.com/video.f10.mp4'),
+                  createMvUrlEntry('https://cdn.example.com/video.f20.mp4')
+                ],
+                hls: [createMvUrlEntry('https://cdn.example.com/video.f30.mp4')]
+              }
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMvPlay')
+        .query({ vid: 'testVid' })
+        .expect(200);
+
+      expect((response.body as ResponseBody).response).toMatchObject({
+        playLists: {
+          f10: ['https://cdn.example.com/video.f10.mp4'],
+          f20: ['https://cdn.example.com/video.f20.mp4'],
+          f30: ['https://cdn.example.com/video.f30.mp4'],
+          f40: []
+        }
+      });
+    });
+
+    test('should handle payloads with only hls urls', async () => {
+      const createMvUrlEntry = (...urls: string[]): MockMvUrlEntry => ({
+        freeflow_url: urls
+      });
+
+      mockService.mockResolvedValueOnce({
+        data: {
+          getMVUrl: {
+            data: {
+              testVid: {
+                hls: [
+                  createMvUrlEntry('https://cdn.example.com/video.f30.mp4'),
+                  createMvUrlEntry('https://cdn.example.com/video.f40.mp4')
+                ]
+              }
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMvPlay')
+        .query({ vid: 'testVid' })
+        .expect(200);
+
+      expect((response.body as ResponseBody).response).toMatchObject({
+        playLists: {
+          f10: [],
+          f20: [],
+          f30: ['https://cdn.example.com/video.f30.mp4'],
+          f40: ['https://cdn.example.com/video.f40.mp4']
+        }
+      });
+    });
+
+    test('should return empty grouped lists when all freeflow urls are empty', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          getMVUrl: {
+            data: {
+              testVid: {
+                mp4: [{ freeflow_url: [] }],
+                hls: [{ freeflow_url: [] }]
+              }
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMvPlay')
+        .query({ vid: 'testVid' })
+        .expect(200);
+
+      expect((response.body as ResponseBody).response).toMatchObject({
+        playLists: {
+          f10: [],
+          f20: [],
+          f30: [],
+          f40: []
+        }
+      });
+    });
+
+    test('should return 502 when upstream mv url payload is empty', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          getMVUrl: {
+            data: {}
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMvPlay')
+        .query({ vid: 'testVid' })
+        .expect(502);
+
+      expect((response.body as ResponseBody).response).toEqual({
+        data: null,
+        error: 'Failed to get MV URL data'
+      });
+    });
+  });
+
+  describe('POST /batchGetSongLists', () => {
+    test('should use default categoryIds when request body omits them', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          code: 0,
+          data: {
+            list: [{ disstid: 'default-category' }]
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .post('/batchGetSongLists')
+        .send({})
+        .expect(200);
+
+      expect(response.body).toEqual({
+        status: 200,
+        data: [{ list: [{ disstid: 'default-category' }] }]
+      });
+      expect(mockService).toHaveBeenCalledTimes(1);
+      const firstCallConfig = mockService.mock.calls[0][0] as { params: { categoryId: number } };
+      expect(firstCallConfig.params.categoryId).toBe(10000000);
+    });
+
+    test('should request each categoryId and merge downstream success payloads', async () => {
+      mockService
+        .mockResolvedValueOnce({ data: { code: 0, data: { list: [{ disstid: 'cat-1' }] } } })
+        .mockResolvedValueOnce({ data: { code: 0, data: { list: [{ disstid: 'cat-2' }] } } });
+
+      const response = await request(callback)
+        .post('/batchGetSongLists')
+        .send({ categoryIds: [1, 2], limit: 10, page: 2, sortId: 5 })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        status: 200,
+        data: [{ list: [{ disstid: 'cat-1' }] }, { list: [{ disstid: 'cat-2' }] }]
+      });
+      expect(mockService).toHaveBeenCalledTimes(2);
+    });
+
+    test('should preserve downstream business error payloads', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          code: 1,
+          message: 'mock song list error'
+        }
+      });
+
+      const response = await request(callback)
+        .post('/batchGetSongLists')
+        .send({ categoryIds: [1] })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        status: 200,
+        data: [{ code: 1, message: 'mock song list error' }]
+      });
     });
   });
 
@@ -368,6 +655,125 @@ describe('API Integration Tests', () => {
         p_skey: 'mockPSkey',
         qm_keyst: 'finalValue'
       });
+    });
+
+    test('POST /checkQQLoginQr should return 502 when checkSigUrl cannot be extracted', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest.fn().mockResolvedValueOnce(
+        createFetchResponse({
+          text: "ptuiCB('0','0','登录成功！','','0','0');",
+          headers: {
+            'Set-Cookie': 'pt_login_sig=abc123; Path=/; HttpOnly'
+          }
+        })
+      );
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(502);
+
+      expect(response.body.error).toBe('Failed to extract checkSigUrl from response');
+    });
+
+    test('POST /checkQQLoginQr should return 502 when p_skey is missing', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            text: "ptuiCB('0','0','登录成功！','https://ssl.ptlogin2.qq.com/check_sig?uin=123456789','0','0');",
+            headers: {
+              'Set-Cookie': 'pt_login_sig=abc123; Path=/; HttpOnly'
+            }
+          })
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            headers: {
+              'Set-Cookie': 'uin=o123456789; Path=/; HttpOnly'
+            }
+          })
+        );
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(502);
+
+      expect(response.body.error).toBe('Failed to extract p_skey from response');
+    });
+
+    test('POST /checkQQLoginQr should return 502 when authorize response does not redirect', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            text: "ptuiCB('0','0','登录成功！','https://ssl.ptlogin2.qq.com/check_sig?uin=123456789','0','0');",
+            headers: {
+              'Set-Cookie': 'pt_login_sig=abc123; Path=/; HttpOnly'
+            }
+          })
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            headers: {
+              'Set-Cookie': 'p_skey=mockPSkey; Path=/; HttpOnly, uin=o123456789; Path=/; HttpOnly'
+            }
+          })
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8'
+            }
+          })
+        );
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(502);
+
+      expect(response.body.error).toBe('授权响应异常，未返回跳转地址');
+    });
+
+    test('POST /checkQQLoginQr should return 502 when authorize redirect location misses code', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            text: "ptuiCB('0','0','登录成功！','https://ssl.ptlogin2.qq.com/check_sig?uin=123456789','0','0');",
+            headers: {
+              'Set-Cookie': 'pt_login_sig=abc123; Path=/; HttpOnly'
+            }
+          })
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            headers: {
+              'Set-Cookie': 'p_skey=mockPSkey; Path=/; HttpOnly, uin=o123456789; Path=/; HttpOnly'
+            }
+          })
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            status: 302,
+            headers: {
+              Location: 'https://y.qq.com/portal/wx_redirect.html?state=mockState'
+            }
+          })
+        );
+
+      const response = await request(callback)
+        .post('/checkQQLoginQr')
+        .send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+        .expect(502);
+
+      expect(response.body.error).toBe('授权响应中未找到 code 参数');
     });
 
     test('POST /checkQQLoginQr should return 504 and 登录检查超时 on fetch timeout', async () => {

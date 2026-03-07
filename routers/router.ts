@@ -7,6 +7,7 @@ router.get('/user/getCookie', context.getCookie);
 router.get('/user/setCookie', context.setCookie);
 router.get('/user/getUserPlaylists', context.getUserPlaylists);
 router.get('/user/getUserAvatar', context.getUserAvatar);
+router.get('/user/getUserLikedSongs', context.getUserLikedSongs);
 
 router.get('/downloadQQMusic', context.getDownloadQQMusic);
 

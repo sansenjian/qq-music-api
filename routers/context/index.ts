@@ -42,6 +42,7 @@ const checkQQLoginQr: Controller = req('./checkQQLoginQr');
 const { get: getCookie, set: setCookie } = req('./cookies');
 const getUserPlaylists: Controller = req('./getUserPlaylists');
 const getUserAvatar: Controller = req('./getUserAvatar');
+const getUserLikedSongs: Controller = req('./getUserLikedSongs');
 
 export default {
   getCookie,
@@ -81,5 +82,6 @@ export default {
   getQQLoginQr,
   checkQQLoginQr,
   getUserPlaylists,
-  getUserAvatar
+  getUserAvatar,
+  getUserLikedSongs
 };

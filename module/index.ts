@@ -51,6 +51,9 @@ import { getUserPlaylists } from './apis/user/getUserPlaylists';
 // getUserAvatar
 import { getUserAvatar } from './apis/user/getUserAvatar';
 
+// getUserLikedSongs
+import { getUserLikedSongs } from './apis/user/getUserLikedSongs';
+
 export {
 	downloadQQMusic,
 	// search
@@ -87,5 +90,6 @@ export {
 	checkQQLoginQr,
 	// user
 	getUserPlaylists,
-	getUserAvatar
+	getUserAvatar,
+	getUserLikedSongs
 };
