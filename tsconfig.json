@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "commonjs",
+		"lib": ["es2020"],
+		"outDir": "dist",
+		"rootDir": "./",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"noImplicitAny": true,
+		"typeRoots": ["./node_modules/@types", "./types"],
+		"types": ["node"]
+	},
+	"include": ["**/*.ts", "types/**/*.d.ts"],
+	"exclude": ["node_modules", "dist", "tests"]
+}

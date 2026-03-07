@@ -1,0 +1,27 @@
+import request from '../../../util/request';
+import { handleApi } from '../../../util/apiResponse';
+import type { ApiOptions } from '../../../types/api';
+
+export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) => {
+  const data = Object.assign(params, {
+    format: 'json',
+    outCharset: 'utf-8',
+    channel: 'radio',
+    page: 'index',
+    tpl: 'wk',
+    new: 1,
+    p: Math.round(1)
+  });
+  
+  const options = Object.assign(option, {
+    params: data
+  });
+  
+  return handleApi(
+    request({
+      url: '/v8/fcg-bin/fcg_v8_radiolist.fcg',
+      method: method as import('axios').Method,
+      options
+    })
+  );
+};

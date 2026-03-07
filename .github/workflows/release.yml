@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 当推送 v 开头的标签时触发（如 v1.0.0, v2.1.0）
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 需要写入权限来创建 Release
+      packages: write
+      id-token: write # 用于 npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js for NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+        env:
+          CI: true
+
+      - name: Run linter
+        run: npm run eslint
+        continue-on-error: true # ESLint 错误不阻止发布，但会警告
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Build documentation
+        run: npm run docs:build
+
+      - name: Generate CHANGELOG
+        run: npm run changelog
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to NPM
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Publish to GitHub Packages
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
