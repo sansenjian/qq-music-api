@@ -41,7 +41,15 @@ router.get('/getMv', context.getMv);
 
 router.get('/getSingerList', context.getSingerList);
 
+router.get('/getSingerListByArea', context.getSingerListByArea);
+
 router.get('/getSimilarSinger', context.getSimilarSinger);
+
+router.get('/getPlaylistTags', context.getPlaylistTags);
+
+router.get('/getPlaylistsByTag', context.getPlaylistsByTag);
+
+router.get('/getHotComments', context.getHotComments);
 
 router.get('/getSingerAlbum', context.getSingerAlbum);
 

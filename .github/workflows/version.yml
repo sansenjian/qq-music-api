@@ -1,0 +1,59 @@
+name: Auto Bump Version
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  auto-bump-version:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump version in package.json
+        id: bump_version
+        run: |
+          NEW_VERSION=$(npm version patch --no-git-tag-version)
+          # Remove leading 'v' from NEW_VERSION to avoid double 'v' in commit message
+          NEW_VERSION_CLEAN=${NEW_VERSION#v}
+          echo "new_version=$NEW_VERSION_CLEAN" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION_CLEAN"
+
+      - name: Generate changelog
+        run: npm run changelog
+
+      - name: Generate version.json
+        run: node scripts/generate-version.js
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git add package.json CHANGELOG.md docs/public/version.json
+          if git diff --cached --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes to commit"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+          fi
+
+      - name: Commit and push
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "chore(version): bump version to v${{ steps.bump_version.outputs.new_version }} [skip ci]"
+          git push origin HEAD:main
