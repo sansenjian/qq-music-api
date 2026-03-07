@@ -20,6 +20,7 @@ const getMvByTag: Controller = req('./getMvByTag');
 const getMv: Controller = req('./getMv');
 const getSingerList: Controller = req('./getSingerList');
 const getSimilarSinger: Controller = req('./getSimilarSinger');
+const { getPlaylistTags, getPlaylistsByTag, getHotComments, getSingerListByArea } = req('./getPlaylistTags');
 const getSingerAlbum: Controller = req('./getSingerAlbum');
 const getSingerHotsong: Controller = req('./getSingerHotsong');
 const getSingerMv: Controller = req('./getSingerMv');
@@ -61,7 +62,11 @@ export default {
   getMvByTag,
   getMv,
   getSingerList,
+  getSingerListByArea,
   getSimilarSinger,
+  getPlaylistTags,
+  getPlaylistsByTag,
+  getHotComments,
   getSingerAlbum,
   getSingerHotsong,
   getSingerMv,
