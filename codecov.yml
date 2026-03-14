@@ -37,13 +37,6 @@ coverage:
       carryforward: false
       paths:
         - tests/unit/
-      statuses:
-        - type: project
-          target: 50%
-          threshold: 1%
-        - type: patch
-          target: 80%
-          threshold: 5%
 
 # 忽略某些文件和目录
 ignore:

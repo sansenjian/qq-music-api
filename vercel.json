@@ -1,8 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "npm run vercel-build",
   "builds": [
     {
-      "src": "dist/app.js",
+      "src": "dist/api/index.js",
       "use": "@vercel/node"
     },
     {
@@ -14,6 +15,10 @@
     {
       "src": "/",
       "dest": "/docs-dist/index.html"
+    },
+    {
+      "src": "/(guide|api|reference)",
+      "dest": "/docs-dist/$1/index.html"
     },
     {
       "src": "/(guide|api|reference)/(.*)",
@@ -29,7 +34,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "dist/app.js"
+      "dest": "dist/api/index.js"
     }
   ]
 }

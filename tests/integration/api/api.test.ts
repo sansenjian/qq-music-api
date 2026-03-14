@@ -198,6 +198,146 @@ describe('API Integration Tests', () => {
         .expect(200);
       expectSuccessResponse(response.body);
     }, 10000);
+
+    test('should return lyric with path param', async () => {
+      const response = await request(callback).get('/getLyric/test123').expect(200);
+      expectSuccessResponse(response.body);
+    }, 10000);
+
+    test('should forward cookie from query to upstream request', async () => {
+      await request(callback)
+        .get('/getLyric')
+        .query({ songmid: 'test123', cookie: 'uin=o123456789; qqmusic_key=mock-key' })
+        .expect(200);
+
+      const firstCallConfig = mockService.mock.calls[0][0] as {
+        headers?: Record<string, string>;
+        params?: Record<string, unknown>;
+      };
+      expect(firstCallConfig.headers?.Cookie).toBe('uin=o123456789; qqmusic_key=mock-key');
+      expect(firstCallConfig.headers?.referer).toBe('https://y.qq.com/portal/player.html');
+      expect(firstCallConfig.params?.loginUin).toBe('o123456789');
+    }, 10000);
+
+    test('should fallback to musicu lyric api when primary lyric api returns negative code', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          retcode: -1901,
+          code: -1901,
+          subcode: -1901
+        }
+      });
+      (global as any).fetch = jest.fn().mockResolvedValueOnce(
+        createFetchResponse({
+          text: JSON.stringify({
+            req_0: {
+              data: {
+                code: 0,
+                lyric: Buffer.from('[00:00.00]fallback lyric').toString('base64')
+              }
+            }
+          })
+        })
+      );
+
+      const response = await request(callback)
+        .get('/getLyric')
+        .query({ songmid: 'test123' })
+        .expect(200);
+
+      expect(response.body?.response?.lyric).toBe('[00:00.00]fallback lyric');
+      expect(mockService).toHaveBeenCalledTimes(1);
+      expect((global as any).fetch).toHaveBeenCalledWith(
+        'https://u.y.qq.com/cgi-bin/musicu.fcg',
+        expect.objectContaining({
+          method: 'POST'
+        })
+      );
+    }, 10000);
+
+    test('should keep primary payload when musicu fallback request fails', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          retcode: -1901,
+          code: -1901,
+          subcode: -1901
+        }
+      });
+      (global as any).fetch = jest.fn().mockRejectedValueOnce(new Error('socket hang up'));
+
+      const response = await request(callback)
+        .get('/getLyric')
+        .query({ songmid: 'test123' })
+        .expect(200);
+
+      expect(response.body?.response?.code).toBe(-1901);
+      expect(response.body?.response?.retcode).toBe(-1901);
+      expect(response.body?.response?.subcode).toBe(-1901);
+      expect(mockService).toHaveBeenCalledTimes(1);
+    }, 10000);
+
+    test('should retry musicu lyric request with resolved songid when first fallback returns negative code', async () => {
+      mockService
+        .mockResolvedValueOnce({
+          data: {
+            retcode: -1901,
+            code: -1901,
+            subcode: -1901
+          }
+        })
+        .mockResolvedValueOnce({
+          data: {
+            songinfo: {
+              data: {
+                track_info: {
+                  id: 123456
+                }
+              }
+            }
+          }
+        });
+
+      (global as any).fetch = jest
+        .fn()
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            text: JSON.stringify({
+              req_0: {
+                data: {
+                  retcode: -1901,
+                  code: -1901,
+                  subcode: -1901,
+                  songID: 0,
+                  lyric: ''
+                }
+              }
+            })
+          })
+        )
+        .mockResolvedValueOnce(
+          createFetchResponse({
+            text: JSON.stringify({
+              req_0: {
+                data: {
+                  code: 0,
+                  songID: 123456,
+                  lyric: Buffer.from('[00:00.00]retry success').toString('base64')
+                }
+              }
+            })
+          })
+        );
+
+      const response = await request(callback)
+        .get('/getLyric')
+        .query({ songmid: 'test123' })
+        .expect(200);
+
+      expect(response.body?.response?.songID).toBe(123456);
+      expect(response.body?.response?.lyric).toBe('[00:00.00]retry success');
+      expect(mockService).toHaveBeenCalledTimes(2);
+      expect((global as any).fetch).toHaveBeenCalledTimes(2);
+    }, 10000);
   });
 
   describe('GET /getMusicPlay', () => {

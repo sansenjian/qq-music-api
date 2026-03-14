@@ -11,7 +11,10 @@ describe('routers/context/getLyric', () => {
     mockCtx = {
       status: 200,
       body: null,
-      query: {}
+      query: {},
+      params: {},
+      headers: {},
+      request: {}
     };
     mockNext = jest.fn();
     jest.clearAllMocks();
@@ -32,11 +35,37 @@ describe('routers/context/getLyric', () => {
 
     await getLyricController(mockCtx, mockNext);
 
-    expect(getLyric).toHaveBeenCalledWith({
+    expect(getLyric).toHaveBeenCalledWith(expect.objectContaining({
       method: 'get',
       params: { songmid: 'test123' },
-      option: {}
-    });
+      option: { headers: {} }
+    }));
+  });
+
+  test('should use path param songmid when query is missing', async () => {
+    mockCtx.params = { songmid: 'path-songmid' };
+    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+
+    await getLyricController(mockCtx, mockNext);
+
+    expect(getLyric).toHaveBeenCalledWith(expect.objectContaining({
+      params: { songmid: 'path-songmid' }
+    }));
+  });
+
+  test('should inject cookie header when cookie is provided in query', async () => {
+    mockCtx.query = { songmid: 'test123', cookie: 'uin=o123; qqmusic_key=abc' };
+    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+
+    await getLyricController(mockCtx, mockNext);
+
+    expect(getLyric).toHaveBeenCalledWith(expect.objectContaining({
+      option: {
+        headers: {
+          Cookie: 'uin=o123; qqmusic_key=abc'
+        }
+      }
+    }));
   });
 
   test('should assign response to ctx when songmid is provided', async () => {

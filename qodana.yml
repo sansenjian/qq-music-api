@@ -1,0 +1,26 @@
+version: "1.0"
+
+linter: jetbrains/qodana-js:2025.2
+
+profile:
+  name: qodana.recommended
+
+bootstrap: |
+  npm install --no-package-lock
+
+exclude:
+  - name: All
+    paths:
+      - .git
+      - .github
+      - .husky
+      - .idea
+      - .kilocode
+      - .trae
+      - .vscode
+      - coverage
+      - dist
+      - docs-dist
+      - node_modules
+      - public
+      - screenshot

@@ -17,10 +17,16 @@ jobs:
       id-token: write # 用于 npm provenance
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.tag || '' }}
           fetch-tags: true
+
+      - name: Setup Node.js for NPM
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org/'
 
       - name: Determine version to publish
         id: version
@@ -33,12 +39,6 @@ jobs:
             echo "No tag provided, using package.json version: v$VERSION"
             echo "version=v$VERSION" >> $GITHUB_OUTPUT
           fi
-
-      - name: Setup Node.js for NPM
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          registry-url: 'https://registry.npmjs.org/'
 
       - name: Install dependencies
         run: npm install --no-package-lock
@@ -67,9 +67,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Setup Node.js for GitHub Packages
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           registry-url: 'https://npm.pkg.github.com'
 
       - name: Publish to GitHub Packages
