@@ -20,12 +20,14 @@ describe('routers/context/getLyric', () => {
     jest.clearAllMocks();
   });
 
-  test('should return 400 when songmid is missing', async () => {
+  test('should return 400 when songmid is missing in both query and path', async () => {
     mockCtx.query = {};
+    mockCtx.params = {};
 
     await getLyricController(mockCtx, mockNext);
 
     expect(mockCtx.status).toBe(400);
+    expect(mockCtx.body).toEqual({ response: 'no songmid' });
     expect(getLyric).not.toHaveBeenCalled();
   });
 
@@ -63,6 +65,44 @@ describe('routers/context/getLyric', () => {
       option: {
         headers: {
           Cookie: 'uin=o123; qqmusic_key=abc'
+        }
+      }
+    }));
+  });
+
+  test('should inject cookie header when cookie is provided in headers', async () => {
+    mockCtx.query = { songmid: 'test123' };
+    mockCtx.headers = {
+      ...mockCtx.headers,
+      cookie: 'uin=o456; qqmusic_key=xyz'
+    };
+    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+
+    await getLyricController(mockCtx, mockNext);
+
+    expect(getLyric).toHaveBeenCalledWith(expect.objectContaining({
+      option: {
+        headers: {
+          Cookie: 'uin=o456; qqmusic_key=xyz'
+        }
+      }
+    }));
+  });
+
+  test('should prefer cookie from query over headers when both are provided', async () => {
+    mockCtx.query = { songmid: 'test123', cookie: 'uin=o123; qqmusic_key=query' };
+    mockCtx.headers = {
+      ...mockCtx.headers,
+      cookie: 'uin=o789; qqmusic_key=header'
+    };
+    (getLyric as jest.Mock).mockResolvedValue({ status: 200, body: { code: 0, data: {} } });
+
+    await getLyricController(mockCtx, mockNext);
+
+    expect(getLyric).toHaveBeenCalledWith(expect.objectContaining({
+      option: {
+        headers: {
+          Cookie: 'uin=o123; qqmusic_key=query'
         }
       }
     }));

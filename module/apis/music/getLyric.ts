@@ -142,7 +142,7 @@ const fetchLyricByMusicu = async ({
   const timer = setTimeout(() => controller.abort(), MUSICU_TIMEOUT_MS);
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Type': 'application/json',
     Referer: 'https://y.qq.com/portal/player.html',
     Origin: 'https://y.qq.com'
   };
@@ -242,10 +242,20 @@ export default async ({ method = 'get', params = {}, option = {}, isFormat = fal
       }
     };
   } catch (error) {
+    const normalizedError = error instanceof Error
+      ? {
+        name: error.name,
+        message: error.message
+      }
+      : {
+        name: 'Error',
+        message: 'Internal server error'
+      };
+
     return {
       status: 500,
       body: {
-        error
+        error: normalizedError
       }
     };
   }
