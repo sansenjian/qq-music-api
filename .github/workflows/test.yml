@@ -33,14 +33,15 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:coverage # 生成覆盖率报告
 
-      - name: Upload coverage to Codecov
+      - name: Upload unit test coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
+          files: ./coverage/lcov.info,./coverage/coverage-final.json
+          flags: unit
+          name: codecov-unit-tests
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }} # 添加 token 提高稳定性
+          verbose: true # 详细输出
 
   build:
     runs-on: ubuntu-latest

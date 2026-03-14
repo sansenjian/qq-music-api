@@ -1,6 +1,6 @@
 {
   "name": "@sansenjian/qq-music-api",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "publishConfig": {
     "access": "public"
   },
@@ -31,6 +31,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:verbose": "jest --verbose",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:flags": "tsx scripts/run-tests-with-flags.ts all",
+    "test:flags:unit": "tsx scripts/run-tests-with-flags.ts unit",
     "docs:dev": "vitepress dev docs --port 9611",
     "docs:preview": "vitepress preview docs",
     "commit-push": "./scripts/commit-push.sh",

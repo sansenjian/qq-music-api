@@ -56,6 +56,7 @@ module.exports = {
     'node_modules/',
     '*.js', // 忽略 JS 文件，只检查 TS
     '*.cjs', // 忽略 CJS 配置文件
-    '.eslintrc.*' // 忽略 ESLint 配置文件
+    '.eslintrc.*', // 忽略 ESLint 配置文件
+    'tests/' // 忽略测试文件，测试文件有自己的配置
   ]
 }

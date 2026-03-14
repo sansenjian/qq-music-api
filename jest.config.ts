@@ -8,12 +8,22 @@ const config: Config = {
     'module/**/*.ts',
     'routers/**/*.ts',
     'util/**/*.ts',
+    'middlewares/**/*.ts',
     '!**/node_modules/**',
     '!**/tests/**',
-    '!**/dist/**'
+    '!**/dist/**',
+    '!**/*.d.ts',
+    '!**/types/**/*.ts'
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary', 'json'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/tests/',
+    '/dist/',
+    '\\.d\\.ts$',
+    '/types/'
+  ],
   coverageThreshold: {
     global: {
       branches: 35,
@@ -26,6 +36,8 @@ const config: Config = {
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
   testTimeout: 10000,
   verbose: true,
+  collectCoverage: true, // 默认开启覆盖率
+  coverageProvider: 'v8', // 使用 v8 引擎，更准确
   moduleNameMapper: {
     '^@module/(.*)$': '<rootDir>/module/$1',
     '^@routers/(.*)$': '<rootDir>/routers/$1',

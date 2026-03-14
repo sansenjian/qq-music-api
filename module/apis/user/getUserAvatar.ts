@@ -1,5 +1,3 @@
-import request from '../../../util/request';
-
 // 获取 QQ 用户头像
 export const getUserAvatar = async (params: {
   k?: string;
