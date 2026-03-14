@@ -246,6 +246,9 @@ describe('API Integration Tests', () => {
         .expect(200);
 
       expect(response.body?.response?.lyric).toBe('[00:00.00]fallback lyric');
+      expect(response.body?.response?.code).toBe(0);
+      expect(response.body?.response?.retcode).toBe(0);
+      expect(response.body?.response?.subcode).toBe(0);
       expect(mockService).toHaveBeenCalledTimes(1);
       expect((global as any).fetch).toHaveBeenCalledWith(
         'https://u.y.qq.com/cgi-bin/musicu.fcg',

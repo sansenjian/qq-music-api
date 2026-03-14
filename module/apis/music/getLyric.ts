@@ -64,6 +64,30 @@ const normalizeSongId = (value: unknown): string | undefined => {
   return undefined;
 };
 
+const mergePrimaryAndFallbackPayload = (
+  primaryPayload: LyricPayload,
+  fallbackPayload: LyricPayload
+): LyricPayload => {
+  const merged = {
+    ...primaryPayload,
+    ...fallbackPayload
+  };
+
+  // When fallback succeeds but does not include status fields, force success codes
+  // to avoid preserving negative primary codes in response.
+  if (!Object.prototype.hasOwnProperty.call(fallbackPayload, 'retcode')) {
+    merged.retcode = 0;
+  }
+  if (!Object.prototype.hasOwnProperty.call(fallbackPayload, 'code')) {
+    merged.code = 0;
+  }
+  if (!Object.prototype.hasOwnProperty.call(fallbackPayload, 'subcode')) {
+    merged.subcode = 0;
+  }
+
+  return merged;
+};
+
 const resolveSongIdBySongmid = async ({
   songmid,
   loginUin
@@ -225,10 +249,7 @@ export default async ({ method = 'get', params = {}, option = {}, isFormat = fal
         }
 
         if (Object.keys(fallbackPayload).length > 0 && !hasNegativeBizCode(fallbackPayload)) {
-          payload = {
-            ...payload,
-            ...fallbackPayload
-          };
+          payload = mergePrimaryAndFallbackPayload(payload, fallbackPayload);
         }
       } catch {
         // keep primary payload when fallback request fails
