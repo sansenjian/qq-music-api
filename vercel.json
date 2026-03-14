@@ -1,17 +1,15 @@
 {
-  "version": 2,
   "buildCommand": "npm run vercel-build",
-  "builds": [
-    {
-      "src": "dist/api/index.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "docs-dist/**",
-      "use": "@vercel/static"
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs22.x",
+      "maxDuration": 30
     }
-  ],
+  },
   "routes": [
+    {
+      "handle": "filesystem"
+    },
     {
       "src": "/",
       "dest": "/docs-dist/index.html"
@@ -34,7 +32,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "dist/api/index.js"
+      "dest": "/api/index.ts"
     }
   ]
 }

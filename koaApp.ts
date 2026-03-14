@@ -8,7 +8,7 @@ import cookieMiddleware from './util/cookie';
 import fallbackMiddleware from './middlewares/fallback-middleware';
 import colors from './util/colors';
 import userInfoImport from './config/user-info';
-import type { UserInfo } from './types/global';
+import type { UserInfo } from './types';
 
 const app = new Koa();
 
