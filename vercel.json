@@ -2,7 +2,6 @@
   "buildCommand": "npm run vercel-build",
   "functions": {
     "api/index.ts": {
-      "runtime": "nodejs22.x",
       "maxDuration": 30
     }
   },
