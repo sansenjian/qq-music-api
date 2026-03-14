@@ -44,10 +44,13 @@ const normalizeFirstValue = (value: unknown): string | undefined => {
 };
 
 const normalizeSongmidList = (songmid: unknown): string[] => {
-  const raw = normalizeFirstValue(songmid);
-  if (!raw) return [];
-  return raw
-    .split(',')
+  const values = Array.isArray(songmid) ? songmid : [songmid];
+
+  return values
+    .flatMap(value => {
+      if (typeof value !== 'string') return [];
+      return value.split(',');
+    })
     .map(item => item.trim())
     .filter(Boolean);
 };

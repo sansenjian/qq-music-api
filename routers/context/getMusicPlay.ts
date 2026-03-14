@@ -3,9 +3,7 @@ import { getMusicPlay } from '../../module';
 import { resolveRequestCookie } from '../../util/cookieResolver';
 
 const controller: Controller = async (ctx, next) => {
-  const songmid = Array.isArray(ctx.query.songmid)
-    ? ctx.query.songmid[0]
-    : (ctx.query.songmid || ctx.params.songmid);
+  const songmid = ctx.query.songmid ?? ctx.params.songmid;
   const resType = Array.isArray(ctx.query.resType) ? ctx.query.resType[0] : ctx.query.resType;
   const mediaId = Array.isArray(ctx.query.mediaId) ? ctx.query.mediaId[0] : ctx.query.mediaId;
   const quality = Array.isArray(ctx.query.quality) ? ctx.query.quality[0] : ctx.query.quality;
@@ -20,7 +18,7 @@ const controller: Controller = async (ctx, next) => {
   const props: {
     method: 'get';
     params: {
-      songmid?: string;
+      songmid?: string | string[];
       resType?: string;
       mediaId?: string;
       quality?: string;

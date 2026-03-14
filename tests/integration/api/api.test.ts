@@ -280,6 +280,41 @@ describe('API Integration Tests', () => {
       expect(playUrl.c.error).toBeTruthy();
     });
 
+    test('should handle repeated songmid query keys and include missing entries', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          req_0: {
+            data: {
+              sip: ['https://isure.stream.qqmusic.qq.com/'],
+              midurlinfo: [
+                {
+                  songmid: 'a',
+                  purl: 'M500aa.mp3'
+                },
+                {
+                  songmid: 'b',
+                  purl: 'M500bb.mp3'
+                }
+              ]
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMusicPlay?songmid=a&songmid=b&songmid=c')
+        .expect(200);
+
+      const playUrl = response.body?.data?.playUrl;
+      expect(playUrl).toHaveProperty('a');
+      expect(playUrl).toHaveProperty('b');
+      expect(playUrl).toHaveProperty('c');
+      expect(playUrl.a.url).toBe('https://isure.stream.qqmusic.qq.com/M500aa.mp3');
+      expect(playUrl.b.url).toBe('https://isure.stream.qqmusic.qq.com/M500bb.mp3');
+      expect(playUrl.c.url).toBe('');
+      expect(playUrl.c.error).toBeTruthy();
+    });
+
     test('should build fallback url when purl is empty but filename and vkey exist', async () => {
       mockService.mockResolvedValueOnce({
         data: {
