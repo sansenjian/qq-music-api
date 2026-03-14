@@ -1,11 +1,13 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getSongInfoController = withErrorHandler(async (ctx: KoaContext) => {
   const song_mid = ctx.query.songmid as string;
   const song_id = ctx.query.songid || '';
 
-  const params = Object.assign({
+  const params = {
     format: 'json',
     inCharset: 'utf8',
     outCharset: 'utf-8',
@@ -27,7 +29,7 @@ const controller: Controller = async (ctx, next) => {
         module: 'music.pf_song_detail_svr'
       }
     }
-  });
+  };
   
   const props = {
     method: 'get',
@@ -35,17 +37,8 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
 
-  await UCommon(props)
-    .then(res => {
-      const response = res.data;
-      ctx.status = 200;
-      ctx.body = {
-        response
-      };
-    })
-    .catch(error => {
-      console.log('error', error);
-    });
-};
+  const response = await UCommon(props);
+  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+});
 
-export default controller;
+export default getSongInfoController;

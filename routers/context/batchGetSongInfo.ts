@@ -1,17 +1,19 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
-	const { songs } = ctx.request.body || {};
+const batchGetSongInfoController = withErrorHandler(async (ctx: KoaContext) => {
+  const { songs } = ctx.request.body || {};
 
-  const params = Object.assign({
+  const params = {
     format: 'json',
     inCharset: 'utf8',
     outCharset: 'utf-8',
     notice: 0,
     platform: 'yqq.json',
     needNewCode: 0
-  });
+  };
 
   const props = {
     method: 'get',
@@ -22,7 +24,7 @@ const controller: Controller = async (ctx, next) => {
   const data = await Promise.all(
     (songs || []).map(async (song: any[]) => {
       const [song_mid, song_id = ''] = song;
-      return await UCommon({
+      const response = await UCommon({
         ...props,
         params: {
           ...params,
@@ -42,19 +44,12 @@ const controller: Controller = async (ctx, next) => {
             }
           }
         }
-      }).then(res => res.data);
+      });
+      return response.data;
     })
   );
   
-  Object.assign(ctx, {
-    status: 200,
-    body: {
-      response: {
-        code: 0,
-        data
-      }
-    }
-  });
-};
+  setApiResponse(ctx, customResponse({ response: { code: 0, data } }, 200));
+});
 
-export default controller;
+export default batchGetSongInfoController;

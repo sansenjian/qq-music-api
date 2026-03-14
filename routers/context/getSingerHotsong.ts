@@ -1,7 +1,9 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getSingerHotsongController = withErrorHandler(async (ctx: KoaContext) => {
   const singermid = ctx.query.singermid as string;
   const num = +ctx.query.limit || 5;
   const page = +ctx.query.page || 0;
@@ -23,11 +25,11 @@ const controller: Controller = async (ctx, next) => {
     }
   };
   
-  const params = Object.assign({
+  const params = {
     format: 'json',
     singermid,
     data: JSON.stringify(data)
-  });
+  };
   
   const props = {
     method: 'get',
@@ -35,24 +37,18 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  if (singermid) {
-    await UCommon(props)
-      .then(res => {
-        const response = res.data;
-        ctx.status = 200;
-        ctx.body = {
-          response
-        };
-      })
-      .catch(error => {
-        console.log('error', error);
-      });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      response: 'no singermid'
-    };
+  if (!singermid) {
+    setApiResponse(ctx, {
+      status: 400,
+      body: {
+        response: 'no singermid'
+      }
+    });
+    return;
   }
-};
+  
+  const response = await UCommon(props);
+  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+});
 
-export default controller;
+export default getSingerHotsongController;

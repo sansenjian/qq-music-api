@@ -1,5 +1,6 @@
-import { Context, Next } from 'koa';
+import { KoaContext } from '../types';
 import { songListCategories } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
 /**
  * @description: 歌单
@@ -9,15 +10,14 @@ import { songListCategories } from '../../module';
  * 4 歌单详情
  *
  */
-export default async (ctx: Context, next: Next) => {
-	const props = {
-		method: 'get',
-		params: {},
-		option: {}
-	};
-	const { status, body } = await songListCategories(props);
-	Object.assign(ctx, {
-		status,
-		body
-	});
-};
+const getSongListCategoriesController = withErrorHandler(async (ctx: KoaContext) => {
+  const props = {
+    method: 'get',
+    params: {},
+    option: {}
+  };
+  const result = await songListCategories(props);
+  setApiResponse(ctx, result);
+});
+
+export default getSongListCategoriesController;

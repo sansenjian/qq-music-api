@@ -1,7 +1,9 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getSingerListController = withErrorHandler(async (ctx: KoaContext) => {
   const { area = -100, sex = -100, genre = -100, index = -100, page = 1 } = ctx.query;
 
   const pageNum = Number(page);
@@ -24,10 +26,10 @@ const controller: Controller = async (ctx, next) => {
     }
   };
   
-  const params = Object.assign({
+  const params = {
     format: 'json',
     data: JSON.stringify(data)
-  });
+  };
   
   const props = {
     method: 'get',
@@ -35,22 +37,8 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  await UCommon(props)
-    .then(res => {
-      const response = res.data;
-      ctx.status = 200;
-      ctx.body = {
-        status: 200,
-        response
-      };
-    })
-    .catch(error => {
-      console.error('getSingerList error:', error);
-      ctx.status = 500;
-      ctx.body = {
-        error: '服务器内部错误'
-      };
-    });
-};
+  const response = await UCommon(props);
+  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+});
 
-export default controller;
+export default getSingerListController;

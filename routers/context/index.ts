@@ -1,110 +1,109 @@
-import { KoaContext, Controller } from '../types';
+import type { KoaContext, Controller } from '../types';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const req = (id: string): any => {
-  const mod = require(id);
-  return mod && mod.default ? mod.default : mod;
-};
+// Import refactored controllers
+import getDownloadQQMusicController from './getDownloadQQMusic';
+import getHotkeyController from './getHotkey';
+import getSearchByKeyController from './getSearchByKey';
+import getSmartboxController from './getSmartbox';
+import getSongListCategoriesController from './getSongListCategories';
+import getSongListsController from './getSongLists';
+import batchGetSongListsController from './batchGetSongLists';
+import getSongInfoController from './getSongInfo';
+import batchGetSongInfoController from './batchGetSongInfo';
+import getSongListDetailController from './getSongListDetail';
+import getNewDisksController from './getNewDisks';
+import getMvByTagController from './getMvByTag';
+import getMvController from './getMv';
+import getSingerListController from './getSingerList';
+import getSimilarSingerController from './getSimilarSinger';
+import getSingerAlbumController from './getSingerAlbum';
+import getSingerHotsongController from './getSingerHotsong';
+import getSingerMvController from './getSingerMv';
+import getSingerDescController from './getSingerDesc';
+import getSingerStarNumController from './getSingerStarNum';
+import getRadioListsController from './getRadioLists';
+import getDigitalAlbumListsController from './getDigitalAlbumLists';
+import getLyricController from './getLyric';
+import getMusicPlayController from './getMusicPlay';
+import getAlbumInfoController from './getAlbumInfo';
+import getCommentsController from './getComments';
+import getRecommendController from './getRecommend';
+import getMvPlayController from './getMvPlay';
+import getTopListsController from './getTopLists';
+import getRanksController from './getRanks';
+import getTicketInfoController from './getTicketInfo';
+import getImageUrlController from './getImageUrl';
+import getQQLoginQrController from './getQQLoginQr';
+import checkQQLoginQrController from './checkQQLoginQr';
+import cookiesController from './cookies';
+import getUserPlaylistsController from './getUserPlaylists';
+import getUserAvatarController from './getUserAvatar';
+import getUserLikedSongsController from './getUserLikedSongs';
+import {
+  getDailyRecommendController,
+  getPrivateFMController,
+  getNewSongsController
+} from './getDailyRecommend';
+import {
+  getPersonalRecommendController,
+  getSimilarSongsController
+} from './getPersonalRecommend';
+import {
+  getPlaylistTagsController,
+  getPlaylistsByTagController,
+  getHotCommentsController,
+  getSingerListByAreaController
+} from './getPlaylistTags';
 
-const getDownloadQQMusic: Controller = req('./getDownloadQQMusic');
-const getHotKey: Controller = req('./getHotkey');
-const getSearchByKey: Controller = req('./getSearchByKey');
-const getSmartbox: Controller = req('./getSmartbox');
-const getSongListCategories: Controller = req('./getSongListCategories');
-const getSongLists: Controller = req('./getSongLists');
-const batchGetSongLists: Controller = req('./batchGetSongLists');
-const getSongInfo: Controller = req('./getSongInfo');
-const batchGetSongInfo: Controller = req('./batchGetSongInfo');
-const getSongListDetail: Controller = req('./getSongListDetail');
-const getNewDisks: Controller = req('./getNewDisks');
-const getMvByTag: Controller = req('./getMvByTag');
-const getMv: Controller = req('./getMv');
-const getSingerList: Controller = req('./getSingerList');
-const getSimilarSinger: Controller = req('./getSimilarSinger');
-const getSingerAlbum: Controller = req('./getSingerAlbum');
-const getSingerHotsong: Controller = req('./getSingerHotsong');
-const getSingerMv: Controller = req('./getSingerMv');
-const getSingerDesc: Controller = req('./getSingerDesc');
-const getSingerStarNum: Controller = req('./getSingerStarNum');
-const getRadioLists: Controller = req('./getRadioLists');
-const getDigitalAlbumLists: Controller = req('./getDigitalAlbumLists');
-const getLyric: Controller = req('./getLyric');
-const getMusicPlay: Controller = req('./getMusicPlay');
-const getAlbumInfo: Controller = req('./getAlbumInfo');
-const getComments: Controller = req('./getComments');
-const getRecommend: Controller = req('./getRecommend');
-const getMvPlay: Controller = req('./getMvPlay');
-const getTopLists: Controller = req('./getTopLists');
-const getRanks: Controller = req('./getRanks');
-const getTicketInfo: Controller = req('./getTicketInfo');
-const getImageUrl: Controller = req('./getImageUrl');
-const getQQLoginQr: Controller = req('./getQQLoginQr');
-const checkQQLoginQr: Controller = req('./checkQQLoginQr');
-const { get: getCookie, set: setCookie } = req('./cookies');
-const getUserPlaylists: Controller = req('./getUserPlaylists');
-const getUserAvatar: Controller = req('./getUserAvatar');
-const getUserLikedSongs: Controller = req('./getUserLikedSongs');
-const dailyRecommendController = req('./getDailyRecommend');
-const personalRecommendController = req('./getPersonalRecommend');
-const extendController = req('./getPlaylistTags');
-const getDailyRecommend: Controller = dailyRecommendController.getDailyRecommend;
-const getPrivateFM: Controller = dailyRecommendController.getPrivateFM;
-const getNewSongs: Controller = dailyRecommendController.getNewSongs;
-const getPersonalRecommend: Controller = personalRecommendController.getPersonalRecommend;
-const getSimilarSongs: Controller = personalRecommendController.getSimilarSongs;
-const getPlaylistTags: Controller = extendController.getPlaylistTags;
-const getPlaylistsByTag: Controller = extendController.getPlaylistsByTag;
-const getHotComments: Controller = extendController.getHotComments;
-const getSingerListByArea: Controller = extendController.getSingerListByArea;
-
+// Export all controllers with consistent naming
 export default {
-  getCookie,
-  setCookie,
-  getDownloadQQMusic,
-  getHotKey,
-  getSearchByKey,
-  getSmartbox,
-  getSongListCategories,
-  getSongLists,
-  batchGetSongLists,
-  getSongInfo,
-  batchGetSongInfo,
-  getSongListDetail,
-  getNewDisks,
-  getMvByTag,
-  getMv,
-  getSingerList,
-  getSimilarSinger,
-  getSingerAlbum,
-  getSingerHotsong,
-  getSingerMv,
-  getSingerDesc,
-  getSingerStarNum,
-  getRadioLists,
-  getDigitalAlbumLists,
-  getLyric,
-  getMusicPlay,
-  getAlbumInfo,
-  getComments,
-  getRecommend,
-  getMvPlay,
-  getTopLists,
-  getRanks,
-  getTicketInfo,
-  getImageUrl,
-  getQQLoginQr,
-  checkQQLoginQr,
-  getUserPlaylists,
-  getUserAvatar,
-  getUserLikedSongs,
-  getDailyRecommend,
-  getPrivateFM,
-  getNewSongs,
-  getPersonalRecommend,
-  getSimilarSongs,
-  getPlaylistTags,
-  getPlaylistsByTag,
-  getHotComments,
-  getSingerListByArea
+  getCookie: cookiesController.get,
+  setCookie: cookiesController.set,
+  getDownloadQQMusic: getDownloadQQMusicController,
+  getHotKey: getHotkeyController,
+  getSearchByKey: getSearchByKeyController,
+  getSmartbox: getSmartboxController,
+  getSongListCategories: getSongListCategoriesController,
+  getSongLists: getSongListsController,
+  batchGetSongLists: batchGetSongListsController,
+  getSongInfo: getSongInfoController,
+  batchGetSongInfo: batchGetSongInfoController,
+  getSongListDetail: getSongListDetailController,
+  getNewDisks: getNewDisksController,
+  getMvByTag: getMvByTagController,
+  getMv: getMvController,
+  getSingerList: getSingerListController,
+  getSimilarSinger: getSimilarSingerController,
+  getSingerAlbum: getSingerAlbumController,
+  getSingerHotsong: getSingerHotsongController,
+  getSingerMv: getSingerMvController,
+  getSingerDesc: getSingerDescController,
+  getSingerStarNum: getSingerStarNumController,
+  getRadioLists: getRadioListsController,
+  getDigitalAlbumLists: getDigitalAlbumListsController,
+  getLyric: getLyricController,
+  getMusicPlay: getMusicPlayController,
+  getAlbumInfo: getAlbumInfoController,
+  getComments: getCommentsController,
+  getRecommend: getRecommendController,
+  getMvPlay: getMvPlayController,
+  getTopLists: getTopListsController,
+  getRanks: getRanksController,
+  getTicketInfo: getTicketInfoController,
+  getImageUrl: getImageUrlController,
+  getQQLoginQr: getQQLoginQrController,
+  checkQQLoginQr: checkQQLoginQrController,
+  getUserPlaylists: getUserPlaylistsController,
+  getUserAvatar: getUserAvatarController,
+  getUserLikedSongs: getUserLikedSongsController,
+  getDailyRecommend: getDailyRecommendController,
+  getPrivateFM: getPrivateFMController,
+  getNewSongs: getNewSongsController,
+  getPersonalRecommend: getPersonalRecommendController,
+  getSimilarSongs: getSimilarSongsController,
+  getPlaylistTags: getPlaylistTagsController,
+  getPlaylistsByTag: getPlaylistsByTagController,
+  getHotComments: getHotCommentsController,
+  getSingerListByArea: getSingerListByAreaController
 };
 

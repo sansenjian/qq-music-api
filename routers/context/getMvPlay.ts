@@ -1,8 +1,20 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getMvPlayController = withErrorHandler(async (ctx: KoaContext) => {
   const { vid } = ctx.query;
+  
+  if (!vid) {
+    setApiResponse(ctx, {
+      status: 400,
+      body: {
+        response: 'vid is null'
+      }
+    });
+    return;
+  }
   
   const data = {
     comm: {
@@ -46,10 +58,10 @@ const controller: Controller = async (ctx, next) => {
     }
   };
   
-  const params = Object.assign({
+  const params = {
     format: 'json',
     data: JSON.stringify(data)
-  });
+  };
   
   const props = {
     method: 'get',
@@ -57,58 +69,47 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  if (vid) {
-    await UCommon(props)
-      .then(res => {
-        const response = res.data;
-        const mvurls = response?.getMVUrl?.data;
-        
-        if (!mvurls || typeof mvurls !== 'object' || Object.keys(mvurls).length === 0) {
-          ctx.status = 502;
-          ctx.body = {
-            response: {
-              data: null,
-              error: 'Failed to get MV URL data'
-            }
-          };
-          return;
+  const response = await UCommon(props);
+  const mvurls = response.data?.getMVUrl?.data;
+  
+  if (!mvurls || typeof mvurls !== 'object' || Object.keys(mvurls).length === 0) {
+    setApiResponse(ctx, {
+      status: 502,
+      body: {
+        response: {
+          data: null,
+          error: 'Failed to get MV URL data'
         }
-        
-        const mvurlskey = Object.keys(mvurls)[0];
-        const mp4_urls = mvurls[mvurlskey]?.mp4?.map((item: any) => item.freeflow_url) || [];
-        const hls_urls = mvurls[mvurlskey]?.hls?.map((item: any) => item.freeflow_url) || [];
-        const urls = [...mp4_urls, ...hls_urls];
-        
-        let play_urls: string[] = [];
-        let playLists: Record<string, string[]> = {};
-        
-        if (urls.length) {
-          urls.forEach((url: string[]) => {
-            play_urls = [...play_urls, ...url];
-          });
-          playLists = {
-            f10: play_urls.filter((item: string) => /\.f10\.mp4/.test(item)),
-            f20: play_urls.filter((item: string) => /\.f20\.mp4/.test(item)),
-            f30: play_urls.filter((item: string) => /\.f30\.mp4/.test(item)),
-            f40: play_urls.filter((item: string) => /\.f40\.mp4/.test(item))
-          };
-        }
-        
-        response.playLists = playLists;
-        ctx.status = 200;
-        ctx.body = {
-          response
-        };
-      })
-      .catch(error => {
-        console.log('error', error);
-      });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      response: 'vid is null'
-    };
+      }
+    });
+    return;
   }
-};
+  
+  const mvurlskey = Object.keys(mvurls)[0];
+  const mp4_urls = mvurls[mvurlskey]?.mp4?.map((item: any) => item.freeflow_url) || [];
+  const hls_urls = mvurls[mvurlskey]?.hls?.map((item: any) => item.freeflow_url) || [];
+  const urls = [...mp4_urls, ...hls_urls];
+  
+  let play_urls: string[] = [];
+  const playLists: Record<string, string[]> = {
+    f10: [],
+    f20: [],
+    f30: [],
+    f40: []
+  };
+  
+  if (urls.length) {
+    urls.forEach((url: string[]) => {
+      play_urls = [...play_urls, ...url];
+    });
+    playLists.f10 = play_urls.filter((item: string) => /\.f10\.mp4/.test(item));
+    playLists.f20 = play_urls.filter((item: string) => /\.f20\.mp4/.test(item));
+    playLists.f30 = play_urls.filter((item: string) => /\.f30\.mp4/.test(item));
+    playLists.f40 = play_urls.filter((item: string) => /\.f40\.mp4/.test(item));
+  }
+  
+  response.data.playLists = playLists;
+  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+});
 
-export default controller;
+export default getMvPlayController;

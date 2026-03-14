@@ -77,7 +77,7 @@ describe('request util', () => {
     expect(getLastConfig().url).toBe('https://c.y.qq.com/fallback-path');
   });
 
-  test('should inject Cookie from global.userInfo when no cookie header is provided', async () => {
+  test('should not inject Cookie from global.userInfo when no cookie header is provided', async () => {
     await request({
       url: '/cookie-test',
       options: {
@@ -85,9 +85,7 @@ describe('request util', () => {
       }
     });
 
-    expect(getLastConfig().headers).toMatchObject({
-      Cookie: 'uin=o123456; qm_keyst=abc'
-    });
+    expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBeUndefined();
   });
 
   test('should preserve explicit Cookie header without overriding it', async () => {

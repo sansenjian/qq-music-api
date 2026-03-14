@@ -449,8 +449,8 @@ describe('推荐功能 API 测试', () => {
     test('应该要求 songmid 参数', async () => {
       const response = await request(callback).get('/getSimilarSongs').expect(400);
 
-      expect(response.body).toHaveProperty('code', -1);
-      expect(response.body.msg).toContain('songmid');
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('songmid');
     }, 10000);
 
     test('应该处理空字符串 songmid 参数', async () => {
@@ -459,8 +459,8 @@ describe('推荐功能 API 测试', () => {
         .query({ songmid: '' })
         .expect(400);
 
-      expect(response.body).toHaveProperty('code', -1);
-      expect(response.body.msg).toContain('songmid');
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('songmid');
     }, 10000);
 
     test('应该处理数组类型 songmid 参数', async () => {

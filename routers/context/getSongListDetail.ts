@@ -1,7 +1,8 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { songListDetail } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
 
-const controller: Controller = async (ctx, next) => {
+const getSongListDetailController = withErrorHandler(async (ctx: KoaContext) => {
   const { disstid } = ctx.query;
   
   const props = {
@@ -12,11 +13,8 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  const { status, body } = await songListDetail(props);
-  Object.assign(ctx, {
-    status,
-    body
-  });
-};
+  const result = await songListDetail(props);
+  setApiResponse(ctx, result);
+});
 
-export default controller;
+export default getSongListDetailController;

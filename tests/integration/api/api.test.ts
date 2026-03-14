@@ -244,6 +244,42 @@ describe('API Integration Tests', () => {
       });
     });
 
+    test('should handle comma-separated songmid list and include missing entries', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          req_0: {
+            data: {
+              sip: ['https://isure.stream.qqmusic.qq.com/'],
+              midurlinfo: [
+                {
+                  songmid: 'a',
+                  purl: 'M500aa.mp3'
+                },
+                {
+                  songmid: 'b',
+                  purl: 'M500bb.mp3'
+                }
+              ]
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMusicPlay')
+        .query({ songmid: 'a,b,c' })
+        .expect(200);
+
+      const playUrl = response.body?.data?.playUrl;
+      expect(playUrl).toHaveProperty('a');
+      expect(playUrl).toHaveProperty('b');
+      expect(playUrl).toHaveProperty('c');
+      expect(playUrl.a.url).toBe('https://isure.stream.qqmusic.qq.com/M500aa.mp3');
+      expect(playUrl.b.url).toBe('https://isure.stream.qqmusic.qq.com/M500bb.mp3');
+      expect(playUrl.c.url).toBe('');
+      expect(playUrl.c.error).toBeTruthy();
+    });
+
     test('should build fallback url when purl is empty but filename and vkey exist', async () => {
       mockService.mockResolvedValueOnce({
         data: {
@@ -271,6 +307,33 @@ describe('API Integration Tests', () => {
       const url = response.body?.data?.playUrl?.['test-mid-2']?.url as string;
       expect(url).toContain('https://isure.stream.qqmusic.qq.com/M500test-mid-2test-mid-2.mp3?vkey=mock-vkey');
       expect(url).toContain('&fromtag=66');
+    });
+
+    test('should keep url empty and set error when purl is empty and filename/vkey are missing', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          req_0: {
+            data: {
+              sip: ['https://isure.stream.qqmusic.qq.com/'],
+              midurlinfo: [
+                {
+                  songmid: 'test-mid-empty',
+                  purl: ''
+                }
+              ]
+            }
+          }
+        }
+      });
+
+      const response = await request(callback)
+        .get('/getMusicPlay')
+        .query({ songmid: 'test-mid-empty' })
+        .expect(200);
+
+      const entry = response.body?.data?.playUrl?.['test-mid-empty'];
+      expect(entry?.url).toBe('');
+      expect(entry?.error).toBeTruthy();
     });
 
     test('should return full upstream payload when resType is not play', async () => {

@@ -1,7 +1,9 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { getAlbumInfo } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { errorResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getAlbumInfoController = withErrorHandler(async (ctx: KoaContext) => {
   const { albummid } = ctx.query;
   
   const props = {
@@ -12,20 +14,13 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  if (albummid) {
-    const { status, body } = await getAlbumInfo(props);
-    Object.assign(ctx, {
-      status,
-      body
-    });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      data: {
-        message: 'no albummid'
-      }
-    };
+  if (!albummid) {
+    setApiResponse(ctx, errorResponse('no albummid', 400));
+    return;
   }
-};
+  
+  const result = await getAlbumInfo(props);
+  setApiResponse(ctx, result);
+});
 
-export default controller;
+export default getAlbumInfoController;

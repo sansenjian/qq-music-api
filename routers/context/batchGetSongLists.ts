@@ -1,8 +1,10 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { songLists } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
-	const { limit: ein = 19, page: sin = 0, sortId = 5, categoryIds = [10000000] } = ctx.request.body || {};
+const batchGetSongListsController = withErrorHandler(async (ctx: KoaContext) => {
+  const { limit: ein = 19, page: sin = 0, sortId = 5, categoryIds = [10000000] } = ctx.request.body || {};
 
   const params = {
     sortId,
@@ -18,29 +20,24 @@ const controller: Controller = async (ctx, next) => {
 
   const data = await Promise.all(
     categoryIds.map(
-      async (categoryId: number) =>
-        await songLists({
+      async (categoryId: number) => {
+        const result = await songLists({
           ...props,
           params: {
             ...params,
             categoryId
           }
-        }).then(res => {
-          if (res.body.response && +res.body.response.code === 0) {
-            return res.body.response.data;
-          } else {
-            return res.body.response;
-          }
-        })
+        });
+        if (result.body.response && +result.body.response.code === 0) {
+          return result.body.response.data;
+        } else {
+          return result.body.response;
+        }
+      }
     )
   );
   
-  Object.assign(ctx, {
-    body: {
-      status: 200,
-      data
-    }
-  });
-};
+  setApiResponse(ctx, customResponse({ status: 200, data }, 200));
+});
 
-export default controller;
+export default batchGetSongListsController;

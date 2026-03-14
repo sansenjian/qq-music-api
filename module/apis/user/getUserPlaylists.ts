@@ -74,8 +74,9 @@ export const getUserPlaylists = async (params: {
   uin: string;
   offset?: number;
   limit?: number;
+  cookie?: string;
 }): Promise<ApiResponse> => {
-  const { uin, offset = 0, limit = 30 } = params;
+  const { uin, offset = 0, limit = 30, cookie } = params;
 
   // 使用 c6.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg 接口
   // 这是通过 Chrome DevTools 抓包发现的实际使用的接口
@@ -89,14 +90,15 @@ export const getUserPlaylists = async (params: {
       offset,
       limit,
       pageOffset,
-      hasGlobalCookie: Boolean(global.userInfo?.cookie),
-      cookieLength: global.userInfo?.cookie?.length || 0
+      hasCookie: Boolean(cookie),
+      cookieLength: cookie?.length || 0
     });
 
     const response = await request<Record<string, any>>({
       url,
       method: 'GET',
       isUUrl: 'u',
+      cookie,
       options: {
         params: {
           _: Date.now(),
@@ -119,8 +121,7 @@ export const getUserPlaylists = async (params: {
           loginUin: Number.parseInt(uin, 10)
         },
         headers: {
-          Referer: `https://y.qq.com/portal/profile.html?uin=${uin}`,
-          Cookie: global.userInfo?.cookie || ''
+          Referer: `https://y.qq.com/portal/profile.html?uin=${uin}`
         }
       }
     });

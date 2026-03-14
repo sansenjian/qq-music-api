@@ -229,3 +229,36 @@ export function createCustomController<T extends ApiOptions>(
     }
   };
 }
+
+/**
+ * 统一处理 API 响应并设置到 Koa 上下文
+ * @param ctx - Koa 上下文
+ * @param apiResponse - API 响应对象
+ */
+export function setApiResponse(ctx: KoaContext, apiResponse: ApiResponse): void {
+  ctx.status = apiResponse.status || 500;
+  ctx.body = apiResponse.body;
+}
+
+/**
+ * 包装异步控制器，自动处理错误
+ * @param handler - 控制器处理函数
+ * @returns 包装后的控制器
+ */
+export function withErrorHandler(
+  handler: (ctx: KoaContext) => Promise<void>
+): (ctx: KoaContext, next: () => Promise<void>) => Promise<void> {
+  return async (ctx: KoaContext, next: () => Promise<void>) => {
+    try {
+      await handler(ctx);
+    } catch (error) {
+      console.error('Controller error:', error);
+      ctx.status = 502;
+      ctx.body = {
+        error: (error as Error).message || '服务器内部错误',
+      };
+    } finally {
+      await next();
+    }
+  };
+}

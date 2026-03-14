@@ -9,6 +9,8 @@
 ![node](https://img.shields.io/badge/node-%3E%3D20.0.0-green?style=flat-square)
 <br />
 ![GitHub repo size](https://img.shields.io/github/repo-size/sansenjian/qq-music-api?style=flat-square) ![GitHub package.json version](https://img.shields.io/github/package-json/v/sansenjian/qq-music-api?style=flat-square) ![GitHub](https://img.shields.io/github/license/sansenjian/qq-music-api?style=flat-square) ![GitHub open issues](https://img.shields.io/github/issues/sansenjian/qq-music-api?style=flat-square) ![GitHub closed issues](https://img.shields.io/github/issues-closed/sansenjian/qq-music-api) ![GitHub last commit](https://img.shields.io/github/last-commit/sansenjian/qq-music-api?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/sansenjian/qq-music-api?style=flat-square)
+<br />
+[![Codecov](https://img.shields.io/codecov/c/github/sansenjian/qq-music-api?style=flat-square&logo=codecov)](https://codecov.io/gh/sansenjian/qq-music-api)
 
 </div>
 

@@ -1,7 +1,9 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { getComments } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { errorResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getCommentsController = withErrorHandler(async (ctx: KoaContext) => {
   const {
     id,
     pagesize = 25,
@@ -15,7 +17,7 @@ const controller: Controller = async (ctx, next) => {
   
   const checkrootcommentid = !pagenum ? true : !!rootcommentid;
 
-  const params = Object.assign({
+  const params = {
     cid,
     reqtype,
     biztype,
@@ -24,7 +26,7 @@ const controller: Controller = async (ctx, next) => {
     pagenum,
     pagesize,
     lasthotcommentid: rootcommentid
-  });
+  };
   
   const props = {
     method: 'get',
@@ -32,20 +34,13 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  if (id && checkrootcommentid) {
-    const { status, body } = await getComments(props);
-    Object.assign(ctx, {
-      status,
-      body
-    });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      data: {
-        message: 'Don\'t have id or rootcommentid'
-      }
-    };
+  if (!id || !checkrootcommentid) {
+    setApiResponse(ctx, errorResponse('Don\'t have id or rootcommentid', 400));
+    return;
   }
-};
+  
+  const result = await getComments(props);
+  setApiResponse(ctx, result);
+});
 
-export default controller;
+export default getCommentsController;

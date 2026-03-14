@@ -1,7 +1,7 @@
 import { Context, Next } from 'koa';
 import { getUserPlaylists } from '../../module';
+import { resolveRequestCookie } from '../../util/cookieResolver';
 
-// 获取用户创建的歌单
 export default async (ctx: Context, next: Next) => {
   const { uin, offset = 0, limit = 30 } = ctx.query;
 
@@ -13,10 +13,14 @@ export default async (ctx: Context, next: Next) => {
     return;
   }
 
+  const normalizedUin = Array.isArray(uin) ? uin[0] : uin;
+  const { cookie } = resolveRequestCookie(ctx);
+
   const { status, body } = await getUserPlaylists({
-    uin: uin as string,
+    uin: String(normalizedUin),
     offset: Number(offset),
-    limit: Number(limit)
+    limit: Number(limit),
+    cookie
   });
 
   Object.assign(ctx, {

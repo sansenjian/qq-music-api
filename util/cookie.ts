@@ -1,7 +1,8 @@
 import { Context, Next } from 'koa';
 import type { UserInfo } from '../types/global';
+import serviceConfig from '../config/service-config';
+import { resolveRequestCookie, setRequestCookieContext } from './cookieResolver';
 
-// Extend global namespace with UserInfo
 declare global {
   var userInfo: UserInfo;
 }
@@ -9,29 +10,33 @@ declare global {
 const SAFE_COOKIE_NAMES = new Set(['qqmusic_key', 'qqmusic_uin']);
 
 const cookieMiddleware = () => async (ctx: Context, next: Next) => {
-  if (global.userInfo?.cookie) {
-    // Extend Request interface if needed, or just cast
-    (ctx.request as any).cookie = global.userInfo.cookie;
+  const { cookie } = resolveRequestCookie(ctx, {
+    fallbackMode: serviceConfig.fallbackMode,
+    useGlobalCookie: false,
+    cookieParamName: serviceConfig.cookieParamName
+  });
+
+  if (cookie) {
+    setRequestCookieContext(ctx, cookie);
   }
 
-	if (Array.isArray(global.userInfo?.cookieList)) {
-		global.userInfo.cookieList.forEach((cookie: string) => {
-			const [key, ...valueParts] = cookie.split('=');
-        const normalizedKey = key?.trim();
-        const value = valueParts.join('=').trim();
+  if (serviceConfig.useGlobalCookie && Array.isArray(global.userInfo?.cookieList)) {
+    global.userInfo.cookieList.forEach((cookieItem: string) => {
+      const [key, ...valueParts] = cookieItem.split('=');
+      const normalizedKey = key?.trim();
+      const value = valueParts.join('=').trim();
 
-			if (normalizedKey && value && SAFE_COOKIE_NAMES.has(normalizedKey)) {
-				ctx.cookies.set(normalizedKey, value, {
-					// 仅同步前端业务必需且可公开的 Cookie，避免敏感登录态透传
-					overwrite: true,
-            httpOnly: false,
-            sameSite: 'lax'
-				});
-			}
-		});
-	}
+      if (normalizedKey && value && SAFE_COOKIE_NAMES.has(normalizedKey)) {
+        ctx.cookies.set(normalizedKey, value, {
+          overwrite: true,
+          httpOnly: false,
+          sameSite: 'lax'
+        });
+      }
+    });
+  }
 
-	await next();
+  await next();
 };
 
 export default cookieMiddleware;

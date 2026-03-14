@@ -253,8 +253,8 @@ describe('扩展功能 API 测试', () => {
     test('应该要求 id 参数', async () => {
       const response = await request(callback).get('/getHotComments').expect(400);
 
-      expect(response.body).toHaveProperty('code', -1);
-      expect(response.body.msg).toContain('id');
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('id');
     }, 10000);
 
     test('应该返回热门评论（默认参数）', async () => {

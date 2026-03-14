@@ -1,7 +1,9 @@
-import { KoaContext, Controller } from '../types';
+import { KoaContext } from '../types';
 import { UCommon } from '../../module';
+import { setApiResponse, withErrorHandler } from '../util';
+import { customResponse } from '../../util/apiResponse';
 
-const controller: Controller = async (ctx, next) => {
+const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
   const getWeekNumber = (d: Date): number => {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -40,10 +42,10 @@ const controller: Controller = async (ctx, next) => {
     }
   };
   
-  const params = Object.assign({
+  const params = {
     format: 'json',
     data: JSON.stringify(data)
-  });
+  };
   
   const props = {
     method: 'get',
@@ -51,17 +53,8 @@ const controller: Controller = async (ctx, next) => {
     option: {}
   };
   
-  await UCommon(props)
-    .then(res => {
-      const response = res.data;
-      ctx.status = 200;
-      ctx.body = {
-        response
-      };
-    })
-    .catch(error => {
-      console.log('error', error);
-    });
-};
+  const response = await UCommon(props);
+  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+});
 
-export default controller;
+export default getRanksController;

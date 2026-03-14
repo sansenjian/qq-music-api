@@ -1,59 +1,44 @@
-import { Context } from 'koa'
-import recommendApi from '../../module/apis/recommend/getPersonalRecommend'
+import { Context } from 'koa';
+import recommendApi from '../../module/apis/recommend/getPersonalRecommend';
+import { resolveRequestCookie } from '../../util/cookieResolver';
+import { errorResponse } from '../../util/apiResponse';
 
-/**
- * 获取个性化推荐
- */
 export async function getPersonalRecommendController(ctx: Context) {
-  const { type = '1', cookie } = ctx.query
+  const { type = '1' } = ctx.query;
+  const rawType = Array.isArray(type) ? type[0] : type;
+  const { cookie } = resolveRequestCookie(ctx);
+  const result = await recommendApi.getPersonalRecommend(Number(rawType), cookie);
 
-  // 处理数组类型，取第一个值
-  const rawType = Array.isArray(type) ? type[0] : type
-  const rawCookie = Array.isArray(cookie) ? cookie[0] : cookie
-
-  const result = await recommendApi.getPersonalRecommend(Number(rawType), rawCookie)
-
-  ctx.status = result.status
-  ctx.body = result.body
+  ctx.status = result.status;
+  ctx.body = result.body;
 }
 
-/**
- * 获取相似歌曲
- */
 export async function getSimilarSongsController(ctx: Context) {
-  const { songmid, cookie } = ctx.query
+  const { songmid } = ctx.query;
 
   if (!songmid) {
-    ctx.status = 400
-    ctx.body = {
-      code: -1,
-      msg: '缺少参数 songmid',
-      data: null
-    }
-    return
+    const result = errorResponse('缺少参数 songmid', 400);
+    ctx.status = result.status;
+    ctx.body = result.body;
+    return;
   }
 
-  // 处理数组类型，取第一个值
-  const validSongmid = Array.isArray(songmid) ? songmid[0] : songmid
-  
-  // 校验空字符串
+  const validSongmid = Array.isArray(songmid) ? songmid[0] : songmid;
   if (!validSongmid || String(validSongmid).trim() === '') {
-    ctx.status = 400
-    ctx.body = {
-      code: -1,
-      msg: '参数 songmid 不能为空',
-      data: null
-    }
-    return
+    const result = errorResponse('参数 songmid 不能为空', 400);
+    ctx.status = result.status;
+    ctx.body = result.body;
+    return;
   }
 
-  const result = await recommendApi.getSimilarSongs(String(validSongmid), cookie as string)
+  const { cookie } = resolveRequestCookie(ctx);
+  const result = await recommendApi.getSimilarSongs(String(validSongmid), cookie);
 
-  ctx.status = result.status
-  ctx.body = result.body
+  ctx.status = result.status;
+  ctx.body = result.body;
 }
 
 export default {
   getPersonalRecommend: getPersonalRecommendController,
   getSimilarSongs: getSimilarSongsController
-}
+};
