@@ -42,7 +42,8 @@ export const extractUinFromCookie = (cookie?: string): string | undefined => {
 export const setRequestCookieContext = (ctx: Context, cookie?: string) => {
   if (!cookie) return;
   (ctx.request as any).cookie = cookie;
-  (ctx.state as any).requestCookie = cookie;
+  const state = ((ctx as any).state || ((ctx as any).state = {})) as Record<string, unknown>;
+  state.requestCookie = cookie;
 };
 
 export const resolveRequestCookie = (
@@ -52,25 +53,28 @@ export const resolveRequestCookie = (
   const fallbackMode = options.fallbackMode ?? serviceConfig.fallbackMode;
   const useGlobalCookie = options.useGlobalCookie ?? false;
   const cookieParamName = options.cookieParamName ?? serviceConfig.cookieParamName;
+  const query = ((ctx as any).query || {}) as Record<string, unknown>;
+  const headers = ((ctx as any).headers || {}) as Record<string, unknown>;
+  const request = ((ctx as any).request || {}) as Record<string, unknown>;
 
   if (fallbackMode) {
-    const queryCookie = normalizeCookieValue((ctx.query as Record<string, unknown>)[cookieParamName]);
+    const queryCookie = normalizeCookieValue(query[cookieParamName]);
     if (queryCookie) {
       return { cookie: queryCookie, source: 'query' };
     }
 
-    const customHeaderCookie = normalizeCookieValue(ctx.headers['x-custom-cookie']);
+    const customHeaderCookie = normalizeCookieValue(headers['x-custom-cookie']);
     if (customHeaderCookie) {
       return { cookie: customHeaderCookie, source: 'x-custom-cookie' };
     }
 
-    const headerCookie = normalizeCookieValue(ctx.headers.cookie);
+    const headerCookie = normalizeCookieValue(headers.cookie);
     if (headerCookie) {
       return { cookie: headerCookie, source: 'header-cookie' };
     }
   }
 
-  const requestCookie = normalizeCookieValue((ctx.request as any).cookie);
+  const requestCookie = normalizeCookieValue((request as any).cookie);
   if (requestCookie) {
     return { cookie: requestCookie, source: 'request' };
   }

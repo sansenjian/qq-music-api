@@ -6,6 +6,7 @@ jest.mock('../../../../module');
 describe('routers/context/getAlbumInfo', () => {
   let mockCtx: any;
   let mockNext: jest.Mock;
+  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockCtx = {
@@ -14,7 +15,12 @@ describe('routers/context/getAlbumInfo', () => {
       query: {}
     };
     mockNext = jest.fn();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   test('should return 400 when albummid is missing', async () => {
@@ -24,9 +30,7 @@ describe('routers/context/getAlbumInfo', () => {
 
     expect(mockCtx.status).toBe(400);
     expect(mockCtx.body).toEqual({
-      data: {
-        message: 'no albummid'
-      }
+      error: 'no albummid'
     });
     expect(getAlbumInfo).not.toHaveBeenCalled();
   });
@@ -72,6 +76,10 @@ describe('routers/context/getAlbumInfo', () => {
     const mockError = new Error('Album info error');
     (getAlbumInfo as jest.Mock).mockRejectedValue(mockError);
 
-    await expect(getAlbumInfoController(mockCtx, mockNext)).rejects.toThrow('Album info error');
+    await getAlbumInfoController(mockCtx, mockNext);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'Album info error' });
   });
 });

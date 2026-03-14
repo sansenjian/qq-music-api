@@ -139,7 +139,6 @@ describe('routers/context/getSingerList', () => {
 
     expect(mockCtx.status).toBe(200);
     expect(mockCtx.body).toEqual({
-      status: 200,
       response: mockResponse
     });
   });
@@ -149,9 +148,9 @@ describe('routers/context/getSingerList', () => {
 
     await getSingerListController(mockCtx, mockNext);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('getSingerList error:', expect.any(Error));
-    expect(mockCtx.status).toBe(500);
-    expect(mockCtx.body).toEqual({ error: '服务器内部错误' });
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'API error' });
   });
 
   test('should construct correct data structure', async () => {
@@ -208,3 +207,4 @@ describe('routers/context/getSingerList', () => {
     });
   });
 });
+

@@ -1,25 +1,39 @@
 import getHotKey from '../../../module/apis/search/getHotKey';
 import { handleApi } from '../../../util/apiResponse';
+import y_common from '../../../module/apis/y_common';
 
 jest.mock('../../../util/apiResponse');
+jest.mock('../../../module/apis/y_common');
 
 describe('module/apis/search/getHotKey', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (handleApi as jest.Mock).mockClear();
+    (y_common as jest.Mock).mockResolvedValue({ data: { hotkeys: [] } });
   });
 
-  it('应调用 handleApi 并返回搜索结果', async () => {
+  it('should call handleApi and return search payload', async () => {
     const mockResult = { data: { hotkeys: [{ k: 'test' }] } };
     (handleApi as jest.Mock).mockResolvedValue(mockResult);
 
     const result = await getHotKey({});
 
-    expect(handleApi).toHaveBeenCalledTimes(1);
+    expect(y_common).toHaveBeenCalledWith({
+      url: '/splcloud/fcgi-bin/gethotkey.fcg',
+      method: 'get',
+      options: {
+        params: {
+          format: 'json',
+          outCharset: 'utf-8',
+          hostUin: 0,
+          needNewCode: 0
+        }
+      }
+    });
+    expect(handleApi).toHaveBeenCalledWith(expect.any(Promise));
     expect(result).toEqual(mockResult);
   });
 
-  it('应处理 handleApi 抛出的错误', async () => {
+  it('should reject when handleApi rejects', async () => {
     const mockError = new Error('search failed');
     (handleApi as jest.Mock).mockRejectedValue(mockError);
 

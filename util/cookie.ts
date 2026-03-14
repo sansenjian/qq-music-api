@@ -12,7 +12,7 @@ const SAFE_COOKIE_NAMES = new Set(['qqmusic_key', 'qqmusic_uin']);
 const cookieMiddleware = () => async (ctx: Context, next: Next) => {
   const { cookie } = resolveRequestCookie(ctx, {
     fallbackMode: serviceConfig.fallbackMode,
-    useGlobalCookie: false,
+    useGlobalCookie: serviceConfig.useGlobalCookie,
     cookieParamName: serviceConfig.cookieParamName
   });
 

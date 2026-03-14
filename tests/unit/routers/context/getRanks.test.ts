@@ -6,7 +6,7 @@ jest.mock('../../../../module');
 describe('routers/context/getRanks', () => {
   let mockCtx: any;
   let mockNext: jest.Mock;
-  let consoleLogSpy: jest.SpyInstance;
+  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockCtx = {
@@ -15,12 +15,12 @@ describe('routers/context/getRanks', () => {
       query: {}
     };
     mockNext = jest.fn();
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     jest.clearAllMocks();
   });
 
   afterEach(() => {
-    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   test('should call UCommon with default parameters', async () => {
@@ -149,9 +149,9 @@ describe('routers/context/getRanks', () => {
 
     await getRanksController(mockCtx, mockNext);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('error', expect.any(Error));
-    expect(mockCtx.status).toBe(200);
-    expect(mockCtx.body).toBeNull();
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Controller error:', expect.any(Error));
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'API error' });
   });
 
   test('should have correct comm structure', async () => {
