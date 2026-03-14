@@ -26,6 +26,7 @@ import getDigitalAlbumLists from './apis/digitalAlbum/getDigitalAlbumLists';
 
 // music
 import getLyric from './apis/music/getLyric';
+import getMusicPlay from './apis/music/getMusicPlay';
 
 // album
 import getAlbumInfo from './apis/album/getAlbumInfo';
@@ -77,6 +78,7 @@ export {
 	getDigitalAlbumLists,
 	// music
 	getLyric,
+	getMusicPlay,
 	// album
 	getAlbumInfo,
 	// comments

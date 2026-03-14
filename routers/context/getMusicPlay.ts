@@ -1,102 +1,51 @@
 import { KoaContext, Controller } from '../types';
-import { UCommon } from '../../module';
-import { _guid } from '../../module/config';
-
-const ALLOWED_QUALITIES = ['m4a', 128, 320, 'ape', 'flac'];
-const DEFAULT_QUALITY = 128;
-
-const parseQuality = (quality: any): string | number => {
-  const parsed = parseInt(quality) || quality;
-  return ALLOWED_QUALITIES.includes(parsed) ? parsed : DEFAULT_QUALITY;
-};
+import { getMusicPlay } from '../../module';
+import { resolveRequestCookie } from '../../util/cookieResolver';
 
 const controller: Controller = async (ctx, next) => {
-  const uin = (global as any).userInfo?.uin || '0';
-  const songmid = ctx.query.songmid + '';
-  const justPlayUrl = (ctx.query.resType || 'play') === 'play';
-  const guid = _guid || '1429839143';
-  const { mediaId } = ctx.query;
-  const quality = parseQuality(ctx.query.quality);
-  
-  const fileType: Record<string, { s: string; e: string }> = {
-    m4a: { s: 'C400', e: '.m4a' },
-    128: { s: 'M500', e: '.mp3' },
-    320: { s: 'M800', e: '.mp3' },
-    ape: { s: 'A000', e: '.ape' },
-    flac: { s: 'F000', e: '.flac' }
-  };
-  
-  const songmidList = songmid.split(',');
-  const fileInfo = fileType[quality as string];
-  const file = songmidList.map(_ => `${fileInfo.s}${_}${mediaId || _}${fileInfo.e}`);
-  
-  const data = {
-    req_0: {
-      module: 'vkey.GetVkeyServer',
-      method: 'CgiGetVkey',
-      param: {
-        filename: file,
-        guid,
-        songmid: songmidList,
-        songtype: [0],
-        uin,
-        loginflag: 1,
-        platform: '20'
-      }
+  const songmid = Array.isArray(ctx.query.songmid)
+    ? ctx.query.songmid[0]
+    : (ctx.query.songmid || ctx.params.songmid);
+  const resType = Array.isArray(ctx.query.resType) ? ctx.query.resType[0] : ctx.query.resType;
+  const mediaId = Array.isArray(ctx.query.mediaId) ? ctx.query.mediaId[0] : ctx.query.mediaId;
+  const quality = Array.isArray(ctx.query.quality) ? ctx.query.quality[0] : ctx.query.quality;
+
+  const { cookie: effectiveCookie } = resolveRequestCookie(ctx);
+
+  const headers: Record<string, string> = {};
+  if (effectiveCookie) {
+    headers.Cookie = effectiveCookie;
+  }
+
+  const props: {
+    method: 'get';
+    params: {
+      songmid?: string;
+      resType?: string;
+      mediaId?: string;
+      quality?: string;
+    };
+    option: {
+      headers: Record<string, string>;
+    };
+  } = {
+    method: 'get',
+    params: {
+      songmid,
+      resType,
+      mediaId,
+      quality
     },
-    loginUin: uin,
-    comm: {
-      uin,
-      format: 'json',
-      ct: 24,
-      cv: 0
+    option: {
+      headers
     }
   };
-  
-  const params = Object.assign({
-    format: 'json',
-    sign: 'zzannc1o6o9b4i971602f3554385022046ab796512b7012',
-    data: JSON.stringify(data)
+
+  const { status, body } = await getMusicPlay(props);
+  Object.assign(ctx, {
+    status,
+    body
   });
-  
-  const props = {
-    method: 'get',
-    params,
-    option: {}
-  };
-
-  if (songmid) {
-    await UCommon(props)
-      .then(res => {
-        const response = res.data;
-        const domain =
-          response?.req_0?.data?.sip?.filter?.((i: string) => !i.startsWith('http://ws'))?.[0] || 
-          response?.req_0?.data?.sip?.[0];
-
-        const playUrl: Record<string, { url: string; error?: string }> = {};
-        (response?.req_0?.data?.midurlinfo || []).forEach((item: any) => {
-          playUrl[item.songmid] = {
-            url: item.purl ? `${domain}${item.purl}` : '',
-            error: !item.purl ? '暂无播放链接' : undefined
-          };
-        });
-        
-        response.playUrl = playUrl;
-        ctx.body = {
-          data: justPlayUrl ? { playUrl } : response
-        };
-      })
-      .catch(error => {
-        console.log('error', error);
-      });
-  } else {
-    ctx.status = 400;
-    ctx.body = {
-      data: {
-        message: 'no songmid'
-      }
-    };
-  }
 };
 
 export default controller;
