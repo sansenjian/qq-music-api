@@ -88,6 +88,35 @@ describe('request util', () => {
     expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBeUndefined();
   });
 
+  test('should inject Cookie header from RequestConfig.cookie', async () => {
+    await request({
+      url: '/cookie-test',
+      cookie: 'k=v'
+    });
+
+    expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBe('k=v');
+  });
+
+  test('should inject Cookie header from customCookie argument in legacy signature', async () => {
+    await request('/cookie-test', 'GET', { headers: {} }, 'c', 'k=v');
+
+    expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBe('k=v');
+  });
+
+  test('should keep explicit Cookie header when RequestConfig.cookie is also provided', async () => {
+    await request({
+      url: '/cookie-test',
+      cookie: 'k=v',
+      options: {
+        headers: {
+          Cookie: 'custom=value'
+        }
+      }
+    });
+
+    expect((getLastConfig().headers as Record<string, string>)?.Cookie).toBe('custom=value');
+  });
+
   test('should preserve explicit Cookie header without overriding it', async () => {
     await request({
       url: '/cookie-test',

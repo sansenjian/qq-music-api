@@ -251,14 +251,13 @@ export function withErrorHandler(
   return async (ctx: KoaContext, next: () => Promise<void>) => {
     try {
       await handler(ctx);
+      await next();
     } catch (error) {
       console.error('Controller error:', error);
       ctx.status = 502;
       ctx.body = {
         error: (error as Error).message || '服务器内部错误',
       };
-    } finally {
-      await next();
     }
   };
 }

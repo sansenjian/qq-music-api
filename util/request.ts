@@ -135,7 +135,13 @@ function request<TResponse = any, TOptions extends AxiosRequestConfig = AxiosReq
 	}
 
 	// Cookie 浼樺厛绾э細鎵嬪姩浼犻€?> 鍏ㄥ眬 Cookie锛堝鏋滃惎鐢級
-	if (!(headers as any).Cookie && !(headers as any).cookie && reqCookie) {
+	if (!(headers as any).Cookie && (headers as any).cookie) {
+		(headers as any).Cookie = (headers as any).cookie;
+	}
+	if ((headers as any).cookie) {
+		delete (headers as any).cookie;
+	}
+	if (!(headers as any).Cookie && reqCookie) {
 		(headers as any).Cookie = reqCookie;
 	}
 

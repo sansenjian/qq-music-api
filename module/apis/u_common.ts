@@ -1,4 +1,4 @@
-﻿import { AxiosRequestConfig, Method } from 'axios';
+import { AxiosRequestConfig, Method } from 'axios';
 import request from '../../util/request';
 import * as config from '../config';
 
@@ -14,17 +14,10 @@ export default ({ options = {}, method = 'get', customCookie }: UCommonOptions) 
 	// Merge commonParams into params for query string
 	opts.params = { ...config.commonParams, ...(opts.params || {}) };
 
-	// Cookie 仅在显式传入时透传
-	let cookieValue: string | undefined;
-	if (customCookie) {
-		cookieValue = customCookie;
-	}
-
 	opts.headers = {
 		referer: 'https://y.qq.com/portal/player.html',
 		host: 'u.y.qq.com',
 		'content-type': 'application/x-www-form-urlencoded',
-		...(cookieValue && { cookie: cookieValue }),
 		...(opts.headers || {})
 	};
 
@@ -33,6 +26,11 @@ export default ({ options = {}, method = 'get', customCookie }: UCommonOptions) 
 		console.log('https://u.y.qq.com/cgi-bin/musicu.fcg', { opts: logOpts });
 	}
 
-	return request('https://u.y.qq.com/cgi-bin/musicu.fcg', method as Method, opts, 'u', customCookie);
+	return request({
+		url: 'https://u.y.qq.com/cgi-bin/musicu.fcg',
+		method: method as Method,
+		options: opts,
+		isUUrl: 'u',
+		cookie: customCookie
+	});
 };
-

@@ -211,6 +211,19 @@ describe('API Integration Tests', () => {
       });
     });
 
+    test('should return 502 and propagate upstream error when service fails', async () => {
+      mockService.mockRejectedValueOnce(new Error('upstream error'));
+
+      const response = await request(callback)
+        .get('/getMusicPlay')
+        .query({ songmid: 'test-songmid' })
+        .expect(502);
+
+      expect(response.body).toEqual({
+        error: 'upstream error'
+      });
+    });
+
     test('should return play url map when upstream returns purl', async () => {
       mockService.mockResolvedValueOnce({
         data: {

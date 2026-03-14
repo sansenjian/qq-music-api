@@ -41,6 +41,8 @@ export FALLBACK_MODE=true
 export USE_GLOBAL_COOKIE=true
 ```
 
+`cookieParamName` 当前不支持环境变量覆盖，仅可在 `config/service-config.json` 中配置。
+
 ## 使用方式
 
 ### 场景 1：不需要登录的接口
