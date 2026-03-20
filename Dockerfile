@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:22.22.1-alpine3.22
 
 LABEL maintainer="Rain120 <1085131904@qq.com>"
 
