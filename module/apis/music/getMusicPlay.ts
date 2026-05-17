@@ -1,7 +1,7 @@
 import type { Method } from 'axios';
 import UCommon from '../UCommon/UCommon';
 import { _guid } from '../../config';
-import { extractUinFromCookie } from '../../../util/cookieResolver';
+import { extractCookieValue, extractUinFromCookie } from '../../../util/cookieResolver';
 import type { ApiOptions, ApiResponse } from '../../../types/api';
 
 type AudioQuality = 'm4a' | '128' | '320' | 'ape' | 'flac';
@@ -115,13 +115,6 @@ const buildPlayUrl = (domain: string, info: MidUrlInfo, guid: string): string =>
 const resolveUin = (cookie?: string): string => {
   const defaultUin = String((global as any).userInfo?.uin || (global as any).userInfo?.loginUin || '0');
   return extractUinFromCookie(cookie) || defaultUin;
-};
-
-const extractCookieValue = (cookie: string | undefined, name: string): string | undefined => {
-  if (!cookie) return undefined;
-  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = cookie.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]+)`));
-  return match?.[1];
 };
 
 const getCookieFromOptions = (option: ApiOptions['option']): string | undefined => {

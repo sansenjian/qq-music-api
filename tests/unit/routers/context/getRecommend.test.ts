@@ -51,13 +51,23 @@ describe('routers/context/getRecommend', () => {
   });
 
   test('should handle API errors gracefully', async () => {
-    (UCommon as jest.Mock).mockRejectedValue(new Error('API error'));
+    (UCommon as jest.Mock).mockRejectedValueOnce(new Error('API error'));
 
     await getRecommendController(mockCtx, mockNext);
 
     expect(consoleLogSpy).toHaveBeenCalledWith('error', expect.any(Error));
     expect(mockCtx.status).toBe(502);
     expect(mockCtx.body).toEqual({ error: 'API error' });
+  });
+
+  test('should handle non-Error rejections and return raw error value', async () => {
+    (UCommon as jest.Mock).mockRejectedValueOnce('Non-error rejection');
+
+    await getRecommendController(mockCtx, mockNext);
+
+    expect(consoleLogSpy).toHaveBeenCalledWith('error', 'Non-error rejection');
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'Non-error rejection' });
   });
 
   test('should construct correct data structure with all modules', async () => {

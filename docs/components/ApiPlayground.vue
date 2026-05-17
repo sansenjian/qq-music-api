@@ -1,5 +1,12 @@
 <script setup>
 import { computed, ref } from 'vue'
+import {
+  buildFetchOptions,
+  buildRequestUrl,
+  defaultBaseUrl,
+  fetchPlaygroundRequest,
+  getErrorMessage
+} from '../../public/playground-utils.js'
 
 const presets = [
   {
@@ -39,7 +46,7 @@ const presets = [
   }
 ]
 
-const baseUrl = ref('http://localhost:3200')
+const baseUrl = ref(defaultBaseUrl)
 const selectedName = ref(presets[0].name)
 const method = ref(presets[0].method)
 const path = ref(presets[0].path)
@@ -55,10 +62,11 @@ const errorText = ref('')
 const selectedPreset = computed(() => presets.find(item => item.name === selectedName.value) || presets[0])
 
 const requestUrl = computed(() => {
-  const normalizedBase = baseUrl.value.replace(/\/+$/, '')
-  const normalizedPath = path.value.startsWith('/') ? path.value : `/${path.value}`
-  const normalizedQuery = query.value.trim().replace(/^\?/, '')
-  return `${normalizedBase}${normalizedPath}${normalizedQuery ? `?${normalizedQuery}` : ''}`
+  return buildRequestUrl({
+    baseUrl: baseUrl.value,
+    path: path.value,
+    query: query.value
+  })
 })
 
 const applyPreset = () => {
@@ -73,14 +81,6 @@ const applyPreset = () => {
   elapsed.value = ''
 }
 
-const formatJson = (value) => {
-  try {
-    return JSON.stringify(JSON.parse(value), null, 2)
-  } catch {
-    return value
-  }
-}
-
 const sendRequest = async () => {
   loading.value = true
   status.value = ''
@@ -90,29 +90,21 @@ const sendRequest = async () => {
   const startedAt = performance.now()
 
   try {
-    const headers = {}
-    if (cookie.value.trim()) {
-      headers['X-Custom-Cookie'] = cookie.value.trim()
-    }
-
-    const options = {
-      method: method.value,
-      headers
-    }
-
-    if (method.value !== 'GET' && body.value.trim()) {
-      headers['Content-Type'] = 'application/json'
-      options.body = body.value
-    }
-
-    const response = await fetch(requestUrl.value, options)
-    const raw = await response.text()
-    status.value = `${response.status} ${response.statusText}`
-    responseText.value = formatJson(raw)
+    const result = await fetchPlaygroundRequest({
+      url: requestUrl.value,
+      options: buildFetchOptions({
+        method: method.value,
+        cookie: cookie.value,
+        body: body.value
+      })
+    })
+    status.value = result.statusText
+    responseText.value = result.formattedText
+    elapsed.value = `${result.elapsedMs} ms`
   } catch (error) {
-    errorText.value = error instanceof Error ? error.message : String(error)
-  } finally {
+    errorText.value = getErrorMessage(error)
     elapsed.value = `${Math.round(performance.now() - startedAt)} ms`
+  } finally {
     loading.value = false
   }
 }

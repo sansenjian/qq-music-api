@@ -33,10 +33,16 @@ const normalizeCookieValue = (value: unknown): string | undefined => {
   return normalized ? normalized : undefined;
 };
 
-export const extractUinFromCookie = (cookie?: string): string | undefined => {
+export const extractCookieValue = (cookie: string | undefined, name: string): string | undefined => {
   if (!cookie) return undefined;
-  const match = cookie.match(/(?:^|;\s*)uin=([^;]+)/);
-  return match?.[1];
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = cookie.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]*)`));
+  const value = match?.[1]?.trim();
+  return value || undefined;
+};
+
+export const extractUinFromCookie = (cookie?: string): string | undefined => {
+  return extractCookieValue(cookie, 'uin');
 };
 
 export const setRequestCookieContext = (ctx: Context, cookie?: string) => {

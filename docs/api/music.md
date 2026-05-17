@@ -110,7 +110,7 @@ curl "http://localhost:3200/getAlbumInfo?albummid=0016l2F430zMux"
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| songs | array | 否 | 歌曲列表，元素格式为 `[song_mid, song_id]` |
+| songs | array | 否 | 歌曲列表，元素格式为 `[song_mid]` 或 `[song_mid, song_id]`，`song_id` 可省略 |
 
 **示例：**
 

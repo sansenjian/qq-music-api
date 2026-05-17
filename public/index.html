@@ -715,7 +715,19 @@
     </footer>
   </main>
 
-  <script>
+  <script type="module">
+    import {
+      buildFetchOptions,
+      buildRequestUrl,
+      fetchPlaygroundRequest,
+      formatBytes,
+      getErrorMessage,
+      getInitialBaseUrl,
+      isAbortError,
+      normalizeBaseUrl,
+      normalizePath
+    } from './playground-utils.js';
+
     const preset = document.querySelector('#preset');
     const methodInput = document.querySelector('#methodInput');
     const pathInput = document.querySelector('#pathInput');
@@ -735,7 +747,6 @@
     const historyList = document.querySelector('#historyList');
     const endpoints = Array.from(document.querySelectorAll('.endpoint'));
     const apiLinks = Array.from(document.querySelectorAll('a[href^="/"]'));
-    const defaultBaseUrl = 'http://localhost:3200';
     const initialResponseText = '响应会显示在这里';
     let activeController = null;
     let baseUrl = getInitialBaseUrl();
@@ -743,22 +754,6 @@
     let requestHistory = [];
 
     baseUrlInput.value = baseUrl;
-
-    function getInitialBaseUrl() {
-      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-        const host = window.location.hostname;
-        const isLocalHost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
-
-        return isLocalHost ? window.location.origin : defaultBaseUrl;
-      }
-
-      return defaultBaseUrl;
-    }
-
-    function normalizeBaseUrl(value) {
-      const trimmed = value.trim().replace(/\/+$/, '');
-      return trimmed || defaultBaseUrl;
-    }
 
     function updateApiLinks() {
       apiLinks.forEach(link => {
@@ -776,27 +771,11 @@
       updateUrl();
     }
 
-    function normalizePath(value) {
-      const trimmed = value.trim();
-
-      if (!trimmed) {
-        return '/';
-      }
-
-      if (/^https?:\/\//i.test(trimmed)) {
-        try {
-          const url = new URL(trimmed);
-          return `${url.pathname}${url.search}${url.hash}` || '/';
-        } catch (error) {
-          return trimmed;
-        }
-      }
-
-      return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    }
-
     function getRequestUrl() {
-      return `${baseUrl}${normalizePath(pathInput.value)}`;
+      return buildRequestUrl({
+        baseUrl,
+        path: pathInput.value
+      });
     }
 
     function updateUrl(options = {}) {
@@ -808,19 +787,7 @@
 
       requestUrl.textContent = `${baseUrl}${path}`;
       highlightEndpoint(path);
-      return requestUrl.textContent;
-    }
-
-    function formatBytes(bytes) {
-      if (!bytes) {
-        return '0 B';
-      }
-
-      if (bytes < 1024) {
-        return `${bytes} B`;
-      }
-
-      return `${(bytes / 1024).toFixed(1)} KB`;
+      return getRequestUrl();
     }
 
     function setStatus(text, type) {
@@ -906,7 +873,6 @@
       const url = updateUrl({ commit: true });
       const method = methodInput.value;
       const path = normalizePath(pathInput.value);
-      const startedAt = performance.now();
 
       if (activeController) {
         activeController.abort();
@@ -920,30 +886,24 @@
       responseBox.textContent = '请求中...';
 
       try {
-        const response = await fetch(url, {
-          method,
-          signal: activeController.signal,
+        const result = await fetchPlaygroundRequest({
+          url,
+          options: buildFetchOptions({
+            method,
+            signal: activeController.signal
+          })
         });
-        const text = await response.text();
-        const elapsed = Math.round(performance.now() - startedAt);
-        let formatted = text;
 
-        try {
-          formatted = JSON.stringify(JSON.parse(text), null, 2);
-        } catch (error) {
-          formatted = text || `${response.status} ${response.statusText}`;
-        }
-
-        lastResult = formatted;
-        responseBox.textContent = formatted;
-        setStatus(`${response.status} ${response.statusText || 'OK'}`, response.ok ? 'success' : 'error');
-        timeBadge.textContent = `耗时 ${elapsed}ms`;
-        sizeBadge.textContent = `大小 ${formatBytes(new Blob([text]).size)}`;
+        lastResult = result.formattedText;
+        responseBox.textContent = result.formattedText;
+        setStatus(result.statusText, result.ok ? 'success' : 'error');
+        timeBadge.textContent = `耗时 ${result.elapsedMs}ms`;
+        sizeBadge.textContent = `大小 ${formatBytes(result.sizeBytes)}`;
         pushHistory(method, path);
       } catch (error) {
-        const isAbort = error instanceof DOMException && error.name === 'AbortError';
+        const isAbort = isAbortError(error);
         lastResult = '';
-        responseBox.textContent = isAbort ? '请求已取消' : error instanceof Error ? error.message : String(error);
+        responseBox.textContent = isAbort ? '请求已取消' : getErrorMessage(error);
         setStatus(isAbort ? '已取消' : '请求失败', isAbort ? '' : 'error');
       } finally {
         activeController = null;
