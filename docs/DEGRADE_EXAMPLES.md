@@ -43,7 +43,7 @@ curl "http://localhost:3200/getSearchByKey/周杰伦"
 
 ### 3. 获取你的 Cookie
 
-访问 http://localhost:3200/user/getCookie 查看当前配置的 Cookie
+访问 `http://localhost:3200/user/getCookie` 查看当前配置的 Cookie
 
 ```bash
 curl "http://localhost:3200/user/getCookie"

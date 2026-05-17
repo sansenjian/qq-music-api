@@ -37,6 +37,10 @@ config/user-info.json
 # 测试覆盖率报告
 coverage/
 
+# 测试临时输出
+tests/output/*
+!tests/output/.gitkeep
+
 # 环境变量文件
 .env
 .env.*

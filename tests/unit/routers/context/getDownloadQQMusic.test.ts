@@ -43,9 +43,14 @@ describe('routers/context/getDownloadQQMusic', () => {
   });
 
   test('should handle errors from downloadQQMusic', async () => {
-    const mockError = new Error('Download error');
-    (downloadQQMusic as jest.Mock).mockRejectedValue(mockError);
+    (downloadQQMusic as jest.Mock).mockResolvedValue({
+      status: 502,
+      body: { error: 'Download error' }
+    });
 
-    await expect(getDownloadQQMusicController(mockCtx, mockNext)).rejects.toThrow('Download error');
+    await getDownloadQQMusicController(mockCtx, mockNext);
+
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'Download error' });
   });
 });

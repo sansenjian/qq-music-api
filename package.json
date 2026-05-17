@@ -10,8 +10,20 @@
     "qq-music-api": "dist/app.js"
   },
   "files": [
-    "dist",
+    "dist/api",
+    "dist/app.js",
+    "dist/config/service-config.js",
+    "dist/config/service-config.json",
+    "dist/config/user-info.js",
+    "dist/index.js",
+    "dist/koaApp.js",
+    "dist/middlewares",
+    "dist/module",
+    "dist/package.json",
+    "dist/routers",
+    "dist/util",
     "docs-dist",
+    "public",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -23,7 +35,7 @@
   },
   "scripts": {
     "dev": "tsx app.ts",
-    "build": "tsc",
+    "build": "rimraf dist && tsc",
     "start": "node dist/app.js",
     "vercel-build": "npm run build && npm run docs:build && (cp -r public dist/ 2>/dev/null || true)",
     "docs:build": "node scripts/generate-version.js && vitepress build docs",
@@ -66,18 +78,11 @@
   "homepage": "https://github.com/sansenjian/qq-music-api#readme",
   "dependencies": {
     "@koa/router": "^15.3.1",
-    "axios": "^1.13.6",
-    "date-fns": "^4.1.0",
-    "is-generator-function": "1.0.10",
+    "axios": "^1.16.0",
+    "chalk": "^4.1.0",
     "koa": "^2.16.1",
     "koa-bodyparser": "^4.4.1",
-    "koa-static": "^5.0.0",
-    "reflect-metadata": "^0.2.2"
-  },
-  "pnpm": {
-    "overrides": {
-      "is-generator-function": "^1.0.10"
-    }
+    "koa-static": "^5.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.0.0",
@@ -91,7 +96,6 @@
     "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
-    "chalk": "^4.1.0",
     "conventional-changelog-cli": "^4.0.0",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.0.0",
@@ -111,10 +115,10 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "5.7.3",
-    "vitepress": "^1.6.4",
+    "vitepress": "^2.0.0-alpha.17",
     "vue": "^3.5.29"
   },
   "engines": {
-    "node": "22.x"
+    "node": ">=20.0.0"
   }
 }

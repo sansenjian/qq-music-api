@@ -11,6 +11,8 @@ RUN yarn install --registry=https://registry.npmmirror.com
 
 COPY . .
 
+RUN npm run build
+
 EXPOSE 3200
 
 ENTRYPOINT ["npm", "run"]

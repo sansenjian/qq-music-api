@@ -56,8 +56,8 @@ describe('routers/context/getRecommend', () => {
     await getRecommendController(mockCtx, mockNext);
 
     expect(consoleLogSpy).toHaveBeenCalledWith('error', expect.any(Error));
-    expect(mockCtx.status).toBe(200);
-    expect(mockCtx.body).toBeNull();
+    expect(mockCtx.status).toBe(502);
+    expect(mockCtx.body).toEqual({ error: 'API error' });
   });
 
   test('should construct correct data structure with all modules', async () => {

@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import chalk from 'chalk';
 import colors from './util/colors';
 import serviceConfig from './config/service-config';

@@ -2,8 +2,6 @@
 
 <div align="center">
 
-<img src='music.png' />
-
 ![GitHub watchers](https://img.shields.io/github/watchers/sansenjian/qq-music-api?style=social) ![GitHub stars](https://img.shields.io/github/stars/sansenjian/qq-music-api?style=social) ![GitHub forks](https://img.shields.io/github/forks/sansenjian/qq-music-api?style=social)
 <br />
 ![node](https://img.shields.io/badge/node-%3E%3D20.0.0-green?style=flat-square)
@@ -24,7 +22,7 @@
 - 服务框架：Koa 2
 - 开发语言：TypeScript
 - 路由系统：[@koa/router](package.json:53)
-- 文档系统：[`VitePress`](package.json:100)
+- 文档系统：[VitePress 2](https://vitepress.dev/)
 - 测试框架：[`Jest`](package.json:89)
 - 默认端口：`3200`
 
@@ -32,7 +30,6 @@
 
 > 当前版本已包含扫码登录相关接口，并已完成 TypeScript 迁移。
 
-![qq-music](./screenshot/qq-music.png)
 
 📖 **详细 API 文档**： [查看完整 API 文档](https://sansenjian.github.io/qq-music-api/)
 
@@ -60,13 +57,15 @@ npm install
 npm install @sansenjian/qq-music-api
 ```
 
+NPM 包默认包含运行所需的 `dist/`、本地交互测试页 `public/`，以及已构建的文档站点 `docs-dist/`。如果你只想在自己的发布产物中保留 API 运行时，可以在你的项目打包配置中自行排除 `node_modules/@sansenjian/qq-music-api/docs-dist/` 或 `node_modules/@sansenjian/qq-music-api/public/`。
+
 在项目中使用：
 
 ```javascript
 const { spawn } = require('child_process');
 const path = require('path');
 
-const qqMusicPath = path.join(__dirname, 'node_modules', '@sansenjian/qq-music-api', 'app.js');
+const qqMusicPath = path.join(__dirname, 'node_modules', '@sansenjian/qq-music-api', 'dist', 'app.js');
 
 spawn('node', [qqMusicPath], {
 	env: { ...process.env, PORT: '3200' },
@@ -102,13 +101,11 @@ npm run docs:dev
 | 依赖                    | 当前版本  |
 | ----------------------- | --------- |
 | `@koa/router`           | `^15.3.1` |
-| `axios`                 | `^1.13.6` |
-| `date-fns`              | `^4.1.0`  |
-| `is-generator-function` | `1.0.10`  |
+| `axios`                 | `^1.16.0` |
+| `chalk`                 | `^4.1.0`  |
 | `koa`                   | `^2.16.1` |
 | `koa-bodyparser`        | `^4.4.1`  |
 | `koa-static`            | `^5.0.0`  |
-| `reflect-metadata`      | `^0.2.2`  |
 
 ### 开发依赖
 
@@ -127,7 +124,6 @@ npm run docs:dev
 | `@types/koa-bodyparser`                      | `^4.3.13` |
 | `@types/node`                                | `^25.3.3` |
 | `@types/supertest`                           | `^7.2.0`  |
-| `chalk`                                      | `^4.1.0`  |
 | `conventional-changelog-cli`                 | `^4.0.0`  |
 | `eslint`                                     | `^8.57.0` |
 | `eslint-config-standard`                     | `^17.0.0` |
@@ -146,7 +142,7 @@ npm run docs:dev
 | `ts-node`                                    | `^10.9.2` |
 | `tsx`                                        | `^4.21.0` |
 | `typescript`                                 | `5.7.3`   |
-| `vitepress`                                  | `^1.6.4`  |
+| `vitepress`                                  | `^2.0.0-alpha.17` |
 | `vue`                                        | `^3.5.29` |
 
 ## 当前主要能力
@@ -185,6 +181,7 @@ npm run docs:dev
 
 - 用户接口说明：[`docs/api/user.md`](docs/api/user.md)
 - 其他接口说明：[`docs/api/other.md`](docs/api/other.md)
+- API 调试台：[`docs/api/playground.md`](docs/api/playground.md)
 - 用户歌单测试说明：[`docs/TEST_USER_PLAYLISTS.md`](docs/TEST_USER_PLAYLISTS.md)
 - 在线文档主页： [https://sansenjian.github.io/qq-music-api/](https://sansenjian.github.io/qq-music-api/)
 

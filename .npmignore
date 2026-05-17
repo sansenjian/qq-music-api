@@ -8,15 +8,34 @@ coverage/
 # 文档源文件
 docs/
 
+# 大体积截图和本地演示资源
+screenshot/
+*.xmind
+music.png
+
 # 开发配置文件
+.github/
 .gitignore
 .husky/
+.vscode/
+.idea/
+.kilocode/
+.trae/
 .editorconfig
 .eslintrc.js
+.eslintrc.cjs
+.npmrc
+.prettierignore
 .prettierrc
 commitlint.config.js
 jest.config.ts
+jest.config.js
 tsconfig.json
+tsconfig.test.json
+pnpm-workspace.yaml
+qodana.yml
+codecov.yml
+codecov-flags.md
 
 # 日志和临时文件
 npm-debug.log*
@@ -25,6 +44,10 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 *.log
+search_pretty.json
+singer_test.txt
+test_output.txt
+tests/output/
 
 # IDE 配置
 .vscode/
@@ -36,3 +59,8 @@ Thumbs.db
 # 其他不需要的文件
 node_modules/
 static/
+api/
+config/user-info.json
+examples/
+scripts/
+upstream-reference/

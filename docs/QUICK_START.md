@@ -2,7 +2,7 @@
 
 ## ✅ 服务已启动
 
-**服务地址**: http://localhost:3200
+**服务地址**: `http://localhost:3200`
 
 **当前配置**:
 - ✅ 降级模式：已启用
@@ -177,10 +177,10 @@ export USE_GLOBAL_COOKIE=true
 
 ## 📚 更多文档
 
-- [降级模式使用指南](./docs/FALLBACK_MODE_GUIDE.md)
-- [认证与登录](./docs/guide/authentication.md)
-- [测试报告](./tests/DEGRADE_TEST.md)
-- [使用示例](./examples/DEGRADE_EXAMPLES.md)
+- [降级模式使用指南](./FALLBACK_MODE_GUIDE.md)
+- [认证与登录](./guide/authentication.md)
+- 测试报告：`tests/DEGRADE_TEST.md`
+- [使用示例](./DEGRADE_EXAMPLES.md)
 
 ---
 
@@ -197,4 +197,4 @@ export USE_GLOBAL_COOKIE=true
 - Cookie 会过期，需定期更新
 - 某些歌曲可能需要 VIP 权限
 
-**服务地址**: http://localhost:3200
+**服务地址**: `http://localhost:3200`

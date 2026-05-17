@@ -1,5 +1,6 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
+import fs from 'fs';
 import path from 'path';
 import koaStatic from 'koa-static';
 import cors from './middlewares/koa-cors';
@@ -11,13 +12,16 @@ import userInfoImport from './config/user-info';
 import type { UserInfo } from './types';
 
 const app = new Koa();
+const publicDir = fs.existsSync(path.join(__dirname, 'public'))
+  ? path.join(__dirname, 'public')
+  : path.join(__dirname, '..', 'public');
 
 global.userInfo = userInfoImport as UserInfo;
 
 app.use(bodyParser());
 app.use(fallbackMiddleware() as any);
 app.use(cookieMiddleware() as any);
-app.use(koaStatic(path.join(__dirname, 'public')) as any);
+app.use(koaStatic(publicDir) as any);
 
 // logger
 app.use(async (ctx, next) => {

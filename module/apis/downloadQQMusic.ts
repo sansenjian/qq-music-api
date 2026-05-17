@@ -43,8 +43,9 @@ export default ({ method = 'get', params = {}, option = {} }: DownloadOptions) =
 		.catch(error => {
 			console.log('error', error);
 			return {
+				status: 502,
 				body: {
-					error
+					error: error instanceof Error ? error.message : error
 				}
 			};
 		});

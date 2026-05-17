@@ -104,18 +104,20 @@ curl "http://localhost:3200/getAlbumInfo?albummid=0016l2F430zMux"
 
 批量获取多首歌曲的详细信息。
 
-**接口：** `GET /batchGetSongInfo`
+**接口：** `POST /batchGetSongInfo`
 
-**参数：**
+**请求体参数：**
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| songmid | string | 是 | 歌曲 MID 列表（逗号分隔） |
+| songs | array | 否 | 歌曲列表，元素格式为 `[song_mid, song_id]` |
 
 **示例：**
 
 ```bash
-curl "http://localhost:3200/batchGetSongInfo?songmid=003rJSwm3TechU,0042c8L50x6Z9z"
+curl -X POST "http://localhost:3200/batchGetSongInfo" \
+  -H "Content-Type: application/json" \
+  -d '{"songs":[["003rJSwm3TechU"],["0042c8L50x6Z9z"]]}'
 ```
 
 ## 相关接口

@@ -11,6 +11,8 @@ title: 使用指南
 
 - **[安装指南](/guide/installation)**：环境要求、依赖安装、启动方式
 - **[快速开始](/guide/quickstart)**：常用接口调用示例
+- **[快速使用指南](/QUICK_START)**：本地服务启动后的接口测试与 Cookie 获取说明
+- **[降级服务示例](/DEGRADE_EXAMPLES)**：手动传递 Cookie、Header 调用和多语言示例
 - **[代码架构](/guide/architecture)**：项目分层与 TypeScript 抽象说明
 
 ## 推荐阅读顺序
@@ -30,6 +32,8 @@ title: 使用指南
 ### 使用与调试
 
 - [快速开始](/guide/quickstart) - 常见请求示例与调试建议
+- [快速使用指南](/QUICK_START) - 本地服务状态、常用接口与 Cookie 更新说明
+- [降级服务示例](/DEGRADE_EXAMPLES) - 降级模式下的 Query/Header Cookie 调用示例
 - [其他接口](/api/other) - 扫码登录、电台、图片、下载等接口说明
 
 ### 开发与维护
@@ -42,6 +46,6 @@ title: 使用指南
 - 默认端口 `3200`
 - 支持音乐、歌手、歌单、排行、搜索、评论等能力
 - 已提供 QQ 扫码登录二维码获取与登录状态轮询接口
-- 提供 [`Jest`](../../jest.config.js) 测试与 [`VitePress`](../index.md) 文档站点
+- 提供 [Jest 测试配置](https://github.com/sansenjian/qq-music-api/blob/main/jest.config.ts) 与 [`VitePress 2`](../index.md) 文档站点
 
 详细接口请查看 [API 文档](/api/)。

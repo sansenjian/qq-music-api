@@ -45,6 +45,10 @@ const controller: Controller = async (ctx, next) => {
     })
     .catch(error => {
       console.log('error', error);
+      ctx.status = 502;
+      ctx.body = {
+        error: error instanceof Error ? error.message : error
+      };
     });
 };
 

@@ -400,6 +400,45 @@ describe('API Integration Tests', () => {
       });
     });
 
+    test('should forward qqmusic_key as authst and not send hard-coded sign', async () => {
+      mockService.mockResolvedValueOnce({
+        data: {
+          req_0: {
+            data: {
+              sip: ['https://isure.stream.qqmusic.qq.com/'],
+              midurlinfo: [
+                {
+                  songmid: 'vip-mid',
+                  purl: 'M500vip-midvip-mid.mp3'
+                }
+              ]
+            }
+          }
+        }
+      });
+
+      await request(callback)
+        .get('/getMusicPlay')
+        .query({
+          songmid: 'vip-mid',
+          cookie: 'uin=o123456789; qqmusic_key=vip-auth-key; qqmusic_uin=123456789'
+        })
+        .expect(200);
+
+      const firstCallConfig = mockService.mock.calls[0][0] as {
+        params: {
+          sign?: string;
+          data: string;
+        };
+        headers?: Record<string, string>;
+      };
+      const payload = JSON.parse(firstCallConfig.params.data);
+
+      expect(firstCallConfig.params.sign).toBeUndefined();
+      expect(payload.req_0.param.authst).toBe('vip-auth-key');
+      expect(firstCallConfig.headers?.Cookie).toBe('uin=o123456789; qqmusic_key=vip-auth-key; qqmusic_uin=123456789');
+    });
+
     test('should handle comma-separated songmid list and include missing entries', async () => {
       mockService.mockResolvedValueOnce({
         data: {
