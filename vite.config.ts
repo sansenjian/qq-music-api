@@ -1,9 +1,22 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { oxcTransform } from './plugins/vite-plugin-oxc-transform';
+import type { Plugin } from 'vite';
+
+function nodeBinShebang(): Plugin {
+	return {
+		name: 'node-bin-shebang',
+		generateBundle(_, bundle) {
+			const appChunk = bundle['app.js'];
+			if (appChunk?.type === 'chunk') {
+				appChunk.code = `#!/usr/bin/env node\n${appChunk.code}`;
+			}
+		},
+	};
+}
 
 export default defineConfig({
-	plugins: [oxcTransform()],
+	plugins: [oxcTransform(), nodeBinShebang()],
 	build: {
 		target: 'node20',
 		ssr: true,

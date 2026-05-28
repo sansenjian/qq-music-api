@@ -9,12 +9,17 @@
 	"type": "module",
 	"main": "dist/index.cjs",
 	"module": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"types": "dist/index.d.cts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/index.cjs"
+			"import": {
+				"types": "./dist/index.d.mts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
 		}
 	},
 	"bin": {
@@ -23,8 +28,12 @@
 	"files": [
 		"dist/app.js",
 		"dist/app.cjs",
+		"dist/app.d.cts",
+		"dist/app.d.mts",
 		"dist/index.js",
 		"dist/index.cjs",
+		"dist/index.d.cts",
+		"dist/index.d.mts",
 		"dist/app.d.ts",
 		"dist/index.d.ts",
 		"dist/config",
@@ -53,7 +62,7 @@
 	},
 	"scripts": {
 		"dev": "tsx src/app.ts",
-		"build": "vite build && tsc --emitDeclarationOnly",
+		"build": "vite build && tsc --emitDeclarationOnly && node scripts/fix-cjs-declarations.js",
 		"start": "node dist/app.js",
 		"vercel-build": "npm run build && npm run docs:build && (cp -r public dist/ 2>/dev/null || true)",
 		"docs:build": "node scripts/generate-version.js && vitepress build docs",
