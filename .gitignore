@@ -3,7 +3,6 @@ node_modules
 *.log
 
 .idea/
-package-lock.json
 pnpm-lock.yaml
 
 .vscode
@@ -18,6 +17,7 @@ dist/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 docs-dist/
+.node-modules-inspector/
 
 # 旧版 Docsify 文档文件（已迁移到 VitePress）
 docs/index.html

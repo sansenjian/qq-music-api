@@ -85,7 +85,9 @@
 		"build:local-images": "node ./scripts/build-images.js local",
 		"build:remote-images": "node ./scripts/build-images.js remote",
 		"build:images": "npm run build:local-images && npm run build:remote-images",
-		"run:images": "docker run -d --name qq-music-api -p 3200:3200 qq-music-api "
+		"run:images": "docker run -d --name qq-music-api -p 3200:3200 qq-music-api ",
+		"deps:inspect": "node-modules-inspector --port 9999",
+		"deps:build": "node-modules-inspector build --outDir .node-modules-inspector"
 	},
 	"repository": {
 		"type": "git",
@@ -118,6 +120,7 @@
 		"@vitest/coverage-v8": "^4.1.6",
 		"husky": "^9.0.0",
 		"lint-staged": "^16.4.0",
+		"node-modules-inspector": "^2.0.1",
 		"nodemon": "^3.1.14",
 		"oxc-transform": "^0.132.0",
 		"oxlint": "^1.65.0",
