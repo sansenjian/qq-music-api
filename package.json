@@ -120,7 +120,7 @@
 		"@vitest/coverage-v8": "^4.1.6",
 		"husky": "^9.0.0",
 		"lint-staged": "^16.4.0",
-		"node-modules-inspector": "^2.0.1",
+		"node-modules-inspector": "^1.4.2",
 		"nodemon": "^3.1.14",
 		"oxc-transform": "^0.132.0",
 		"oxlint": "^1.65.0",

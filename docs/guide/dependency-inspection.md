@@ -29,6 +29,6 @@ npm run deps:build
 
 ## 版本说明
 
-当前固定使用 `node-modules-inspector@2.0.1`。`2.1.x` 版本暂时依赖尚未发布到 npm 的 `publint@^0.3.21`，在 npm 安装时会失败；等上游发布修复后再升级。
+当前固定使用 `node-modules-inspector@1.4.2`。`2.0.x` 会通过 `devframe` 引入低采用率的 `logs-sdk`，`2.1.x` 版本暂时依赖尚未发布到 npm 的 `publint@^0.3.21`，在 npm 安装时会失败；等上游发布修复后再升级。
 
-项目当前不提交 `package-lock.json`，因此暂不提供 `node-modules-inspector check` 脚本；该命令依赖 npm lockfile 的 `npm query --package-lock-only` 能力。
+项目当前提交并维护 `package-lock.json`。如果后续需要在 CI 中增加依赖快照校验，可以再评估接入 `node-modules-inspector check`；本次仅提供交互式分析和静态报告构建命令。
