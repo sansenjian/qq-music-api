@@ -107,13 +107,13 @@
 	"homepage": "https://github.com/sansenjian/qq-music-api#readme",
 	"dependencies": {
 		"@koa/router": "^15.5.0",
-		"axios": "^1.16.0",
+		"axios": "^1.16.1",
 		"koa": "^2.16.4"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^20.5.3",
 		"@commitlint/config-conventional": "^20.5.3",
-		"@types/koa": "^3.0.1",
+		"@types/koa": "^3.0.3",
 		"@types/koa__router": "^12.0.5",
 		"@types/node": "^25.3.3",
 		"@types/supertest": "^7.2.0",
@@ -124,10 +124,10 @@
 		"nodemon": "^3.1.14",
 		"oxc-transform": "^0.132.0",
 		"oxlint": "^1.65.0",
-		"prettier": "^3.8.1",
+		"prettier": "^3.8.3",
 		"sinon": "^21.0.1",
 		"supertest": "^7.2.2",
-		"tsx": "^4.21.0",
+		"tsx": "^4.22.3",
 		"typescript": "5.7.3",
 		"vite": "^8.0.13",
 		"vitepress": "^2.0.0-alpha.17",
@@ -144,7 +144,8 @@
 		"readdirp": {
 			"picomatch": "^2.3.2"
 		},
-		"yaml": "^2.9.0"
+		"yaml": "^2.9.0",
+		"semver": "7.8.0"
 	},
 	"engines": {
 		"node": "^20.17.0 || >=22.9.0",
