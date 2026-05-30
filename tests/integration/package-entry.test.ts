@@ -8,6 +8,8 @@ const execFileAsync = promisify(execFile);
 const projectRoot = process.cwd();
 const configDir = path.join(projectRoot, 'tests', 'output', 'package-entry-config');
 const outputDir = path.join(projectRoot, 'tests', 'output', 'package-entry');
+const typesDir = path.join(projectRoot, 'tests', 'output', 'package-entry-types');
+const tscEntry = path.join(projectRoot, 'node_modules', 'typescript', 'bin', 'tsc');
 
 const commandOptions = {
 	cwd: projectRoot,
@@ -29,6 +31,82 @@ const runNode = async (args: string[]) =>
 		},
 		timeout: 60_000,
 	});
+
+const runTsc = async (configPath: string) =>
+	execFileAsync(process.execPath, [tscEntry, '--project', configPath, '--pretty', 'false'], {
+		cwd: projectRoot,
+		timeout: 60_000,
+	});
+
+const writeTypesFixture = () => {
+	fs.rmSync(typesDir, { recursive: true, force: true });
+	fs.mkdirSync(typesDir, { recursive: true });
+
+	fs.writeFileSync(
+		path.join(typesDir, 'esm-consumer.mts'),
+		[
+			"import app from '@sansenjian/qq-music-api';",
+			"import type Koa from 'koa';",
+			'',
+			'const typedApp: Koa = app;',
+			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'void callback;',
+			'',
+		].join('\n'),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'cjs-consumer.cts'),
+		[
+			"import app = require('@sansenjian/qq-music-api');",
+			"import type Koa from 'koa';",
+			'',
+			'const typedApp: Koa = app;',
+			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'void callback;',
+			'',
+		].join('\n'),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.node16.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'Node16',
+					moduleResolution: 'Node16',
+					strict: true,
+					noEmit: true,
+					esModuleInterop: true,
+					skipLibCheck: false,
+					types: ['node'],
+				},
+				include: ['esm-consumer.mts', 'cjs-consumer.cts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.bundler.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'ESNext',
+					moduleResolution: 'Bundler',
+					strict: true,
+					noEmit: true,
+					esModuleInterop: true,
+					skipLibCheck: false,
+					types: ['node'],
+				},
+				include: ['esm-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+};
 
 const waitForServerStart = (entry: string) =>
 	new Promise<void>((resolve, reject) => {
@@ -115,9 +193,11 @@ describe('Package Entry Compatibility', () => {
 				'--eval',
 				`
 					const mod = require('@sansenjian/qq-music-api');
-					const app = mod.default || mod;
-					if (typeof app.callback !== 'function') {
+					if (typeof mod.callback !== 'function') {
 						throw new Error('Expected CJS export to be a Koa app');
+					}
+					if (Object.prototype.hasOwnProperty.call(mod, 'default')) {
+						throw new Error('Expected CJS export to work without a .default wrapper');
 					}
 					console.log('cjs ok');
 				`,
@@ -139,6 +219,26 @@ describe('Package Entry Compatibility', () => {
 			fs.symlinkSync(realEntry, symlinkEntry);
 
 			await waitForServerStart(symlinkEntry);
+		},
+		60_000,
+	);
+
+	test(
+		'should expose Node16-compatible types for ESM import and CJS require consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.node16.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose bundler-compatible types for ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.bundler.json'));
 		},
 		60_000,
 	);
