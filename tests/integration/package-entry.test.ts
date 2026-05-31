@@ -209,6 +209,15 @@ describe('Package Entry Compatibility', () => {
 		60_000,
 	);
 
+	test('should emit a node shebang on the package bin entry', () => {
+		const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')) as {
+			bin: Record<string, string>;
+		};
+		const binEntry = path.join(projectRoot, packageJson.bin['qq-music-api']);
+
+		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
+	});
+
 	test(
 		'should start the CLI when invoked through a symlinked bin path',
 		async () => {
