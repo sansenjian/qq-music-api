@@ -342,11 +342,18 @@ export const runCli = async (argv: string[] = process.argv.slice(2), io: CliIo =
 
 		if (command === 'mcp' && (subcommand === 'start' || subcommand === undefined)) {
 			const restoreConsoleOutput = redirectConsoleOutputToStderr();
+			const restoreOnProcessExit = () => {
+				restoreConsoleOutput();
+			};
+			process.once('exit', restoreOnProcessExit);
+
 			try {
 				const { runMcpServer } = await import('./mcp/server');
 				await runMcpServer();
-			} finally {
+			} catch (error) {
+				process.off('exit', restoreOnProcessExit);
 				restoreConsoleOutput();
+				throw error;
 			}
 			return 0;
 		}
