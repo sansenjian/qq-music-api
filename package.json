@@ -1,6 +1,6 @@
 {
 	"name": "@sansenjian/qq-music-api",
-	"version": "2.3.2",
+	"version": "2.3.4",
 	"packageManager": "npm@11.14.1",
 	"publishConfig": {
 		"access": "public"

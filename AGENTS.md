@@ -41,6 +41,7 @@ For code changes, run `npm run build && npm run test` before handoff. If docs ch
 
 - [Architecture and layering](docs/agent-instructions/architecture.md)
 - [Development workflow](docs/agent-instructions/development.md)
+- [Branching and merge rules](docs/agent-instructions/branching.md)
 - [Testing and validation](docs/agent-instructions/testing.md)
 - [Safety boundaries](docs/agent-instructions/safety.md)
 - [Release workflow](docs/agent-instructions/release.md)

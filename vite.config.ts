@@ -12,26 +12,31 @@ function nodeBinShebang(): Plugin {
 	return {
 		name: 'node-bin-shebang',
 		generateBundle(_, bundle) {
-			let locatedEntries = 0;
+			const locatedEntryIds = new Set<string>();
 
 			Object.values(bundle).forEach(output => {
 				if (
 					output.type !== 'chunk' ||
 					!output.isEntry ||
-					output.facadeModuleId === null ||
-					!binEntryIds.has(normalizePath(output.facadeModuleId))
+					output.facadeModuleId === null
 				) {
 					return;
 				}
 
-				locatedEntries += 1;
+				const facadeModuleId = normalizePath(output.facadeModuleId);
+				if (!binEntryIds.has(facadeModuleId)) {
+					return;
+				}
+
+				locatedEntryIds.add(facadeModuleId);
 				if (!output.code.startsWith('#!/usr/bin/env node')) {
 					output.code = `#!/usr/bin/env node\n${output.code}`;
 				}
 			});
 
-			if (locatedEntries !== binEntryIds.size) {
-				this.error(`Expected ${binEntryIds.size} bin entry chunks, found ${locatedEntries}.`);
+			const missingEntryIds = [...binEntryIds].filter(entryId => !locatedEntryIds.has(entryId));
+			if (missingEntryIds.length > 0) {
+				this.error(`Failed to locate bin entry chunks for: ${missingEntryIds.join(', ')}`);
 			}
 		},
 	};
