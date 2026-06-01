@@ -40,18 +40,7 @@ export const createQqMusicMcpServer = (options: CreateQqMusicMcpServerOptions = 
 	return server;
 };
 
-const redirectConsoleLogToStderr = () => {
-	const stderrLog = (...args: unknown[]) => {
-		console.error(...args);
-	};
-
-	console.log = stderrLog;
-	console.info = stderrLog;
-	console.warn = stderrLog;
-};
-
 export const runMcpServer = async (): Promise<void> => {
-	redirectConsoleLogToStderr();
 	const server = createQqMusicMcpServer();
 	const transport = new StdioServerTransport();
 	await server.connect(transport);

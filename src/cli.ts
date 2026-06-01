@@ -105,6 +105,25 @@ const printError = (io: CliIo, json: boolean, code: string, message: string): nu
 	return 1;
 };
 
+const redirectConsoleOutputToStderr = (): (() => void) => {
+	const originalLog = console.log;
+	const originalInfo = console.info;
+	const originalWarn = console.warn;
+	const stderrLog = (...args: unknown[]) => {
+		console.error(...args);
+	};
+
+	console.log = stderrLog;
+	console.info = stderrLog;
+	console.warn = stderrLog;
+
+	return () => {
+		console.log = originalLog;
+		console.info = originalInfo;
+		console.warn = originalWarn;
+	};
+};
+
 const helpText = () => `QQ Music API CLI
 
 Usage:
@@ -163,8 +182,13 @@ const getCookieKeys = (cookie: string | undefined): string[] => {
 		.split(';')
 		.map(item => item.trim())
 		.filter(Boolean)
-		.map(item => item.slice(0, item.indexOf('=')).trim())
-		.filter(Boolean);
+		.flatMap(item => {
+			const separatorIndex = item.indexOf('=');
+			if (separatorIndex <= 0) return [];
+
+			const key = item.slice(0, separatorIndex).trim();
+			return key ? [key] : [];
+		});
 };
 
 const checkWritable = (configDir: string) => {
@@ -317,8 +341,13 @@ export const runCli = async (argv: string[] = process.argv.slice(2), io: CliIo =
 		}
 
 		if (command === 'mcp' && (subcommand === 'start' || subcommand === undefined)) {
-			const { runMcpServer } = await import('./mcp/server');
-			await runMcpServer();
+			const restoreConsoleOutput = redirectConsoleOutputToStderr();
+			try {
+				const { runMcpServer } = await import('./mcp/server');
+				await runMcpServer();
+			} finally {
+				restoreConsoleOutput();
+			}
 			return 0;
 		}
 

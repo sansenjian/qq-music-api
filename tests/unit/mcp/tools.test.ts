@@ -54,7 +54,7 @@ describe('MCP tool handlers', () => {
 		setUserInfo({
 			loginUin: 'o123456',
 			uin: 'o123456',
-			cookie: 'uin=o123456; qqmusic_key=secret-value',
+			cookie: 'uin=o123456; malformed; qqmusic_key=secret-value',
 			cookieList: [],
 			cookieObject: {},
 			refreshData: () => ({}),
@@ -69,6 +69,7 @@ describe('MCP tool handlers', () => {
 		expect(text).toContain('qqmusic_key');
 		expect(text).not.toContain('secret-value');
 		expect(payload.metadata).toEqual({ redacted: true });
+		expect((payload.data as { cookieKeys: string[] }).cookieKeys).toEqual(['uin', 'qqmusic_key']);
 	});
 
 	test('searches songs through the service layer with normalized params', async () => {
@@ -119,5 +120,28 @@ describe('MCP tool handlers', () => {
 				message: 'network down',
 			},
 		});
+	});
+
+	test('bounds upstream error messages in structured content', async () => {
+		const longDetail = 'x'.repeat(5_000);
+		const services = createServices({
+			getTopLists: vi.fn().mockResolvedValue({
+				status: 502,
+				body: {
+					error: {
+						detail: longDetail,
+					},
+				},
+			}),
+		});
+		const handlers = createQqMusicMcpHandlers(services);
+
+		const result = await handlers.getTopLists({ response_format: 'json' });
+		const payload = payloadOf(result);
+
+		expect(result.isError).toBe(true);
+		expect(payload.error?.code).toBe('UPSTREAM_ERROR');
+		expect(payload.error?.message.length).toBeLessThan(2_200);
+		expect(payload.error?.message).toContain('Response truncated');
 	});
 });

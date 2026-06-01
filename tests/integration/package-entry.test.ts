@@ -253,6 +253,9 @@ describe('Package Entry Compatibility', () => {
 	test(
 		'should expose MCP tools over stdio through the CLI',
 		async () => {
+			fs.mkdirSync(configDir, { recursive: true });
+			fs.writeFileSync(path.join(configDir, 'service-config.json'), '{ invalid json', 'utf-8');
+
 			const transport = new StdioClientTransport({
 				command: process.execPath,
 				args: [getPackageBinEntry(), 'mcp', 'start'],
@@ -353,7 +356,7 @@ describe('Package Entry Compatibility', () => {
 			path.join(configDir, 'user-info.json'),
 			JSON.stringify({
 				loginUin: 'o123456',
-				cookie: 'uin=o123456; qqmusic_key=secret-value',
+				cookie: 'uin=o123456; malformed; qqmusic_key=secret-value',
 			}),
 			'utf-8',
 		);

@@ -14,6 +14,7 @@ import {
 import type { ApiResponse } from '../types/api';
 
 const CHARACTER_LIMIT = 24_000;
+const ERROR_MESSAGE_LIMIT = 2_000;
 
 const responseFormatSchema = z
 	.enum(['markdown', 'json'])
@@ -122,6 +123,11 @@ const stringify = (value: unknown): string => {
 const jsonBlock = (title: string, value: unknown): string =>
 	[`# ${title}`, '', '```json', truncate(stringify(value), 12_000), '```'].join('\n');
 
+const errorMessageText = (value: unknown): string => {
+	const text = typeof value === 'string' ? value : stringify(value);
+	return truncate(text, ERROR_MESSAGE_LIMIT);
+};
+
 const createToolResult = <TData>(
 	payload: QqMusicToolPayload<TData>,
 	responseFormat: ResponseFormat,
@@ -136,7 +142,7 @@ const createToolResult = <TData>(
 };
 
 const errorResult = (tool: string, error: unknown, responseFormat: ResponseFormat): CallToolResult => {
-	const message = error instanceof Error ? error.message : String(error);
+	const message = errorMessageText(error instanceof Error ? error.message : error);
 	const payload: QqMusicToolPayload = {
 		ok: false,
 		tool,
@@ -182,7 +188,7 @@ const serviceResult = (
 				status: response.status,
 				error: {
 					code: 'UPSTREAM_ERROR',
-					message: typeof upstreamError === 'string' ? upstreamError : stringify(upstreamError || data),
+					message: errorMessageText(upstreamError ?? data),
 				},
 				data,
 			};
@@ -197,8 +203,13 @@ const cookieKeys = (cookie: string | undefined): string[] => {
 		.split(';')
 		.map(item => item.trim())
 		.filter(Boolean)
-		.map(item => item.slice(0, item.indexOf('=')).trim())
-		.filter(Boolean);
+		.flatMap(item => {
+			const separatorIndex = item.indexOf('=');
+			if (separatorIndex <= 0) return [];
+
+			const key = item.slice(0, separatorIndex).trim();
+			return key ? [key] : [];
+		});
 };
 
 const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
