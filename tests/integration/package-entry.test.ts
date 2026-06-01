@@ -275,12 +275,27 @@ describe('Package Entry Compatibility', () => {
 				await client.connect(transport);
 				const tools = await client.listTools();
 				const toolNames = tools.tools.map(tool => tool.name);
+				const searchTool = tools.tools.find(tool => tool.name === 'qq_music_search_songs');
 
 				expect(toolNames).toEqual(expect.arrayContaining([
 					'qq_music_config_status',
 					'qq_music_list_apis',
 					'qq_music_search_songs',
 				]));
+				expect(searchTool?.inputSchema).toMatchObject({
+					type: 'object',
+					properties: {
+						keyword: expect.any(Object),
+						response_format: expect.any(Object),
+					},
+				});
+				expect(searchTool?.outputSchema).toMatchObject({
+					type: 'object',
+					properties: {
+						ok: expect.any(Object),
+						tool: expect.any(Object),
+					},
+				});
 
 				const result = await client.callTool({
 					name: 'qq_music_config_status',

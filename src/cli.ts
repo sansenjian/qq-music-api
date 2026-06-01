@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { getConfigDir, resolveConfigPath } from './config/config-path';
 import { getUserInfo, setUserInfo } from './config/user-info-store';
 import type { UserInfo } from './types';
+import { getCookieKeys } from './util/cookieResolver';
 import pkg from '../package.json';
 
 interface CliIo {
@@ -109,6 +110,7 @@ const redirectConsoleOutputToStderr = (): (() => void) => {
 	const originalLog = console.log;
 	const originalInfo = console.info;
 	const originalWarn = console.warn;
+	const originalDebug = console.debug;
 	const stderrLog = (...args: unknown[]) => {
 		console.error(...args);
 	};
@@ -116,11 +118,13 @@ const redirectConsoleOutputToStderr = (): (() => void) => {
 	console.log = stderrLog;
 	console.info = stderrLog;
 	console.warn = stderrLog;
+	console.debug = stderrLog;
 
 	return () => {
 		console.log = originalLog;
 		console.info = originalInfo;
 		console.warn = originalWarn;
+		console.debug = originalDebug;
 	};
 };
 
@@ -174,21 +178,6 @@ const readJsonFileStatus = (filePath: string): JsonFileStatus => {
 			error: error instanceof Error ? error.message : 'Invalid JSON',
 		};
 	}
-};
-
-const getCookieKeys = (cookie: string | undefined): string[] => {
-	if (!cookie) return [];
-	return cookie
-		.split(';')
-		.map(item => item.trim())
-		.filter(Boolean)
-		.flatMap(item => {
-			const separatorIndex = item.indexOf('=');
-			if (separatorIndex <= 0) return [];
-
-			const key = item.slice(0, separatorIndex).trim();
-			return key ? [key] : [];
-		});
 };
 
 const checkWritable = (configDir: string) => {

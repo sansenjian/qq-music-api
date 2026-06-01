@@ -42,6 +42,22 @@ export const extractCookieValue = (cookie: string | undefined, name: string): st
   return value || undefined;
 };
 
+export const getCookieKeys = (cookie: string | undefined): string[] => {
+  if (!cookie) return [];
+
+  return cookie
+    .split(';')
+    .map(item => item.trim())
+    .filter(Boolean)
+    .flatMap(item => {
+      const separatorIndex = item.indexOf('=');
+      if (separatorIndex <= 0) return [];
+
+      const key = item.slice(0, separatorIndex).trim();
+      return key ? [key] : [];
+    });
+};
+
 export const extractUinFromCookie = (cookie?: string): string | undefined => {
   return extractCookieValue(cookie, 'uin');
 };

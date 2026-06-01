@@ -2,6 +2,7 @@ import type { UserInfo } from '../../../src/types';
 import {
   extractCookieValue,
   extractUinFromCookie,
+  getCookieKeys,
   resolveRequestCookie,
 } from '../../../src/util/cookieResolver';
 
@@ -44,6 +45,13 @@ describe('util/cookieResolver cookie value parsing', () => {
   test('should trim values and ignore empty matches', () => {
     expect(extractCookieValue('qqmusic_key=  value  ', 'qqmusic_key')).toBe('value');
     expect(extractCookieValue('qqmusic_key=; uin=o123456', 'qqmusic_key')).toBeUndefined();
+  });
+
+  test('should list cookie keys while skipping malformed segments', () => {
+    expect(getCookieKeys('uin=o123456; malformed; =empty; qqmusic_key=secret=value')).toEqual([
+      'uin',
+      'qqmusic_key',
+    ]);
   });
 
   test('should reuse cookie value parsing for uin extraction', () => {

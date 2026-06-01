@@ -12,16 +12,18 @@ import {
 	songListDetail,
 } from '../services';
 import type { ApiResponse } from '../types/api';
+import { getCookieKeys } from '../util/cookieResolver';
 
 const CHARACTER_LIMIT = 24_000;
 const ERROR_MESSAGE_LIMIT = 2_000;
 
-const responseFormatSchema = z
+const responseFormatField = z
 	.enum(['markdown', 'json'])
 	.default('markdown')
 	.describe("Response format. Use 'markdown' for readable summaries or 'json' for structured output.");
 
-const mcpOutputSchema = {
+// The MCP SDK accepts Zod raw shapes here and serializes them to JSON Schema in listTools.
+const mcpOutputShape = {
 	ok: z.boolean(),
 	tool: z.string(),
 	status: z.number().optional(),
@@ -196,22 +198,6 @@ const serviceResult = (
 	return createToolResult(payload, responseFormat, jsonBlock(title, data));
 };
 
-const cookieKeys = (cookie: string | undefined): string[] => {
-	if (!cookie) return [];
-
-	return cookie
-		.split(';')
-		.map(item => item.trim())
-		.filter(Boolean)
-		.flatMap(item => {
-			const separatorIndex = item.indexOf('=');
-			if (separatorIndex <= 0) return [];
-
-			const key = item.slice(0, separatorIndex).trim();
-			return key ? [key] : [];
-		});
-};
-
 const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
 	const data = payload.data as {
 		total: number;
@@ -277,7 +263,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 	getAuthStatus: async (input: CommonInput): Promise<CallToolResult> => {
 		const responseFormat = getResponseFormat(input);
 		const userInfo = getUserInfo();
-		const keys = cookieKeys(userInfo.cookie);
+		const keys = getCookieKeys(userInfo.cookie);
 		const data = {
 			authenticated: Boolean(userInfo.cookie && (userInfo.uin || userInfo.loginUin)),
 			uin: userInfo.uin || userInfo.loginUin || '',
@@ -431,8 +417,8 @@ export const registerQqMusicMcpTools = (
 		{
 			title: 'QQ Music Config Status',
 			description: 'Return local QQ Music API config paths. Does not read or expose credential values.',
-			inputSchema: { response_format: responseFormatSchema },
-			outputSchema: mcpOutputSchema,
+			inputSchema: { response_format: responseFormatField },
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyLocal,
 		},
 		handlers.getConfigStatus,
@@ -443,8 +429,8 @@ export const registerQqMusicMcpTools = (
 		{
 			title: 'QQ Music Auth Status',
 			description: 'Return redacted login status and cookie key names. Never returns full cookie values.',
-			inputSchema: { response_format: responseFormatSchema },
-			outputSchema: mcpOutputSchema,
+			inputSchema: { response_format: responseFormatField },
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyLocal,
 		},
 		handlers.getAuthStatus,
@@ -459,9 +445,9 @@ export const registerQqMusicMcpTools = (
 				category: z.string().min(1).max(40).optional().describe("Optional category such as 'search', 'music', or 'playlist'."),
 				limit: z.number().int().min(1).max(100).default(20).describe('Maximum APIs to return.'),
 				offset: z.number().int().min(0).default(0).describe('Number of APIs to skip.'),
-				response_format: responseFormatSchema,
+				response_format: responseFormatField,
 			},
-			outputSchema: mcpOutputSchema,
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyLocal,
 		},
 		handlers.listApis,
@@ -472,8 +458,8 @@ export const registerQqMusicMcpTools = (
 		{
 			title: 'Get QQ Music Hot Keys',
 			description: 'Fetch public QQ Music search hot keys from the upstream service.',
-			inputSchema: { response_format: responseFormatSchema },
-			outputSchema: mcpOutputSchema,
+			inputSchema: { response_format: responseFormatField },
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyExternal,
 		},
 		handlers.getHotKeys,
@@ -492,9 +478,9 @@ export const registerQqMusicMcpTools = (
 					.enum(['song', 'album', 'mv', 'singer', 'smartbox'])
 					.default('song')
 					.describe('QQ Music search scope.'),
-				response_format: responseFormatSchema,
+				response_format: responseFormatField,
 			},
-			outputSchema: mcpOutputSchema,
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyExternal,
 		},
 		handlers.searchSongs,
@@ -505,8 +491,8 @@ export const registerQqMusicMcpTools = (
 		{
 			title: 'Get QQ Music Top Lists',
 			description: 'Fetch public QQ Music ranking list metadata.',
-			inputSchema: { response_format: responseFormatSchema },
-			outputSchema: mcpOutputSchema,
+			inputSchema: { response_format: responseFormatField },
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyExternal,
 		},
 		handlers.getTopLists,
@@ -519,9 +505,9 @@ export const registerQqMusicMcpTools = (
 			description: 'Fetch public QQ Music playlist details by disstid.',
 			inputSchema: {
 				disstid: z.string().min(1).max(80).describe('QQ Music playlist disstid.'),
-				response_format: responseFormatSchema,
+				response_format: responseFormatField,
 			},
-			outputSchema: mcpOutputSchema,
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyExternal,
 		},
 		handlers.getPlaylistDetail,
@@ -534,9 +520,9 @@ export const registerQqMusicMcpTools = (
 			description: 'Fetch public QQ Music album information by albummid.',
 			inputSchema: {
 				albummid: z.string().min(1).max(80).describe('QQ Music album MID.'),
-				response_format: responseFormatSchema,
+				response_format: responseFormatField,
 			},
-			outputSchema: mcpOutputSchema,
+			outputSchema: mcpOutputShape,
 			annotations: readOnlyExternal,
 		},
 		handlers.getAlbumInfo,
