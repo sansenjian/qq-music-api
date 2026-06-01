@@ -7,6 +7,24 @@ on:
         description: 'Tag to release (e.g., v1.0.0). Leave empty to use version from package.json'
         required: false
         type: string
+      channel:
+        description: 'Release channel. auto uses beta on dev and latest for version tags/main.'
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - beta
+          - latest
+  push:
+    branches:
+      - dev
+    tags:
+      - 'v*'
+
+concurrency:
+  group: package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -19,8 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag || '' }}
+          ref: ${{ github.event.inputs.tag || '' }}
           fetch-tags: true
+          fetch-depth: 0
 
       - name: Setup Node.js for NPM
         uses: actions/setup-node@v6
@@ -32,17 +51,76 @@ jobs:
       - name: Setup npm 11
         run: bash .github/scripts/setup-npm.sh 11.14.1
 
-      - name: Determine version to publish
-        id: version
+      - name: Determine release channel and version
+        id: release
+        shell: bash
         run: |
-          if [ -n "${{ inputs.tag }}" ]; then
-            echo "Using provided tag: ${{ inputs.tag }}"
-            echo "version=${{ inputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            VERSION=$(node -p "require('./package.json').version")
-            echo "No tag provided, using package.json version: v$VERSION"
-            echo "version=v$VERSION" >> $GITHUB_OUTPUT
+          INPUT_TAG="${{ github.event.inputs.tag || '' }}"
+          INPUT_CHANNEL="${{ github.event.inputs.channel || 'auto' }}"
+          CHANNEL="$INPUT_CHANNEL"
+
+          if [ "$CHANNEL" = "auto" ]; then
+            if [ -n "$INPUT_TAG" ] || [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+              CHANNEL="latest"
+            elif [[ "$GITHUB_REF" == refs/heads/dev ]]; then
+              CHANNEL="beta"
+            elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+              CHANNEL="latest"
+            else
+              echo "Unable to infer release channel for $GITHUB_REF. Set workflow_dispatch channel explicitly."
+              exit 1
+            fi
           fi
+
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          if [ "$CHANNEL" = "beta" ]; then
+            PUBLISH_VERSION=$(node -e 'const version = process.argv[1].split("-")[0].split(".").map(Number); const run = process.env.GITHUB_RUN_NUMBER; const attempt = process.env.GITHUB_RUN_ATTEMPT; console.log(`${version[0]}.${version[1]}.${version[2] + 1}-beta.${run}.${attempt}`);' "$CURRENT_VERSION")
+            npm pkg set version="$PUBLISH_VERSION"
+            NPM_TAG="beta"
+          elif [ "$CHANNEL" = "latest" ]; then
+            PUBLISH_VERSION="$CURRENT_VERSION"
+            NPM_TAG="latest"
+            if [[ "$PUBLISH_VERSION" == *-* ]]; then
+              echo "Latest releases must use a stable numeric version, got $PUBLISH_VERSION."
+              exit 1
+            fi
+            TAG_REF="$INPUT_TAG"
+            if [ -z "$TAG_REF" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+              TAG_REF="${GITHUB_REF#refs/tags/}"
+            fi
+            if [ -n "$TAG_REF" ]; then
+              TAG_VERSION="${TAG_REF#v}"
+              if [ "$TAG_VERSION" != "$PUBLISH_VERSION" ]; then
+                echo "Release tag $TAG_REF does not match package.json version $PUBLISH_VERSION."
+                exit 1
+              fi
+            fi
+          else
+            echo "Unsupported release channel: $CHANNEL"
+            exit 1
+          fi
+
+          echo "Release channel: $CHANNEL"
+          echo "npm dist-tag: $NPM_TAG"
+          echo "Version to publish: $PUBLISH_VERSION"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$PUBLISH_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure beta releases come from dev
+        if: steps.release.outputs.channel == 'beta'
+        shell: bash
+        run: |
+          git fetch origin dev
+          git merge-base --is-ancestor HEAD origin/dev
+
+      - name: Ensure latest releases come from main
+        if: steps.release.outputs.channel == 'latest'
+        shell: bash
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
 
       - name: Install dependencies
         run: npm install --no-package-lock
@@ -65,7 +143,7 @@ jobs:
         run: npm run changelog
 
       - name: Publish to NPM
-        run: npm publish --access public --provenance
+        run: npm publish --access public --tag ${{ steps.release.outputs.npm_tag }} --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -80,6 +158,6 @@ jobs:
         run: bash .github/scripts/setup-npm.sh 11.14.1
 
       - name: Publish to GitHub Packages
-        run: npm publish --access public
+        run: npm publish --access public --tag ${{ steps.release.outputs.npm_tag }}
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
