@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { getConfigDir, resolveConfigPath } from '../config/config-path';
-import { getUserInfo } from '../config/user-info-store';
-import { apiMetadata } from '../routes/api-metadata';
+import { getConfigDir, resolveConfigPath } from '../../../src/config/config-path';
+import { getUserInfo } from '../../../src/config/user-info-store';
+import { apiMetadata } from '../../../src/routes/api-metadata';
 import {
 	getAlbumInfo,
 	getHotKey,
 	getSearchByKey,
 	getTopLists,
 	songListDetail,
-} from '../services';
-import type { ApiResponse } from '../types/api';
-import { getCookieKeys } from '../util/cookieResolver';
+} from '../../../src/services';
+import type { ApiResponse } from '../../../src/types/api';
+import { getCookieKeys } from '../../../src/util/cookieResolver';
 
 const CHARACTER_LIMIT = 24_000;
 const ERROR_MESSAGE_LIMIT = 2_000;

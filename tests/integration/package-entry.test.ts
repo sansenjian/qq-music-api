@@ -47,6 +47,13 @@ const getPackageBinEntry = () => {
 	return path.join(projectRoot, packageJson.bin['qq-music-api']);
 };
 
+const getMcpPackageBinEntry = () => {
+	const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'packages', 'mcp', 'package.json'), 'utf8')) as {
+		bin: Record<string, string>;
+	};
+	return path.join(projectRoot, 'packages', 'mcp', packageJson.bin['qq-music-api-mcp']);
+};
+
 const writeTypesFixture = () => {
 	fs.rmSync(typesDir, { recursive: true, force: true });
 	fs.mkdirSync(typesDir, { recursive: true });
@@ -228,6 +235,12 @@ describe('Package Entry Compatibility', () => {
 		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
 	});
 
+	test('should emit a node shebang on the MCP package bin entry', () => {
+		const binEntry = getMcpPackageBinEntry();
+
+		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
+	});
+
 	test(
 		'should start the CLI when invoked through a symlinked bin path',
 		async () => {
@@ -242,23 +255,36 @@ describe('Package Entry Compatibility', () => {
 		60_000,
 	);
 
+	test('should start the MCP CLI when invoked through a symlinked bin path', async () => {
+		fs.mkdirSync(outputDir, { recursive: true });
+		const realEntry = getMcpPackageBinEntry();
+		const symlinkEntry = path.join(outputDir, 'qq-music-api-mcp-bin.mjs');
+		fs.rmSync(symlinkEntry, { force: true });
+		fs.symlinkSync(realEntry, symlinkEntry);
+
+		const { stdout } = await runNode([symlinkEntry, '--help']);
+
+		expect(stdout).toContain('qq-music-api-mcp');
+	});
+
 	test('should print CLI help without starting the service', async () => {
 		const { stdout } = await runNode([getPackageBinEntry(), '--help']);
 
 		expect(stdout).toContain('qq-music-api config doctor');
 		expect(stdout).toContain('qq-music-api auth status');
-		expect(stdout).toContain('qq-music-api mcp start');
+		expect(stdout).toContain('@sansenjian/qq-music-api-mcp');
+		expect(stdout).not.toContain('qq-music-api mcp start');
 	});
 
 	test(
-		'should expose MCP tools over stdio through the CLI',
+		'should expose MCP tools over stdio through the MCP package CLI',
 		async () => {
 			fs.mkdirSync(configDir, { recursive: true });
 			fs.writeFileSync(path.join(configDir, 'service-config.json'), '{ invalid json', 'utf-8');
 
 			const transport = new StdioClientTransport({
 				command: process.execPath,
-				args: [getPackageBinEntry(), 'mcp', 'start'],
+				args: [getMcpPackageBinEntry()],
 				cwd: projectRoot,
 				env: {
 					...process.env,

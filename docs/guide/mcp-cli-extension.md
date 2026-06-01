@@ -9,7 +9,7 @@ title: MCP 与 CLI 拓展
 
 ## 背景
 
-项目当前主要能力是 Koa HTTP API 服务，同时 npm 包中存在 `bin` 入口，可用于启动 HTTP 服务、查询本地配置状态，并通过 stdio 启动 MCP Server。
+项目当前主要能力是 Koa HTTP API 服务，同时 npm 包中存在 `bin` 入口，可用于启动 HTTP 服务、查询本地配置状态。MCP Server 单独发布为 `@sansenjian/qq-music-api-mcp`，避免普通 API 用户安装 MCP SDK 相关依赖。
 
 如果继续扩展，应避免把 HTTP 服务、命令行工具和 MCP Server 混在一个入口里。三者可以共享底层模块，但运行边界要清晰。
 
@@ -25,7 +25,6 @@ qq-music-api config doctor
 qq-music-api doctor
 qq-music-api auth status
 qq-music-api auth clear
-qq-music-api mcp start
 ```
 
 说明：
@@ -34,14 +33,14 @@ qq-music-api mcp start
 - `serve` 支持 `--port <port>` 和 `--json`。
 - `config path`、`config doctor`、`doctor`、`auth status`、`auth clear` 支持 `--json`。
 - `auth status` 不输出完整 Cookie，只输出登录态是否存在和 Cookie key 列表。
-- `mcp start` 通过 stdio 启动 MCP Server，供支持 MCP 的本地客户端以子进程方式连接。
+- 旧的 `mcp start` 命令会提示用户改用独立 MCP 包。
 
 ## 当前 MCP 状态
 
 当前 MCP Server 使用 `@modelcontextprotocol/sdk` 的 stdio transport，入口如下：
 
 ```bash
-qq-music-api mcp start
+qq-music-api-mcp
 ```
 
 本地源码开发可用：
@@ -63,8 +62,7 @@ MCP 客户端可以使用类似配置：
 {
   "mcpServers": {
     "qq-music-api": {
-      "command": "qq-music-api",
-      "args": ["mcp", "start"],
+      "command": "qq-music-api-mcp",
       "env": {
         "QQ_MUSIC_API_CONFIG_DIR": "/path/to/config"
       }
@@ -118,7 +116,6 @@ qq-music-api config doctor
 qq-music-api config path
 qq-music-api auth status
 qq-music-api auth clear
-qq-music-api mcp start
 ```
 
 ### 命令职责
@@ -130,7 +127,6 @@ qq-music-api mcp start
 | `config doctor` | 检查配置目录是否可写、JSON 是否可解析、敏感文件是否存在。 |
 | `auth status` | 显示是否存在登录态，不输出 Cookie。 |
 | `auth clear` | 清除本地登录态。 |
-| `mcp start` | 启动 MCP Server，供客户端连接。 |
 
 ### CLI 输出规范
 
@@ -197,16 +193,10 @@ MCP 工具优先覆盖无需敏感凭据或可安全降级的能力：
 MCP Server 可以作为独立入口运行：
 
 ```bash
-qq-music-api mcp start
-```
-
-也可以未来暴露独立 bin：
-
-```bash
 qq-music-api-mcp
 ```
 
-是否拆分 bin 取决于安装体验和维护成本。早期可以先放在主 CLI 下，稳定后再考虑独立入口。
+该入口由 `@sansenjian/qq-music-api-mcp` 提供，与主 API 包分开发布。
 
 ## 配置关系
 

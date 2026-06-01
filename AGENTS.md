@@ -14,6 +14,7 @@ QQ Music API 是一个基于 Koa 2 和 TypeScript 的 QQ 音乐 API 服务，包
 - Package manager: `npm@11.14.1`
 - App entry: `src/app.ts`
 - Package entry: `src/index.ts`
+- MCP package: `packages/mcp`
 - Default port: `3200`
 - Production start requires `dist/`
 - Scope: only operate inside this repository unless the user explicitly asks otherwise.
@@ -25,7 +26,10 @@ QQ Music API 是一个基于 Koa 2 和 TypeScript 的 QQ 音乐 API 服务，包
 | Install | `npm install` | `package.json` |
 | Dev server | `npm run dev` | `src/app.ts` |
 | Build | `npm run build` | `vite.config.ts`, `tsconfig.json` |
+| Build core only | `npm run build:core` | `vite.config.ts`, `tsconfig.json` |
+| Build MCP only | `npm run build:mcp` | `packages/mcp/vite.config.ts` |
 | Production start | `npm run start` | `dist/app.js` |
+| MCP dev | `npm run mcp:dev` | `packages/mcp/src/cli.ts` |
 | Test | `npm run test` | `vitest.config.ts` |
 | Lint | `npm run lint` | `.oxlintrc.json` |
 | Format TS | `npm run format` | `.prettierrc` |

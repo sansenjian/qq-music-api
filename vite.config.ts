@@ -7,8 +7,6 @@ const externalPackages = [
 	'koa',
 	'@koa/router',
 	'axios',
-	'@modelcontextprotocol/sdk',
-	'zod',
 ];
 
 function nodeBinShebang(): Plugin {

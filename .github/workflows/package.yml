@@ -77,10 +77,16 @@ jobs:
           if [ "$CHANNEL" = "beta" ]; then
             PUBLISH_VERSION=$(node -e 'const version = process.argv[1].split("-")[0].split(".").map(Number); const run = process.env.GITHUB_RUN_NUMBER; const attempt = process.env.GITHUB_RUN_ATTEMPT; console.log(`${version[0]}.${version[1]}.${version[2] + 1}-beta.${run}.${attempt}`);' "$CURRENT_VERSION")
             npm pkg set version="$PUBLISH_VERSION"
+            npm pkg set version="$PUBLISH_VERSION" --workspace @sansenjian/qq-music-api-mcp
             NPM_TAG="beta"
           elif [ "$CHANNEL" = "latest" ]; then
             PUBLISH_VERSION="$CURRENT_VERSION"
             NPM_TAG="latest"
+            MCP_VERSION=$(node -p "require('./packages/mcp/package.json').version")
+            if [ "$MCP_VERSION" != "$PUBLISH_VERSION" ]; then
+              echo "MCP package version $MCP_VERSION does not match root package version $PUBLISH_VERSION."
+              exit 1
+            fi
             if [[ "$PUBLISH_VERSION" == *-* ]]; then
               echo "Latest releases must use a stable numeric version, got $PUBLISH_VERSION."
               exit 1
@@ -142,8 +148,13 @@ jobs:
       - name: Generate CHANGELOG
         run: npm run changelog
 
-      - name: Publish to NPM
+      - name: Publish core package to NPM
         run: npm publish --access public --tag ${{ steps.release.outputs.npm_tag }} --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish MCP package to NPM
+        run: npm publish --workspace @sansenjian/qq-music-api-mcp --access public --tag ${{ steps.release.outputs.npm_tag }} --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -157,7 +168,12 @@ jobs:
       - name: Setup npm 11 for GitHub Packages
         run: bash .github/scripts/setup-npm.sh 11.14.1
 
-      - name: Publish to GitHub Packages
+      - name: Publish core package to GitHub Packages
         run: npm publish --access public --tag ${{ steps.release.outputs.npm_tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+
+      - name: Publish MCP package to GitHub Packages
+        run: npm publish --workspace @sansenjian/qq-music-api-mcp --access public --tag ${{ steps.release.outputs.npm_tag }}
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}

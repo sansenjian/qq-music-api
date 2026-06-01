@@ -4,7 +4,7 @@ import {
 	createQqMusicMcpHandlers,
 	type QqMusicMcpServices,
 	type QqMusicToolPayload,
-} from '../../../src/mcp/tools';
+} from '../../../packages/mcp/src/tools';
 
 const okResponse = (data: unknown) => ({
 	status: 200,

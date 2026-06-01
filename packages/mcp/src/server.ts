@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { apiMetadata } from '../routes/api-metadata';
-import pkg from '../../package.json';
+import { apiMetadata } from '../../../src/routes/api-metadata';
+import pkg from '../package.json';
 import { registerQqMusicMcpTools } from './tools';
 import type { QqMusicMcpServices } from './tools';
 

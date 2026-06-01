@@ -44,7 +44,7 @@ jobs:
           git config --local user.name "github-actions[bot]"
 
           # 添加所有生成的文件
-          git add package.json CHANGELOG.md docs/public/version.json
+          git add package.json package-lock.json packages/mcp/package.json CHANGELOG.md docs/public/version.json
 
           # 检查是否有更改
           if git diff --cached --quiet; then

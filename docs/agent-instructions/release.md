@@ -12,14 +12,16 @@ This project separates documentation deployment from package publication.
 | --- | --- | --- | --- |
 | GitHub Pages docs | Push to `main` or manual dispatch | `.github/workflows/deploy-docs.yml` | Deploys latest `main` docs |
 | Version bump | Push to `main` or manual dispatch | `.github/workflows/version.yml` | Updates `package.json`, `CHANGELOG.md`, and `docs/public/version.json` |
-| npm beta package | Push to `dev` or manual dispatch with `beta` | `.github/workflows/package.yml` | Publishes a prerelease version to the `beta` dist-tag |
-| npm stable package | `v*` tag or manual dispatch with `latest` | `.github/workflows/package.yml` | Publishes the stable numeric version to the `latest` dist-tag |
+| npm beta packages | Push to `dev` or manual dispatch with `beta` | `.github/workflows/package.yml` | Publishes core and MCP prerelease packages to the `beta` dist-tag |
+| npm stable packages | `v*` tag or manual dispatch with `latest` | `.github/workflows/package.yml` | Publishes core and MCP stable packages to the `latest` dist-tag |
 
 ## Package Publication
 
 - Standard package release is the GitHub Actions workflow `.github/workflows/package.yml`.
 - `dev` branch publication uses a generated prerelease version such as `2.3.5-beta.123.1` and publishes with npm dist-tag `beta`.
 - Stable publication must use a numeric `package.json` version and publishes with npm dist-tag `latest`.
+- Package publication includes `@sansenjian/qq-music-api` and `@sansenjian/qq-music-api-mcp`.
+- The MCP package version must match the core package version for stable releases.
 - Provide a tag only when intentionally publishing that historical stable tag.
 - Do not publish stable packages from `dev`; the workflow verifies `latest` releases come from `main`.
 - Do not use local `npm publish` as the normal release path unless the user explicitly asks for a manual/local publish test.
@@ -53,5 +55,6 @@ After publication, check:
 
 - GitHub Actions run status under `actions/workflows/package.yml`.
 - npm package page for `@sansenjian/qq-music-api`.
-- `npm dist-tag ls @sansenjian/qq-music-api` shows beta releases under `beta` and stable releases under `latest`.
+- npm package page for `@sansenjian/qq-music-api-mcp`.
+- `npm dist-tag ls @sansenjian/qq-music-api` and `npm dist-tag ls @sansenjian/qq-music-api-mcp` show beta releases under `beta` and stable releases under `latest`.
 - GitHub Packages entry for this repository.

@@ -16,6 +16,19 @@ try {
 	const newVersion = newPkg.version;
 	console.log(`Version bumped to ${newVersion}`);
 
+	const mcpPackagePath = 'packages/mcp/package.json';
+	if (fs.existsSync(mcpPackagePath)) {
+		console.log('Syncing MCP package version...');
+		const mcpPkg = JSON.parse(fs.readFileSync(mcpPackagePath, 'utf8'));
+		mcpPkg.version = newVersion;
+		fs.writeFileSync(mcpPackagePath, `${JSON.stringify(mcpPkg, null, '\t')}\n`);
+		console.log(`MCP package version synced to ${newVersion}`);
+
+		console.log('Refreshing package lock...');
+		execSync('npm install --package-lock-only --ignore-scripts', { stdio: 'inherit' });
+		console.log('Package lock refreshed successfully');
+	}
+
 	console.log('Generating CHANGELOG...');
 	execSync('npm run changelog', { stdio: 'inherit' });
 	console.log('CHANGELOG generated successfully');

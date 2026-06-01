@@ -86,7 +86,7 @@ npm run build
 # 生产运行
 npm run start
 
-# 启动 MCP Server（构建后）
+# 启动 MCP Server（仓库开发模式，独立 workspace 包）
 npm run mcp
 
 # 运行测试
@@ -105,10 +105,10 @@ npm run docs:dev
 | 依赖          | 说明        |
 | ------------- | ----------- |
 | `@koa/router` | 路由        |
-| `@modelcontextprotocol/sdk` | MCP Server SDK |
 | `axios`       | HTTP 客户端 |
 | `koa`         | Web 框架    |
-| `zod`         | MCP 工具参数校验 |
+
+MCP 能力单独发布在 `@sansenjian/qq-music-api-mcp`，普通 API 用户安装主包时不会安装 MCP SDK 相关依赖。
 
 ### 开发依赖
 
@@ -161,9 +161,15 @@ npm run docs:dev
 
 ### MCP 与 CLI
 
-- `qq-music-api mcp start` 可通过 stdio 启动 MCP Server
+- `@sansenjian/qq-music-api-mcp` 单独发布 MCP Server，避免普通 API 用户安装 MCP 依赖
+- `qq-music-api-mcp` 可通过 stdio 启动 MCP Server
 - `qq_music_search_songs`、`qq_music_get_top_lists`、`qq_music_get_playlist_detail` 等工具复用现有 service 层
 - `qq_music_auth_status` 只返回登录态摘要和 Cookie key，不返回完整 Cookie 值
+
+```bash
+npm install @sansenjian/qq-music-api-mcp
+qq-music-api-mcp
+```
 
 ## 文档入口
 

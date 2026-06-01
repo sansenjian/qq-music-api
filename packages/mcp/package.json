@@ -1,0 +1,52 @@
+{
+	"name": "@sansenjian/qq-music-api-mcp",
+	"version": "2.3.4",
+	"description": "MCP server for @sansenjian/qq-music-api",
+	"type": "module",
+	"main": "dist/index.js",
+	"exports": {
+		".": "./dist/index.js"
+	},
+	"bin": {
+		"qq-music-api-mcp": "dist/cli.js"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "vite build",
+		"dev": "tsx src/cli.ts",
+		"start": "node dist/cli.js"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/sansenjian/qq-music-api.git",
+		"directory": "packages/mcp"
+	},
+	"keywords": [
+		"qq-music",
+		"mcp",
+		"model-context-protocol"
+	],
+	"author": "sansenjian",
+	"license": "MIT",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.29.0",
+		"axios": "^1.16.1",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"tsx": "^4.22.3",
+		"vite": "^8.0.13",
+		"typescript": "6.0.3"
+	},
+	"engines": {
+		"node": "^20.17.0 || >=22.9.0",
+		"npm": "^11.0.0"
+	}
+}
