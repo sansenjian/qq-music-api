@@ -15,7 +15,7 @@ title: 使用指南
 - **[降级服务示例](/DEGRADE_EXAMPLES)**：手动传递 Cookie、Header 调用和多语言示例
 - **[配置规范](/guide/configuration-policy)**：配置目录、写入时机和环境变量边界
 - **[依赖分析](/guide/dependency-inspection)**：使用依赖分析工具观察依赖体积与优化空间
-- **[MCP 与 CLI 拓展思考](/guide/mcp-cli-extension)**：未来命令行与 MCP Server 的职责划分
+- **[MCP 与 CLI 拓展](/guide/mcp-cli-extension)**：命令行与 MCP Server 的职责划分
 - **[代码架构](/guide/architecture)**：项目分层与 TypeScript 抽象说明
 
 ## 推荐阅读顺序
@@ -43,7 +43,7 @@ title: 使用指南
 
 - [配置规范](/guide/configuration-policy) - 配置文件、环境变量和写入副作用边界
 - [依赖分析](/guide/dependency-inspection) - 依赖体积、依赖树和优化线索检查
-- [MCP 与 CLI 拓展思考](/guide/mcp-cli-extension) - 后续工具化方向与风险边界
+- [MCP 与 CLI 拓展](/guide/mcp-cli-extension) - 工具化方向与风险边界
 - [代码架构](/guide/architecture) - 当前目录结构、抽象方式与重构结果
 
 ## 项目特性概览

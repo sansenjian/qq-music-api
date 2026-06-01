@@ -68,6 +68,8 @@
 		"dev": "tsx src/app.ts",
 		"build": "vite build && tsc --emitDeclarationOnly && node scripts/fix-cjs-declarations.js",
 		"start": "node dist/app.js",
+		"mcp": "node dist/cli.js mcp start",
+		"mcp:dev": "tsx src/cli.ts mcp start",
 		"vercel-build": "npm run build && npm run docs:build && (cp -r public dist/ 2>/dev/null || true)",
 		"docs:build": "node scripts/generate-version.js && vitepress build docs",
 		"test": "vitest run",
@@ -111,8 +113,10 @@
 	"homepage": "https://github.com/sansenjian/qq-music-api#readme",
 	"dependencies": {
 		"@koa/router": "^15.5.0",
+		"@modelcontextprotocol/sdk": "^1.29.0",
 		"axios": "^1.16.1",
-		"koa": "^2.16.4"
+		"koa": "^2.16.4",
+		"zod": "^4.4.3"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^20.5.3",

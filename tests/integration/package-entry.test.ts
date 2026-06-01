@@ -2,6 +2,8 @@ import { exec, execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -245,7 +247,58 @@ describe('Package Entry Compatibility', () => {
 
 		expect(stdout).toContain('qq-music-api config doctor');
 		expect(stdout).toContain('qq-music-api auth status');
+		expect(stdout).toContain('qq-music-api mcp start');
 	});
+
+	test(
+		'should expose MCP tools over stdio through the CLI',
+		async () => {
+			const transport = new StdioClientTransport({
+				command: process.execPath,
+				args: [getPackageBinEntry(), 'mcp', 'start'],
+				cwd: projectRoot,
+				env: {
+					...process.env,
+					QQ_MUSIC_API_CONFIG_DIR: configDir,
+				},
+				stderr: 'pipe',
+			});
+			const client = new Client({
+				name: 'qq-music-api-package-entry-test',
+				version: '1.0.0',
+			});
+
+			try {
+				await client.connect(transport);
+				const tools = await client.listTools();
+				const toolNames = tools.tools.map(tool => tool.name);
+
+				expect(toolNames).toEqual(expect.arrayContaining([
+					'qq_music_config_status',
+					'qq_music_list_apis',
+					'qq_music_search_songs',
+				]));
+
+				const result = await client.callTool({
+					name: 'qq_music_config_status',
+					arguments: { response_format: 'json' },
+				});
+
+				expect(result.structuredContent).toMatchObject({
+					ok: true,
+					tool: 'qq_music_config_status',
+					data: {
+						configDir,
+						serviceConfigPath: path.join(configDir, 'service-config.json'),
+						userInfoPath: path.join(configDir, 'user-info.json'),
+					},
+				});
+			} finally {
+				await client.close();
+			}
+		},
+		60_000,
+	);
 
 	test('should return config paths as JSON', async () => {
 		const { stdout } = await runNode([getPackageBinEntry(), 'config', 'path', '--json']);

@@ -3,6 +3,14 @@ import { resolve } from 'node:path';
 import { oxcTransform } from './plugins/vite-plugin-oxc-transform';
 import type { Plugin } from 'vite';
 
+const externalPackages = [
+	'koa',
+	'@koa/router',
+	'axios',
+	'@modelcontextprotocol/sdk',
+	'zod',
+];
+
 function nodeBinShebang(): Plugin {
 	const binEntryIds = new Set([
 		normalizePath(resolve(__dirname, 'src/app.ts')),
@@ -59,11 +67,7 @@ export default defineConfig({
 		emptyOutDir: true,
 		copyPublicDir: false,
 		rollupOptions: {
-			external: [
-				'koa',
-				'@koa/router',
-				'axios',
-			],
+			external: id => externalPackages.some(pkg => id === pkg || id.startsWith(`${pkg}/`)),
 		},
 	},
 	resolve: {

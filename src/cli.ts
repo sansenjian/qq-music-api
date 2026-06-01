@@ -114,6 +114,7 @@ Usage:
   qq-music-api doctor [--json]
   qq-music-api auth status [--json]
   qq-music-api auth clear [--json]
+  qq-music-api mcp start
 
 Options:
   --json             Output stable machine-readable JSON for supported commands.
@@ -124,6 +125,7 @@ Options:
 Notes:
   Running qq-music-api with no command keeps the legacy behavior and starts the HTTP service.
   Auth commands never print the full Cookie value.
+  MCP uses stdio; do not pipe normal logs to stdout while it is running.
 `;
 
 const getPathPayload = () => {
@@ -311,6 +313,12 @@ export const runCli = async (argv: string[] = process.argv.slice(2), io: CliIo =
 			const payload = clearAuth();
 			if (parsed.json) printJson(io, payload);
 			else io.stdout(`Cleared auth state at ${payload.userInfoPath}`);
+			return 0;
+		}
+
+		if (command === 'mcp' && (subcommand === 'start' || subcommand === undefined)) {
+			const { runMcpServer } = await import('./mcp/server');
+			await runMcpServer();
 			return 0;
 		}
 

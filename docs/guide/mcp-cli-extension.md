@@ -1,15 +1,15 @@
 ---
 layout: doc
-title: MCP 与 CLI 拓展思考
+title: MCP 与 CLI 拓展
 ---
 
-# MCP 与 CLI 拓展思考
+# MCP 与 CLI 拓展
 
-本文记录 QQ Music API 在 MCP 和 CLI 方向上的拓展思路。它不是当前功能承诺，而是后续设计和评审时的边界参考。
+本文记录 QQ Music API 在 MCP 和 CLI 方向上的当前能力、使用方式和后续边界。
 
 ## 背景
 
-项目当前主要能力是 Koa HTTP API 服务，同时 npm 包中存在 `bin` 入口，可用于启动服务。这个入口更接近“服务启动器”，还不是完整 CLI。
+项目当前主要能力是 Koa HTTP API 服务，同时 npm 包中存在 `bin` 入口，可用于启动 HTTP 服务、查询本地配置状态，并通过 stdio 启动 MCP Server。
 
 如果继续扩展，应避免把 HTTP 服务、命令行工具和 MCP Server 混在一个入口里。三者可以共享底层模块，但运行边界要清晰。
 
@@ -25,6 +25,7 @@ qq-music-api config doctor
 qq-music-api doctor
 qq-music-api auth status
 qq-music-api auth clear
+qq-music-api mcp start
 ```
 
 说明：
@@ -33,19 +34,71 @@ qq-music-api auth clear
 - `serve` 支持 `--port <port>` 和 `--json`。
 - `config path`、`config doctor`、`doctor`、`auth status`、`auth clear` 支持 `--json`。
 - `auth status` 不输出完整 Cookie，只输出登录态是否存在和 Cookie key 列表。
-- MCP Server 尚未实现，仍属于后续扩展方向。
+- `mcp start` 通过 stdio 启动 MCP Server，供支持 MCP 的本地客户端以子进程方式连接。
+
+## 当前 MCP 状态
+
+当前 MCP Server 使用 `@modelcontextprotocol/sdk` 的 stdio transport，入口如下：
+
+```bash
+qq-music-api mcp start
+```
+
+本地源码开发可用：
+
+```bash
+npm run mcp:dev
+```
+
+构建后可用：
+
+```bash
+npm run build
+npm run mcp
+```
+
+MCP 客户端可以使用类似配置：
+
+```json
+{
+  "mcpServers": {
+    "qq-music-api": {
+      "command": "qq-music-api",
+      "args": ["mcp", "start"],
+      "env": {
+        "QQ_MUSIC_API_CONFIG_DIR": "/path/to/config"
+      }
+    }
+  }
+}
+```
+
+已提供的工具：
+
+| 工具 | 说明 | 凭据行为 |
+| --- | --- | --- |
+| `qq_music_config_status` | 输出配置目录和配置文件路径 | 不读取 Cookie 值 |
+| `qq_music_auth_status` | 输出登录态摘要和 Cookie key 列表 | 不返回 Cookie 值 |
+| `qq_music_list_apis` | 分页列出 HTTP API 目录 | 只读本地元数据 |
+| `qq_music_get_hot_keys` | 获取搜索热词 | 调用公开上游接口 |
+| `qq_music_search_songs` | 按关键词搜索歌曲 | 调用公开上游接口 |
+| `qq_music_get_top_lists` | 获取排行榜列表 | 调用公开上游接口 |
+| `qq_music_get_playlist_detail` | 按 `disstid` 获取歌单详情 | 调用公开上游接口 |
+| `qq_music_get_album_info` | 按 `albummid` 获取专辑信息 | 调用公开上游接口 |
+
+所有工具默认返回 Markdown 文本，同时提供 `structuredContent`。支持 `response_format: "json"` 时，会返回适合机器处理的 JSON 文本。
 
 ## 目标
 
-后续拓展可以围绕三个方向推进：
+后续拓展继续围绕三个方向推进：
 
 - CLI：提供本地开发、配置检查、登录态管理、服务启动等命令。
-- MCP Server：让支持 MCP 的客户端以工具方式调用音乐搜索、歌单、排行等能力。
+- MCP Server：继续扩展工具覆盖面，让支持 MCP 的客户端以工具方式调用音乐搜索、歌单、排行等能力。
 - SDK/包入口：继续保持 `import` 使用时的低副作用和可组合性。
 
 ## 非目标
 
-短期不建议做这些事：
+不建议做这些事：
 
 - 不把 CLI 做成另一个 HTTP 框架。
 - 不在 MCP 工具中直接暴露 Cookie 或登录态原文。
@@ -107,7 +160,7 @@ qq-music-api config doctor --json
 
 ### 工具边界
 
-MCP 工具应优先覆盖无需敏感凭据或可安全降级的能力：
+MCP 工具优先覆盖无需敏感凭据或可安全降级的能力：
 
 - 搜索歌曲。
 - 获取排行榜。
@@ -125,11 +178,11 @@ MCP 工具应优先覆盖无需敏感凭据或可安全降级的能力：
 - 错误返回使用通用错误码和可读消息，不泄露内部异常。
 - 工具实现复用 `src/services/` 层能力，不直接调用 Koa `ctx`。
 
-示例工具草案：
+示例工具：
 
 ```ts
 {
-  name: 'search_songs',
+  name: 'qq_music_search_songs',
   description: 'Search QQ Music songs by keyword.',
   inputSchema: {
     keyword: 'string',
@@ -171,9 +224,9 @@ MCP Server 如果需要读取登录态，只能读取运行进程可访问的配
 1. 先抽出配置解析和写入模块，消除 import 阶段写盘副作用。
 2. 增加 `serve`、`config path`、`config doctor` 三个最小 CLI 命令。
 3. 将当前 bin 从“直接启动服务”过渡到 `serve` 默认命令，保持兼容。
-4. 为公开 API 能力设计第一批 MCP 工具。
-5. 增加 MCP 工具测试，覆盖 schema、成功响应和错误响应。
-6. 再评估是否支持登录态相关 MCP 工具。
+4. 已为公开 API 能力设计第一批 MCP 工具。
+5. 已增加 MCP 工具测试，覆盖 schema、成功响应和错误响应。
+6. 后续再评估是否支持登录态相关 MCP 工具。
 
 ## 风险与约束
 
@@ -188,7 +241,6 @@ MCP Server 如果需要读取登录态，只能读取运行进程可访问的配
 ## 开放问题
 
 - CLI 是否引入命令解析库，还是先用轻量原生命令解析。
-- MCP Server 是否作为主包能力发布，还是拆成独立包。
 - 登录态相关 MCP 工具是否默认禁用。
 - 是否需要为配置目录提供跨平台默认路径。
 - 是否为所有工具提供 HTTP 路由到 MCP 工具的映射表。
