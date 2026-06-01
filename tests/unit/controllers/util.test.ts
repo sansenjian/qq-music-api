@@ -121,6 +121,49 @@ describe('controllers/util', () => {
       expect(mockApiFunction).toHaveBeenCalled();
     });
 
+    test('should allow custom API options mapping', async () => {
+      mockCtx.query = { id: '123' };
+      mockCtx.params = { kind: 'playlist' };
+      mockApiFunction.mockResolvedValue({ status: 200, body: {} });
+
+      const buildApiOptions = vi.fn((_ctx, params) => ({
+        method: 'post',
+        params,
+        option: {
+          headers: {
+            'x-test': '1'
+          }
+        }
+      }));
+
+      const controller = createController(mockApiFunction, { buildApiOptions });
+      await controller(mockCtx, mockNext);
+
+      expect(buildApiOptions).toHaveBeenCalledWith(mockCtx, { id: '123', kind: 'playlist' });
+      expect(mockApiFunction).toHaveBeenCalledWith({
+        method: 'post',
+        params: { id: '123', kind: 'playlist' },
+        option: {
+          headers: {
+            'x-test': '1'
+          }
+        }
+      });
+    });
+
+    test('should not build API options when validation fails', async () => {
+      const validator = vi.fn().mockReturnValue({ valid: false, error: 'Invalid' });
+      const buildApiOptions = vi.fn();
+      const controller = createController(mockApiFunction, { validator, buildApiOptions });
+
+      await controller(mockCtx, mockNext);
+
+      expect(buildApiOptions).not.toHaveBeenCalled();
+      expect(mockApiFunction).not.toHaveBeenCalled();
+      expect(mockCtx.status).toBe(400);
+      expect(mockCtx.body).toEqual({ response: 'Invalid' });
+    });
+
     test('should handle errors with custom onError handler', async () => {
       const onError = vi.fn();
       mockApiFunction.mockRejectedValue(new Error('API error'));

@@ -9,8 +9,7 @@ import securityHeaders from './middlewares/security-headers';
 import router from './routes/router';
 import cookieMiddleware from './util/cookie';
 import colors from './util/colors';
-import userInfoImport from './config/user-info';
-import type { UserInfo } from './types';
+import { initializeUserInfo } from './config/user-info-store';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -19,7 +18,7 @@ const publicDir = fs.existsSync(path.join(__dirname, 'public'))
 	? path.join(__dirname, 'public')
 	: path.join(__dirname, '..', 'public');
 
-global.userInfo = userInfoImport as UserInfo;
+initializeUserInfo();
 
 // Error handler (must be first) — catches downstream errors, sets response
 app.use(async (ctx, next) => {

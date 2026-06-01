@@ -1,6 +1,7 @@
 import type { Method } from 'axios';
 import UCommon from '../UCommon/UCommon';
 import { _guid } from '../../config';
+import { getUserUin } from '../../../config/user-info-store';
 import { extractCookieValue, extractUinFromCookie } from '../../../util/cookieResolver';
 import type { ApiOptions, ApiResponse } from '../../../types/api';
 
@@ -113,8 +114,7 @@ const buildPlayUrl = (domain: string, info: MidUrlInfo, guid: string): string =>
 };
 
 const resolveUin = (cookie?: string): string => {
-  const defaultUin = String((global as any).userInfo?.uin || (global as any).userInfo?.loginUin || '0');
-  return extractUinFromCookie(cookie) || defaultUin;
+  return extractUinFromCookie(cookie) || getUserUin();
 };
 
 const getCookieFromOptions = (option: ApiOptions['option']): string | undefined => {

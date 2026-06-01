@@ -26,6 +26,15 @@ describe('util/apiResponse', () => {
     });
   });
 
+  it('errorResponse 应隐藏 500 Error 的内部消息', () => {
+    expect(errorResponse(new Error('private failure'), 500)).toEqual({
+      status: 500,
+      body: {
+        error: '服务器内部错误',
+      },
+    });
+  });
+
   it('customResponse 应原样返回自定义 body', () => {
     const body = { message: 'custom', extra: 1 };
 
@@ -65,6 +74,15 @@ describe('util/apiResponse', () => {
       status: 200,
       body: {
         response: payload,
+      },
+    });
+  });
+
+  it.each([0, false, '', null])('handleApi 应保留 data 字段的边界值: %s', async data => {
+    await expect(handleApi(Promise.resolve({ data }))).resolves.toEqual({
+      status: 200,
+      body: {
+        response: data,
       },
     });
   });

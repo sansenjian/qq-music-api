@@ -13,6 +13,28 @@ title: MCP 与 CLI 拓展思考
 
 如果继续扩展，应避免把 HTTP 服务、命令行工具和 MCP Server 混在一个入口里。三者可以共享底层模块，但运行边界要清晰。
 
+## 当前 CLI 状态
+
+当前 `qq-music-api` 已经提供最小 CLI：
+
+```bash
+qq-music-api
+qq-music-api serve
+qq-music-api config path
+qq-music-api config doctor
+qq-music-api doctor
+qq-music-api auth status
+qq-music-api auth clear
+```
+
+说明：
+
+- `qq-music-api` 无参数时仍保持旧行为，默认启动 HTTP 服务。
+- `serve` 支持 `--port <port>` 和 `--json`。
+- `config path`、`config doctor`、`doctor`、`auth status`、`auth clear` 支持 `--json`。
+- `auth status` 不输出完整 Cookie，只输出登录态是否存在和 Cookie key 列表。
+- MCP Server 尚未实现，仍属于后续扩展方向。
+
 ## 目标
 
 后续拓展可以围绕三个方向推进：

@@ -1,6 +1,7 @@
 import { lyricParse } from '../../../util/lyricParse';
 import y_common from '../y_common';
 import type { ApiOptions } from '../../../types/api';
+import { getUserUin } from '../../../config/user-info-store';
 import { extractUinFromCookie } from '../../../util/cookieResolver';
 import UCommon from '../UCommon/UCommon';
 import { observeService } from '../../../util/observability';
@@ -23,7 +24,7 @@ const getCookieFromOptions = (option: ApiOptions['option']): string | undefined 
 };
 
 const resolveUin = (cookie?: string): string => {
-  return extractUinFromCookie(cookie) || String((global as any).userInfo?.loginUin || '0');
+  return extractUinFromCookie(cookie) || getUserUin();
 };
 
 const decodeLyricField = (value: unknown): string => {
