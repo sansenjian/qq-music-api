@@ -1,6 +1,7 @@
 import { Context, Next, Middleware } from 'koa';
 import type { UserInfo } from '../types/global';
 import serviceConfig from '../config/service-config';
+import { getUserInfo } from '../config/user-info-store';
 import { resolveRequestCookie, setRequestCookieContext } from './cookieResolver';
 
 declare global {
@@ -30,8 +31,10 @@ const cookieMiddleware = (options: CookieMiddlewareOptions = {}): Middleware => 
     setRequestCookieContext(ctx, cookie);
   }
 
-  if (useGlobal && Array.isArray(global.userInfo?.cookieList)) {
-    global.userInfo.cookieList.forEach((cookieItem: string) => {
+  const userInfo = getUserInfo();
+
+  if (useGlobal && Array.isArray(userInfo.cookieList)) {
+    userInfo.cookieList.forEach((cookieItem: string) => {
       const [key, ...valueParts] = cookieItem.split('=');
       const normalizedKey = key?.trim();
       const value = valueParts.join('=').trim();

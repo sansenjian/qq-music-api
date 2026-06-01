@@ -23,13 +23,17 @@
 		}
 	},
 	"bin": {
-		"qq-music-api": "dist/app.js"
+		"qq-music-api": "dist/cli.js"
 	},
 	"files": [
+		"dist",
 		"dist/app.js",
 		"dist/app.cjs",
 		"dist/app.d.cts",
 		"dist/app.d.mts",
+		"dist/cli.js",
+		"dist/cli.cjs",
+		"dist/cli.d.ts",
 		"dist/index.js",
 		"dist/index.cjs",
 		"dist/index.d.cts",
@@ -81,7 +85,7 @@
 		"release": "npm version patch",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
-		"format": "prettier --write --tab-width=2 src/**/*.ts",
+		"format": "prettier --write --tab-width=2 \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.{js,ts,cjs,mjs}\" \"plugins/**/*.ts\" \"*.config.{js,ts,mjs}\" \"docs/.vitepress/config.mjs\" \"package.json\" \".oxlintrc.json\"",
 		"build:local-images": "node ./scripts/build-images.js local",
 		"build:remote-images": "node ./scripts/build-images.js remote",
 		"build:images": "npm run build:local-images && npm run build:remote-images",

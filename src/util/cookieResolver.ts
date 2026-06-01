@@ -1,5 +1,6 @@
 import type { Context } from 'koa';
 import serviceConfig from '../config/service-config';
+import { getUserCookie } from '../config/user-info-store';
 
 type CookieSource =
   | 'query'
@@ -86,7 +87,7 @@ export const resolveRequestCookie = (
   }
 
   if (useGlobalCookie) {
-    const globalCookie = normalizeCookieValue(global.userInfo?.cookie);
+    const globalCookie = normalizeCookieValue(getUserCookie());
     if (globalCookie) {
       return { cookie: globalCookie, source: 'global' };
     }

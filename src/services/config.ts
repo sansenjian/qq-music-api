@@ -1,6 +1,8 @@
+import { getUserUin } from '../config/user-info-store';
+
 export const getCommonParams = () => ({
 	g_tk: 1124214810,
-	loginUin: global.userInfo?.uin || '0',
+	loginUin: getUserUin(),
 	hostUin: 0,
 	inCharset: 'utf8',
 	outCharset: 'utf-8',

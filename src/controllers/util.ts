@@ -1,6 +1,6 @@
 import type { Context } from 'koa';
 import type { KoaContext, Controller } from '../routes/types';
-import type { ApiResponse, ApiOptions } from '../types/api';
+import type { ApiResponse, ApiOptions, ApiResponseBody } from '../types/api';
 import {
 	logControllerFailure,
 	logControllerStart,
@@ -12,8 +12,9 @@ export interface Validator<T = Record<string, unknown>> {
 	(params: T): { valid: boolean; error?: string };
 }
 
-export interface ControllerOptions<T = Record<string, unknown>> {
+export interface ControllerOptions<T = Record<string, unknown>, TApiOptions extends ApiOptions = ApiOptions> {
 	validator?: Validator<T>;
+	buildApiOptions?: (ctx: KoaContext, params: T) => TApiOptions;
 	errorMessage?: string;
 	onError?: (ctx: KoaContext, error: unknown) => void;
 	name?: string;
@@ -36,7 +37,7 @@ const isMissingRequiredValue = (value: unknown): boolean => {
 
 export function createController<T extends ApiOptions>(
 	apiFunction: (props: T) => Promise<ApiResponse>,
-	options?: ControllerOptions<Record<string, unknown>>,
+	options?: ControllerOptions<Record<string, unknown>, T>,
 ): Controller {
 	return async (ctx: KoaContext, _next: () => Promise<void>) => {
 		const controllerName = options?.name || apiFunction.name || 'anonymous';
@@ -54,11 +55,13 @@ export function createController<T extends ApiOptions>(
 				}
 			}
 
-			const apiProps = {
-				method: 'get',
-				params,
-				option: {},
-			} as T;
+			const apiProps = options?.buildApiOptions
+				? options.buildApiOptions(ctx, params)
+				: ({
+						method: 'get',
+						params,
+						option: {},
+					} as T);
 
 			const { status, body } = await apiFunction(apiProps);
 			setJsonResponse(ctx, status, body);
@@ -84,7 +87,7 @@ export function validateRequired(fields: string[]): Validator {
 	};
 }
 
-export function setApiResponse(ctx: Context, apiResponse: ApiResponse): void {
+export function setApiResponse(ctx: Context, apiResponse: ApiResponse<ApiResponseBody>): void {
 	setJsonResponse(ctx, apiResponse.status || 500, apiResponse.body);
 }
 

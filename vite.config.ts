@@ -4,25 +4,34 @@ import { oxcTransform } from './plugins/vite-plugin-oxc-transform';
 import type { Plugin } from 'vite';
 
 function nodeBinShebang(): Plugin {
-	const appEntryId = normalizePath(resolve(__dirname, 'src/app.ts'));
+	const binEntryIds = new Set([
+		normalizePath(resolve(__dirname, 'src/app.ts')),
+		normalizePath(resolve(__dirname, 'src/cli.ts')),
+	]);
 
 	return {
 		name: 'node-bin-shebang',
 		generateBundle(_, bundle) {
-			const appChunk = Object.values(bundle).find(
-				(output) =>
-					output.type === 'chunk' &&
-					output.isEntry &&
-					output.facadeModuleId !== null &&
-					normalizePath(output.facadeModuleId) === appEntryId,
-			);
+			let locatedEntries = 0;
 
-			if (!appChunk || appChunk.type !== 'chunk') {
-				this.error(`Failed to locate the app entry chunk for ${appEntryId}`);
-			}
+			Object.values(bundle).forEach(output => {
+				if (
+					output.type !== 'chunk' ||
+					!output.isEntry ||
+					output.facadeModuleId === null ||
+					!binEntryIds.has(normalizePath(output.facadeModuleId))
+				) {
+					return;
+				}
 
-			if (!appChunk.code.startsWith('#!/usr/bin/env node')) {
-				appChunk.code = `#!/usr/bin/env node\n${appChunk.code}`;
+				locatedEntries += 1;
+				if (!output.code.startsWith('#!/usr/bin/env node')) {
+					output.code = `#!/usr/bin/env node\n${output.code}`;
+				}
+			});
+
+			if (locatedEntries !== binEntryIds.size) {
+				this.error(`Expected ${binEntryIds.size} bin entry chunks, found ${locatedEntries}.`);
 			}
 		},
 	};
@@ -36,6 +45,7 @@ export default defineConfig({
 		lib: {
 			entry: {
 				app: resolve(__dirname, 'src/app.ts'),
+				cli: resolve(__dirname, 'src/cli.ts'),
 				index: resolve(__dirname, 'src/index.ts'),
 			},
 			formats: ['es', 'cjs'],

@@ -3,6 +3,15 @@ import { songLists } from '../services';
 import { setApiResponse, withErrorHandler } from './util';
 import { customResponse } from '../util/apiResponse';
 
+interface SongListResponse {
+  code?: number | string;
+  data?: unknown;
+  [key: string]: unknown;
+}
+
+const isSongListResponse = (value: unknown): value is SongListResponse =>
+  Boolean(value && typeof value === 'object');
+
 const batchGetSongListsController = withErrorHandler(async (ctx: KoaContext) => {
   const { limit: ein = 19, page: sin = 0, sortId = 5, categoryIds = [10000000] } = ctx.request.body || {};
 
@@ -28,15 +37,16 @@ const batchGetSongListsController = withErrorHandler(async (ctx: KoaContext) => 
             categoryId
           }
         });
-        if (result.body.response && +result.body.response.code === 0) {
-          return result.body.response.data;
+        const response = result.body.response;
+        if (isSongListResponse(response) && Number(response.code) === 0) {
+          return response.data;
         } else {
-          return result.body.response;
+          return response;
         }
       }
     )
   );
-  
+
   setApiResponse(ctx, customResponse({ status: 200, data }, 200));
 });
 

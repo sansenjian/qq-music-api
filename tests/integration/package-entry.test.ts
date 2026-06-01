@@ -38,6 +38,13 @@ const runTsc = async (configPath: string) =>
 		timeout: 60_000,
 	});
 
+const getPackageBinEntry = () => {
+	const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')) as {
+		bin: Record<string, string>;
+	};
+	return path.join(projectRoot, packageJson.bin['qq-music-api']);
+};
+
 const writeTypesFixture = () => {
 	fs.rmSync(typesDir, { recursive: true, force: true });
 	fs.mkdirSync(typesDir, { recursive: true });
@@ -214,10 +221,7 @@ describe('Package Entry Compatibility', () => {
 	);
 
 	test('should emit a node shebang on the package bin entry', () => {
-		const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')) as {
-			bin: Record<string, string>;
-		};
-		const binEntry = path.join(projectRoot, packageJson.bin['qq-music-api']);
+		const binEntry = getPackageBinEntry();
 
 		expect(fs.readFileSync(binEntry, 'utf8')).toMatch(/^#!\/usr\/bin\/env node\n/);
 	});
@@ -226,7 +230,7 @@ describe('Package Entry Compatibility', () => {
 		'should start the CLI when invoked through a symlinked bin path',
 		async () => {
 			fs.mkdirSync(outputDir, { recursive: true });
-			const realEntry = path.join(projectRoot, 'dist', 'app.js');
+			const realEntry = getPackageBinEntry();
 			const symlinkEntry = path.join(outputDir, 'qq-music-api-bin.mjs');
 			fs.rmSync(symlinkEntry, { force: true });
 			fs.symlinkSync(realEntry, symlinkEntry);
@@ -235,6 +239,109 @@ describe('Package Entry Compatibility', () => {
 		},
 		60_000,
 	);
+
+	test('should print CLI help without starting the service', async () => {
+		const { stdout } = await runNode([getPackageBinEntry(), '--help']);
+
+		expect(stdout).toContain('qq-music-api config doctor');
+		expect(stdout).toContain('qq-music-api auth status');
+	});
+
+	test('should return config paths as JSON', async () => {
+		const { stdout } = await runNode([getPackageBinEntry(), 'config', 'path', '--json']);
+		const payload = JSON.parse(stdout);
+
+		expect(payload).toMatchObject({
+			ok: true,
+			command: 'config path',
+			configDir,
+			serviceConfigPath: path.join(configDir, 'service-config.json'),
+			userInfoPath: path.join(configDir, 'user-info.json'),
+		});
+	});
+
+	test('should reject missing CLI port values', async () => {
+		await expect(runNode([getPackageBinEntry(), 'config', 'path', '--port'])).rejects.toMatchObject({
+			code: 1,
+			stderr: expect.stringContaining('Missing value for --port'),
+		});
+	});
+
+	test('should reject partial CLI port values', async () => {
+		await expect(runNode([getPackageBinEntry(), 'config', 'path', '--port=3200abc'])).rejects.toMatchObject({
+			code: 1,
+			stderr: expect.stringContaining('Invalid port: 3200abc'),
+		});
+	});
+
+	test('should run config doctor as JSON without requiring auth', async () => {
+		const { stdout } = await runNode([getPackageBinEntry(), '--json', 'doctor']);
+		const payload = JSON.parse(stdout);
+
+		expect(payload).toMatchObject({
+			ok: true,
+			command: 'config doctor',
+			configDir,
+			writable: {
+				writable: true,
+			},
+			serviceConfig: {
+				status: 'missing',
+			},
+			userInfo: {
+				status: 'missing',
+			},
+		});
+	});
+
+	test('should report auth status without leaking cookie values', async () => {
+		fs.mkdirSync(configDir, { recursive: true });
+		fs.writeFileSync(
+			path.join(configDir, 'user-info.json'),
+			JSON.stringify({
+				loginUin: 'o123456',
+				cookie: 'uin=o123456; qqmusic_key=secret-value',
+			}),
+			'utf-8',
+		);
+
+		const { stdout } = await runNode([getPackageBinEntry(), 'auth', 'status', '--json']);
+		const payload = JSON.parse(stdout);
+
+		expect(payload).toMatchObject({
+			ok: true,
+			command: 'auth status',
+			authenticated: true,
+			hasCookie: true,
+			cookieKeys: ['uin', 'qqmusic_key'],
+		});
+		expect(stdout).not.toContain('secret-value');
+	});
+
+	test('should clear auth state through the CLI', async () => {
+		fs.mkdirSync(configDir, { recursive: true });
+		const userInfoPath = path.join(configDir, 'user-info.json');
+		fs.writeFileSync(
+			userInfoPath,
+			JSON.stringify({
+				loginUin: 'o123456',
+				cookie: 'uin=o123456; qqmusic_key=secret-value',
+			}),
+			'utf-8',
+		);
+
+		const { stdout } = await runNode([getPackageBinEntry(), 'auth', 'clear', '--json']);
+		const payload = JSON.parse(stdout);
+		const userInfo = JSON.parse(fs.readFileSync(userInfoPath, 'utf-8'));
+
+		expect(payload).toMatchObject({
+			ok: true,
+			command: 'auth clear',
+			cleared: true,
+			userInfoPath,
+		});
+		expect(userInfo).toEqual({ loginUin: '', cookie: '' });
+	});
 
 	test(
 		'should expose Node16-compatible types for ESM import and CJS require consumers',

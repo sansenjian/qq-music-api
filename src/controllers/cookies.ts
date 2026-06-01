@@ -1,4 +1,5 @@
 import { Context, Next } from 'koa';
+import { getUserInfo } from '../config/user-info-store';
 
 /*
  * @Author: Rainy [https://github.com/rain120]
@@ -8,20 +9,21 @@ import { Context, Next } from 'koa';
  */
 export default {
 	get: async (ctx: Context, next: Next) => {
+		const userInfo = getUserInfo();
 		ctx.status = 200;
 		ctx.body = {
 			data: {
 				code: 200,
-				cookie: (global.userInfo as any).cookie,
-				cookieList: (global.userInfo as any).cookieList,
-				cookieObject: (global.userInfo as any).cookieObject
+				cookie: userInfo.cookie,
+				cookieList: userInfo.cookieList,
+				cookieObject: userInfo.cookieObject
 			}
 		};
 
 		await next();
 	},
 	set: async (ctx: Context, next: Next) => {
-		(ctx.request as any).cookies = global.userInfo.cookie;
+		(ctx.request as any).cookies = getUserInfo().cookie;
 		ctx.request.header['Access-Control-Allow-Origin'] = 'https://y.qq.com';
 		ctx.request.header['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE';
 		ctx.request.header['Access-Control-Allow-Headers'] = 'Content-Type';

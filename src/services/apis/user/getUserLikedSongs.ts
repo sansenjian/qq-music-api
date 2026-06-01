@@ -1,4 +1,5 @@
 import request from '../../../util/request';
+import { getUserInfo } from '../../../config/user-info-store';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
 import type { ApiResponse } from '../../../types/api';
 
@@ -25,14 +26,16 @@ export const getUserLikedSongs = async (params: {
 	const url = 'https://c6.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg';
 
 	try {
+		const userInfo = getUserInfo();
+
 		debugLog('request meta', {
 			url,
 			uin,
 			offset,
 			limit,
 			page,
-			hasGlobalCookie: Boolean(global.userInfo?.cookie),
-			cookieLength: global.userInfo?.cookie?.length || 0,
+			hasGlobalCookie: Boolean(userInfo.cookie),
+			cookieLength: userInfo.cookie?.length || 0,
 		});
 
 		const response = await request<Record<string, any>>({
@@ -62,7 +65,7 @@ export const getUserLikedSongs = async (params: {
 				},
 				headers: {
 					Referer: `https://y.qq.com/portal/profile.html?uin=${uin}`,
-					Cookie: global.userInfo?.cookie || '',
+					Cookie: userInfo.cookie || '',
 				},
 			},
 		});
