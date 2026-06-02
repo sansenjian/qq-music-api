@@ -1,0 +1,36 @@
+name: Dev Version Line
+
+on:
+  pull_request:
+    branches: [dev]
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Check dev and main version line
+        shell: bash
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          MAIN_VERSION=$(git show origin/main:package.json | node -e "const fs = require('node:fs'); console.log(JSON.parse(fs.readFileSync(0, 'utf8')).version)")
+
+          node scripts/check-version-line.mjs "$CURRENT_VERSION" "$MAIN_VERSION" "dev package version" "main package version"

@@ -18,7 +18,8 @@ Use this file when creating branches, opening pull requests, or deciding how `de
 3. Use a project-scoped branch name such as `feat/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...`, or `sync/...`.
 4. Implement and validate the change on the topic branch.
 5. Open a pull request back into `dev`.
-6. Merge into `dev` only after the expected checks and review pass.
+6. Confirm the `Dev Version Line` check passes; it verifies the PR result uses the same `<manual>.<main>` version line as `origin/main`.
+7. Merge into `dev` only after the expected checks and review pass.
 
 ## Promoting Dev to Main
 
@@ -60,6 +61,8 @@ Common examples:
 - conflict-resolution fixes made during a `dev -> main` promotion
 
 Use a small sync branch from `dev` and open a pull request back into `dev` when needed.
+
+If a pull request into `dev` fails the `Dev Version Line` check, sync the main release version metadata back into `dev` before merging new feature work.
 
 ## Conflict Resolution Policy
 
