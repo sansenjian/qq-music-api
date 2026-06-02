@@ -8,17 +8,17 @@ Use this file for versioning, documentation deployment, and npm/GitHub Packages 
 
 This project separates documentation deployment from package publication.
 
-| Artifact | Trigger | Workflow | Result |
-| --- | --- | --- | --- |
-| GitHub Pages docs | Push to `main` or manual dispatch | `.github/workflows/deploy-docs.yml` | Deploys latest `main` docs |
-| Version bump | Push to `main` or manual dispatch | `.github/workflows/version.yml` | Updates `package.json`, `CHANGELOG.md`, and `docs/public/version.json` |
-| npm beta packages | Push to `dev` or manual dispatch with `beta` | `.github/workflows/package.yml` | Publishes core and MCP prerelease packages to the `beta` dist-tag |
-| npm stable packages | `v*` tag or manual dispatch with `latest` | `.github/workflows/package.yml` | Publishes core and MCP stable packages to the `latest` dist-tag |
+| Artifact            | Trigger                                      | Workflow                            | Result                                                                 |
+| ------------------- | -------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| GitHub Pages docs   | Push to `main` or manual dispatch            | `.github/workflows/deploy-docs.yml` | Deploys latest `main` docs                                             |
+| Version bump        | Push to `main` or manual dispatch            | `.github/workflows/version.yml`     | Updates `package.json`, `CHANGELOG.md`, and `docs/public/version.json` |
+| npm beta packages   | Push to `dev` or manual dispatch with `beta` | `.github/workflows/package.yml`     | Publishes core and MCP prerelease packages to the `beta` dist-tag      |
+| npm stable packages | `v*` tag or manual dispatch with `latest`    | `.github/workflows/package.yml`     | Publishes core and MCP stable packages to the `latest` dist-tag        |
 
 ## Package Publication
 
 - Standard package release is the GitHub Actions workflow `.github/workflows/package.yml`.
-- `dev` branch publication uses a generated prerelease version such as `2.3.5-beta.123.1` and publishes with npm dist-tag `beta`.
+- `dev` branch publication uses the higher of local `package.json` and npm `latest`, then publishes the next patch prerelease such as `2.3.6-beta.123.1` with npm dist-tag `beta`.
 - Stable publication must use a numeric `package.json` version and publishes with npm dist-tag `latest`.
 - Package publication includes `@sansenjian/qq-music-api` and `@sansenjian/qq-music-api-mcp`.
 - The MCP package version must match the core package version for stable releases.
@@ -36,6 +36,7 @@ Before triggering package publication, verify:
 - `npm run docs:build`
 - `package.json` version is the intended version.
 - Beta releases intentionally do not require committing the generated prerelease version.
+- Beta releases do not require syncing the latest stable version commit back into `dev`; the package workflow reads npm `latest` and uses it as the prerelease base when it is newer than local `package.json`.
 - `CHANGELOG.md` has been generated and reviewed when relevant.
 
 ## Workflow Behavior

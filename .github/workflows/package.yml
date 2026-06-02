@@ -75,7 +75,14 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
           if [ "$CHANNEL" = "beta" ]; then
-            PUBLISH_VERSION=$(node -e 'const version = process.argv[1].split("-")[0].split(".").map(Number); const run = process.env.GITHUB_RUN_NUMBER; const attempt = process.env.GITHUB_RUN_ATTEMPT; console.log(`${version[0]}.${version[1]}.${version[2] + 1}-beta.${run}.${attempt}`);' "$CURRENT_VERSION")
+            PACKAGE_NAME=$(node -p "require('./package.json').name")
+            NPM_LATEST_VERSION=""
+            if NPM_LATEST_VERSION=$(npm view "$PACKAGE_NAME@latest" version 2>/dev/null); then
+              echo "npm latest version: $NPM_LATEST_VERSION"
+            else
+              echo "Unable to read npm latest version for $PACKAGE_NAME. Falling back to package.json version."
+            fi
+            PUBLISH_VERSION=$(node scripts/compute-beta-version.js "$CURRENT_VERSION" "$NPM_LATEST_VERSION")
             npm pkg set version="$PUBLISH_VERSION"
             npm pkg set version="$PUBLISH_VERSION" --workspace @sansenjian/qq-music-api-mcp
             NPM_TAG="beta"
