@@ -1,4 +1,4 @@
-import { compareVersions, computeBetaVersion, parseVersion } from '../../../scripts/compute-beta-version.js';
+import { compareVersions, computeBetaVersion, parseVersion } from '../../../scripts/compute-beta-version.mjs';
 
 describe('scripts/compute-beta-version', () => {
 	test('uses the next patch after the current package version when npm latest is missing', () => {

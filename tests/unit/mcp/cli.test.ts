@@ -10,6 +10,11 @@ describe('MCP CLI', () => {
 		runMcpServerMock.mockReset();
 	});
 
+	const expectNoStartSideEffects = (originalExitListeners: ReturnType<typeof process.rawListeners>) => {
+		expect(runMcpServerMock).not.toHaveBeenCalled();
+		expect(process.rawListeners('exit')).toEqual(originalExitListeners);
+	};
+
 	test('keeps stdout redirected for the MCP server lifetime', async () => {
 		runMcpServerMock.mockResolvedValue(undefined);
 		const originalLog = console.log;
@@ -70,5 +75,45 @@ describe('MCP CLI', () => {
 		expect(console.debug).toBe(originalDebug);
 		expect(process.rawListeners('exit')).toEqual(originalExitListeners);
 		expect(errorSpy).toHaveBeenCalledWith('Error: boom');
+	});
+
+	test.each(['--help', '-h'])('does not redirect stdout for help flag %s', async flag => {
+		const originalExitListeners = process.rawListeners('exit');
+		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		const { runCli } = await import('../../../packages/mcp/src/cli');
+
+		await expect(runCli([flag])).resolves.toBe(0);
+
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('QQ Music API MCP'));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Usage:'));
+		expect(errorSpy).not.toHaveBeenCalled();
+		expectNoStartSideEffects(originalExitListeners);
+	});
+
+	test.each(['--version', '-v'])('does not redirect stdout for version flag %s', async flag => {
+		const originalExitListeners = process.rawListeners('exit');
+		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		const { runCli } = await import('../../../packages/mcp/src/cli');
+
+		await expect(runCli([flag])).resolves.toBe(0);
+
+		expect(logSpy).toHaveBeenCalledWith(expect.stringMatching(/^\d+\.\d+\.\d+(?:-.+)?$/));
+		expect(errorSpy).not.toHaveBeenCalled();
+		expectNoStartSideEffects(originalExitListeners);
+	});
+
+	test('does not redirect stdout for unknown commands and returns an error code', async () => {
+		const originalExitListeners = process.rawListeners('exit');
+		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		const { runCli } = await import('../../../packages/mcp/src/cli');
+
+		await expect(runCli(['foo'])).resolves.toBe(1);
+
+		expect(logSpy).not.toHaveBeenCalled();
+		expect(errorSpy).toHaveBeenCalledWith('Error: Unknown command: foo');
+		expectNoStartSideEffects(originalExitListeners);
 	});
 });

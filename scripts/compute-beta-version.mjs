@@ -58,7 +58,7 @@ const main = () => {
 
 	if (!currentVersion) {
 		throw new Error(
-			'Usage: node scripts/compute-beta-version.js <current-version> [npm-latest-version] [run] [attempt]',
+			'Usage: node scripts/compute-beta-version.mjs <current-version> [npm-latest-version] [run] [attempt]',
 		);
 	}
 

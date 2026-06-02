@@ -37,6 +37,7 @@ Before triggering package publication, verify:
 - `package.json` version is the intended version.
 - Beta releases intentionally do not require committing the generated prerelease version.
 - Beta releases do not require syncing the latest stable version commit back into `dev`; the package workflow reads npm `latest` and uses it as the prerelease base when it is newer than local `package.json`.
+- Beta releases, including manual dispatches, must run from the current `origin/dev` HEAD.
 - `CHANGELOG.md` has been generated and reviewed when relevant.
 
 ## Workflow Behavior
@@ -48,7 +49,7 @@ Default channel behavior:
 - Push to `dev`: publish `beta`.
 - Push a `v*` tag from `main`: publish `latest`.
 - Manual dispatch with `channel=auto`: infer the channel from the selected ref.
-- Manual dispatch with `channel=beta` or `channel=latest`: use the requested channel, while preserving branch safety checks.
+- Manual dispatch with `channel=beta` or `channel=latest`: use the requested channel, while preserving exact branch/tag safety checks.
 
 ## Verification
 

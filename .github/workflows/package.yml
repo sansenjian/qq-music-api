@@ -82,7 +82,7 @@ jobs:
             else
               echo "Unable to read npm latest version for $PACKAGE_NAME. Falling back to package.json version."
             fi
-            PUBLISH_VERSION=$(node scripts/compute-beta-version.js "$CURRENT_VERSION" "$NPM_LATEST_VERSION")
+            PUBLISH_VERSION=$(node scripts/compute-beta-version.mjs "$CURRENT_VERSION" "$NPM_LATEST_VERSION")
             npm pkg set version="$PUBLISH_VERSION"
             npm pkg set version="$PUBLISH_VERSION" --workspace @sansenjian/qq-music-api-mcp
             NPM_TAG="beta"
@@ -125,8 +125,17 @@ jobs:
         if: steps.release.outputs.channel == 'beta'
         shell: bash
         run: |
-          git fetch origin dev
-          git merge-base --is-ancestor origin/dev HEAD
+          git fetch origin dev:refs/remotes/origin/dev
+
+          if [[ "$GITHUB_REF" != refs/heads/dev ]]; then
+            echo "Beta releases must run from refs/heads/dev."
+            exit 1
+          fi
+
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/dev)" ]; then
+            echo "Beta releases must run from the current origin/dev HEAD."
+            exit 1
+          fi
 
       - name: Ensure latest releases come from main
         if: steps.release.outputs.channel == 'latest'
