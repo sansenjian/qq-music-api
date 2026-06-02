@@ -89,7 +89,7 @@
 		"commit-push": "./scripts/commit-push.sh",
 		"changelog": "node scripts/generate-changelog.js",
 		"version": "npm run changelog && git add CHANGELOG.md",
-		"release": "npm version patch",
+		"release": "node scripts/bump-version.js",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"format": "prettier --write --tab-width=2 \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.{js,ts,cjs,mjs}\" \"plugins/**/*.ts\" \"*.config.{js,ts,mjs}\" \"docs/.vitepress/config.mjs\" \"package.json\" \".oxlintrc.json\"",

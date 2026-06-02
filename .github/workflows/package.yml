@@ -77,12 +77,24 @@ jobs:
           if [ "$CHANNEL" = "beta" ]; then
             PACKAGE_NAME=$(node -p "require('./package.json').name")
             NPM_LATEST_VERSION=""
+            NPM_BETA_VERSION=""
+            MAIN_VERSION=""
             if NPM_LATEST_VERSION=$(npm view "$PACKAGE_NAME@latest" version 2>/dev/null); then
               echo "npm latest version: $NPM_LATEST_VERSION"
             else
               echo "Unable to read npm latest version for $PACKAGE_NAME. Falling back to package.json version."
             fi
-            PUBLISH_VERSION=$(node scripts/compute-beta-version.mjs "$CURRENT_VERSION" "$NPM_LATEST_VERSION")
+            if NPM_BETA_VERSION=$(npm view "$PACKAGE_NAME@beta" version 2>/dev/null); then
+              echo "npm beta version: $NPM_BETA_VERSION"
+            else
+              echo "Unable to read npm beta version for $PACKAGE_NAME. Falling back to local/latest versions."
+            fi
+            if git fetch origin main:refs/remotes/origin/main && MAIN_VERSION=$(git show origin/main:package.json | node -e "const fs = require('node:fs'); console.log(JSON.parse(fs.readFileSync(0, 'utf8')).version)"); then
+              echo "main branch version: $MAIN_VERSION"
+            else
+              echo "Unable to read origin/main package version. Falling back to local/npm versions."
+            fi
+            PUBLISH_VERSION=$(node scripts/compute-release-version.mjs "$CURRENT_VERSION" "$NPM_LATEST_VERSION" "$NPM_BETA_VERSION" "$MAIN_VERSION")
             npm pkg set version="$PUBLISH_VERSION"
             npm pkg set version="$PUBLISH_VERSION" --workspace @sansenjian/qq-music-api-mcp
             NPM_TAG="beta"

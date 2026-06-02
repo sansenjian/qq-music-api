@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import { computeMainVersion } from './compute-release-version.mjs';
 
 console.log('Bumping version in package.json...');
 
@@ -8,12 +9,9 @@ try {
 	const oldVersion = pkg.version;
 	console.log(`Current version: ${oldVersion}`);
 
-	execSync('npm version patch --no-git-tag-version --ignore-scripts', {
-		stdio: 'inherit',
-	});
-
-	const newPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-	const newVersion = newPkg.version;
+	const newVersion = computeMainVersion(oldVersion);
+	pkg.version = newVersion;
+	fs.writeFileSync('package.json', `${JSON.stringify(pkg, null, '\t')}\n`);
 	console.log(`Version bumped to ${newVersion}`);
 
 	const mcpPackagePath = 'packages/mcp/package.json';

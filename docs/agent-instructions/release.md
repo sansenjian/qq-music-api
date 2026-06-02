@@ -18,8 +18,13 @@ This project separates documentation deployment from package publication.
 ## Package Publication
 
 - Standard package release is the GitHub Actions workflow `.github/workflows/package.yml`.
-- `dev` branch publication uses the higher of local `package.json` and npm `latest`, then publishes the next patch prerelease such as `2.3.6-beta.123.1` with npm dist-tag `beta`.
-- Stable publication must use a numeric `package.json` version and publishes with npm dist-tag `latest`.
+- Version numbers use `<manual>.<main>.<dev>`:
+  - `<manual>` is changed manually when the project needs a larger compatibility line.
+  - `<main>` is incremented by the stable version bump on `main`.
+  - `<dev>` is incremented by beta releases from `dev` and resets to `0` on the next stable bump.
+- The stable version bump increments the main segment, resets the dev segment to `0`, and writes a numeric version such as `2.4.0`.
+- `dev` branch publication reads local `package.json`, `origin/main`, npm `latest`, and npm `beta`, then publishes the next dev prerelease such as `2.4.1-beta.123.1` with npm dist-tag `beta`.
+- Stable publication must use the numeric `package.json` version and publishes with npm dist-tag `latest`.
 - Package publication includes `@sansenjian/qq-music-api` and `@sansenjian/qq-music-api-mcp`.
 - The MCP package version must match the core package version for stable releases.
 - Provide a tag only when intentionally publishing that historical stable tag.
@@ -36,7 +41,7 @@ Before triggering package publication, verify:
 - `npm run docs:build`
 - `package.json` version is the intended version.
 - Beta releases intentionally do not require committing the generated prerelease version.
-- Beta releases do not require syncing the latest stable version commit back into `dev`; the package workflow reads npm `latest` and uses it as the prerelease base when it is newer than local `package.json`.
+- Beta releases do not require syncing the latest stable version commit back into `dev`; the package workflow reads `origin/main`, npm `latest`, and npm `beta` to choose the prerelease base.
 - Beta releases, including manual dispatches, must run from the current `origin/dev` HEAD.
 - `CHANGELOG.md` has been generated and reviewed when relevant.
 
