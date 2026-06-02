@@ -4,8 +4,13 @@
 	"description": "MCP server for @sansenjian/qq-music-api",
 	"type": "module",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
-		".": "./dist/index.js"
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
 	},
 	"bin": {
 		"qq-music-api-mcp": "dist/cli.js"
@@ -16,7 +21,7 @@
 		"LICENSE"
 	],
 	"scripts": {
-		"build": "vite build",
+		"build": "vite build && node scripts/build-declarations.mjs",
 		"dev": "tsx src/cli.ts",
 		"start": "node dist/cli.js"
 	},

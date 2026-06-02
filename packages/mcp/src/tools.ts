@@ -11,7 +11,6 @@ import {
 	getTopLists,
 	songListDetail,
 } from '../../../src/services';
-import type { ApiResponse } from '../../../src/types/api';
 import { getCookieKeys } from '../../../src/util/cookieResolver';
 
 const CHARACTER_LIMIT = 24_000;
@@ -70,7 +69,19 @@ interface ServiceCallOptions {
 	option?: Record<string, unknown>;
 }
 
-type ServiceCall = (options: ServiceCallOptions) => Promise<ApiResponse>;
+interface ServiceResponseBody {
+	response?: unknown;
+	error?: unknown;
+	data?: unknown;
+	[key: string]: unknown;
+}
+
+interface ServiceResponse {
+	status: number;
+	body: ServiceResponseBody;
+}
+
+type ServiceCall = (options: ServiceCallOptions) => Promise<ServiceResponse>;
 
 export interface QqMusicMcpServices {
 	getAlbumInfo: ServiceCall;
@@ -157,20 +168,20 @@ const errorResult = (tool: string, error: unknown, responseFormat: ResponseForma
 	return createToolResult(payload, responseFormat, `Error: ${message}`);
 };
 
-const extractResponseData = (response: ApiResponse): unknown => {
+const extractResponseData = (response: ServiceResponse): unknown => {
 	if ('response' in response.body) return response.body.response;
 	if ('data' in response.body) return response.body.data;
 	return response.body;
 };
 
-const extractResponseError = (response: ApiResponse): unknown => {
+const extractResponseError = (response: ServiceResponse): unknown => {
 	if ('error' in response.body) return response.body.error;
 	return undefined;
 };
 
 const serviceResult = (
 	tool: string,
-	response: ApiResponse,
+	response: ServiceResponse,
 	responseFormat: ResponseFormat,
 	title: string,
 ): CallToolResult => {

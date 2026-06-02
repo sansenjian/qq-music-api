@@ -71,6 +71,20 @@ const writeTypesFixture = () => {
 		].join('\n'),
 	);
 	fs.writeFileSync(
+		path.join(typesDir, 'mcp-consumer.mts'),
+		[
+			"import { createQqMusicMcpServer, runMcpServer } from '@sansenjian/qq-music-api-mcp';",
+			"import type { QqMusicToolPayload } from '@sansenjian/qq-music-api-mcp';",
+			'',
+			"const payload: QqMusicToolPayload = { ok: true, tool: 'typed-mcp' };",
+			'const server = createQqMusicMcpServer();',
+			'void payload;',
+			'void server;',
+			'void runMcpServer;',
+			'',
+		].join('\n'),
+	);
+	fs.writeFileSync(
 		path.join(typesDir, 'cjs-consumer.cts'),
 		[
 			"import app = require('@sansenjian/qq-music-api');",
@@ -121,6 +135,46 @@ const writeTypesFixture = () => {
 					types: ['node'],
 				},
 				include: ['esm-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.mcp-node16.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'Node16',
+					moduleResolution: 'Node16',
+					strict: true,
+					noEmit: true,
+					ignoreDeprecations: '6.0',
+					skipLibCheck: true,
+					types: ['node'],
+				},
+				include: ['mcp-consumer.mts'],
+			},
+			null,
+			2,
+		),
+	);
+	fs.writeFileSync(
+		path.join(typesDir, 'tsconfig.mcp-bundler.json'),
+		JSON.stringify(
+			{
+				compilerOptions: {
+					target: 'ES2022',
+					module: 'ESNext',
+					moduleResolution: 'Bundler',
+					strict: true,
+					noEmit: true,
+					ignoreDeprecations: '6.0',
+					skipLibCheck: true,
+					types: ['node'],
+				},
+				include: ['mcp-consumer.mts'],
 			},
 			null,
 			2,
@@ -456,6 +510,26 @@ describe('Package Entry Compatibility', () => {
 			writeTypesFixture();
 
 			await runTsc(path.join(typesDir, 'tsconfig.bundler.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose Node16-compatible types for MCP ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.mcp-node16.json'));
+		},
+		60_000,
+	);
+
+	test(
+		'should expose bundler-compatible types for MCP ESM consumers',
+		async () => {
+			writeTypesFixture();
+
+			await runTsc(path.join(typesDir, 'tsconfig.mcp-bundler.json'));
 		},
 		60_000,
 	);
