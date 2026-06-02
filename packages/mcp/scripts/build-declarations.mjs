@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,11 +47,42 @@ execFileSync(
 mkdirSync(join(packageRoot, 'dist'), { recursive: true });
 cpSync(generatedSourceDir, join(packageRoot, 'dist'), { recursive: true });
 
-for (const fileName of ['index.d.ts', 'server.d.ts', 'tools.d.ts']) {
-	const declarationPath = join(packageRoot, 'dist', fileName);
+const declarationFiles = [];
+
+const collectDeclarationFiles = directory => {
+	for (const entryName of readdirSync(directory)) {
+		const entryPath = join(directory, entryName);
+		const entryStats = statSync(entryPath);
+
+		if (entryStats.isDirectory()) {
+			collectDeclarationFiles(entryPath);
+			continue;
+		}
+
+		if (entryStats.isFile() && entryName.endsWith('.d.ts')) {
+			declarationFiles.push(entryPath);
+		}
+	}
+};
+
+const rewriteSpecifier = specifier => {
+	if (specifier.endsWith('.d.ts') || specifier.endsWith('.d.mts') || specifier.endsWith('.d.cts')) {
+		return specifier;
+	}
+
+	if (/(\.c|\.m)?js$|\.json$/.test(specifier)) {
+		return specifier;
+	}
+
+	return `${specifier}.js`;
+};
+
+collectDeclarationFiles(join(packageRoot, 'dist'));
+
+for (const declarationPath of declarationFiles) {
 	const declaration = readFileSync(declarationPath, 'utf8').replace(
-		/(from\s+['"]\.\/(?:server|tools))(['"])/g,
-		'$1.js$2',
+		/(from\s+['"])(\.{1,2}\/[^'"]+)(['"])/g,
+		(_, prefix, specifier, suffix) => `${prefix}${rewriteSpecifier(specifier)}${suffix}`,
 	);
 	writeFileSync(declarationPath, declaration);
 }

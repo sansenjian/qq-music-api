@@ -119,14 +119,14 @@ jobs:
         shell: bash
         run: |
           git fetch origin dev
-          git merge-base --is-ancestor HEAD origin/dev
+          git merge-base --is-ancestor origin/dev HEAD
 
       - name: Ensure latest releases come from main
         if: steps.release.outputs.channel == 'latest'
         shell: bash
         run: |
           git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
+          git merge-base --is-ancestor origin/main HEAD
 
       - name: Install dependencies
         run: npm install --no-package-lock

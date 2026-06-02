@@ -1,17 +1,22 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { getConfigDir, resolveConfigPath } from '../../../src/config/config-path';
-import { getUserInfo } from '../../../src/config/user-info-store';
-import { apiMetadata } from '../../../src/routes/api-metadata';
 import {
 	getAlbumInfo,
 	getHotKey,
 	getSearchByKey,
 	getTopLists,
+	getConfigDir,
+	getCookieKeys,
+	getUserInfo,
+	resolveConfigPath,
+	apiMetadata,
 	songListDetail,
-} from '../../../src/services';
-import { getCookieKeys } from '../../../src/util/cookieResolver';
+	type ApiCatalogEntry,
+	type ServiceCall,
+	type ServiceResponse,
+	type UserInfoSnapshot,
+} from './root-compat';
 
 const CHARACTER_LIMIT = 24_000;
 const ERROR_MESSAGE_LIMIT = 2_000;
@@ -62,26 +67,6 @@ interface PlaylistDetailInput extends CommonInput {
 interface AlbumInfoInput extends CommonInput {
 	albummid: string;
 }
-
-interface ServiceCallOptions {
-	method?: string;
-	params?: Record<string, unknown>;
-	option?: Record<string, unknown>;
-}
-
-interface ServiceResponseBody {
-	response?: unknown;
-	error?: unknown;
-	data?: unknown;
-	[key: string]: unknown;
-}
-
-interface ServiceResponse {
-	status: number;
-	body: ServiceResponseBody;
-}
-
-type ServiceCall = (options: ServiceCallOptions) => Promise<ServiceResponse>;
 
 export interface QqMusicMcpServices {
 	getAlbumInfo: ServiceCall;
@@ -215,13 +200,7 @@ const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
 		count: number;
 		offset: number;
 		limit: number;
-		items: Array<{
-			name: string;
-			category: string;
-			method: string;
-			path: string;
-			cookieRequired?: boolean;
-		}>;
+		items: ApiCatalogEntry[];
 	};
 
 	const lines = [
@@ -273,7 +252,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 
 	getAuthStatus: async (input: CommonInput): Promise<CallToolResult> => {
 		const responseFormat = getResponseFormat(input);
-		const userInfo = getUserInfo();
+		const userInfo: UserInfoSnapshot = getUserInfo();
 		const keys = getCookieKeys(userInfo.cookie);
 		const data = {
 			authenticated: Boolean(userInfo.cookie && (userInfo.uin || userInfo.loginUin)),
