@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       channel:
-        description: 'Release channel. auto uses beta on dev and latest for version tags/main.'
+        description: 'Manual release channel. auto uses beta on dev and latest for version tags/main.'
         required: false
         default: auto
         type: choice
@@ -16,11 +16,6 @@ on:
           - auto
           - beta
           - latest
-  push:
-    branches:
-      - dev
-    tags:
-      - 'v*'
 
 concurrency:
   group: package-${{ github.workflow }}-${{ github.ref }}

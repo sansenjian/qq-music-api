@@ -8,16 +8,17 @@ Use this file for versioning, documentation deployment, and npm/GitHub Packages 
 
 This project separates documentation deployment from package publication.
 
-| Artifact            | Trigger                                      | Workflow                            | Result                                                                 |
-| ------------------- | -------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------- |
-| GitHub Pages docs   | Push to `main` or manual dispatch            | `.github/workflows/deploy-docs.yml` | Deploys latest `main` docs                                             |
-| Version bump        | Push to `main` or manual dispatch            | `.github/workflows/version.yml`     | Updates `package.json`, `CHANGELOG.md`, and `docs/public/version.json` |
-| npm beta packages   | Push to `dev` or manual dispatch with `beta` | `.github/workflows/package.yml`     | Publishes core and MCP prerelease packages to the `beta` dist-tag      |
-| npm stable packages | `v*` tag or manual dispatch with `latest`    | `.github/workflows/package.yml`     | Publishes core and MCP stable packages to the `latest` dist-tag        |
+| Artifact            | Trigger                           | Workflow                            | Result                                                                 |
+| ------------------- | --------------------------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| GitHub Pages docs   | Push to `main` or manual dispatch | `.github/workflows/deploy-docs.yml` | Deploys latest `main` docs                                             |
+| Version bump        | Push to `main` or manual dispatch | `.github/workflows/version.yml`     | Updates `package.json`, `CHANGELOG.md`, and `docs/public/version.json` |
+| npm beta packages   | Manual dispatch with `beta`       | `.github/workflows/package.yml`     | Publishes core and MCP prerelease packages to the `beta` dist-tag      |
+| npm stable packages | Manual dispatch with `latest`     | `.github/workflows/package.yml`     | Publishes core and MCP stable packages to the `latest` dist-tag        |
 
 ## Package Publication
 
 - Standard package release is the GitHub Actions workflow `.github/workflows/package.yml`.
+- Package publication must be started manually with `workflow_dispatch`; pushes to `dev`, `main`, or `v*` tags must not publish npm packages automatically.
 - Version numbers use `<manual>.<main>.<dev>`:
   - `<manual>` is changed manually when the project needs a larger compatibility line.
   - `<main>` is incremented by the stable version bump on `main`.
@@ -40,6 +41,7 @@ Before triggering package publication, verify:
 - `npm run build`
 - `npm run docs:build`
 - `package.json` version is the intended version.
+- The package workflow is manually dispatched with the intended `channel`.
 - Beta releases intentionally do not require committing the generated prerelease version.
 - Beta releases do not require syncing the latest stable version commit back into `dev`; the package workflow reads `origin/main`, npm `latest`, and npm `beta` to choose the prerelease base.
 - Beta releases, including manual dispatches, must run from the current `origin/dev` HEAD.
@@ -49,12 +51,12 @@ Before triggering package publication, verify:
 
 The package workflow checks out the selected ref, determines the release channel, installs dependencies, runs tests, runs lint, builds TypeScript, builds documentation, generates the changelog, then publishes to npm and GitHub Packages with the correct dist-tag.
 
-Default channel behavior:
+Manual channel behavior:
 
-- Push to `dev`: publish `beta`.
-- Push a `v*` tag from `main`: publish `latest`.
 - Manual dispatch with `channel=auto`: infer the channel from the selected ref.
 - Manual dispatch with `channel=beta` or `channel=latest`: use the requested channel, while preserving exact branch/tag safety checks.
+- Selecting the current `dev` ref with `channel=beta` publishes `beta`.
+- Selecting `main` or a `v*` tag on `main` with `channel=latest` publishes `latest`.
 
 ## Verification
 
