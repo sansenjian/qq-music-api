@@ -125,8 +125,35 @@ jobs:
         if: steps.release.outputs.channel == 'latest'
         shell: bash
         run: |
-          git fetch origin main
-          git merge-base --is-ancestor origin/main HEAD
+          git fetch origin main:refs/remotes/origin/main --tags
+
+          TAG_REF="${{ github.event.inputs.tag || '' }}"
+          if [ -z "$TAG_REF" ] && [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG_REF="${GITHUB_REF#refs/tags/}"
+          fi
+
+          if [ -n "$TAG_REF" ]; then
+            TAG_COMMIT="$(git rev-list -n 1 "$TAG_REF")"
+            HEAD_COMMIT="$(git rev-parse HEAD)"
+
+            if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+              echo "Latest tag release must checkout $TAG_REF. HEAD is $HEAD_COMMIT, tag is $TAG_COMMIT."
+              exit 1
+            fi
+
+            if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+              echo "Latest release tag $TAG_REF must point to a commit contained in origin/main."
+              exit 1
+            fi
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+              echo "Latest branch release must run from the current origin/main HEAD."
+              exit 1
+            fi
+          else
+            echo "Latest releases must come from refs/heads/main or a version tag on main."
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm install --no-package-lock
