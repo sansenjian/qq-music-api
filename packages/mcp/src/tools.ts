@@ -57,7 +57,6 @@ interface SearchSongsInput extends CommonInput {
 	keyword: string;
 	page?: number;
 	limit?: number;
-	remoteplace?: 'song' | 'album' | 'mv' | 'singer' | 'smartbox';
 }
 
 interface PlaylistDetailInput extends CommonInput {
@@ -331,7 +330,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 					n: Math.min(Math.max(input.limit || 10, 1), 50),
 					p: Math.max(input.page || 1, 1),
 					catZhida: 1,
-					remoteplace: `txt.yqq.${input.remoteplace || 'song'}`,
+					remoteplace: 'txt.yqq.song',
 				},
 				option: {},
 			});
@@ -459,15 +458,11 @@ export const registerQqMusicMcpTools = (
 		'qq_music_search_songs',
 		{
 			title: 'Search QQ Music Songs',
-			description: 'Search public QQ Music results by keyword. Does not require or expose cookies.',
+			description: 'Search public QQ Music songs by keyword. Does not require or expose cookies.',
 			inputSchema: {
 				keyword: z.string().min(1).max(100).describe('Search keyword, for example a song title or artist name.'),
 				page: z.number().int().min(1).default(1).describe('Result page number, starting from 1.'),
 				limit: z.number().int().min(1).max(50).default(10).describe('Maximum results per page.'),
-				remoteplace: z
-					.enum(['song', 'album', 'mv', 'singer', 'smartbox'])
-					.default('song')
-					.describe('QQ Music search scope.'),
 				response_format: responseFormatField,
 			},
 			outputSchema: mcpOutputShape,

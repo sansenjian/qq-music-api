@@ -369,6 +369,7 @@ describe('Package Entry Compatibility', () => {
 						response_format: expect.any(Object),
 					},
 				});
+				expect(searchTool?.inputSchema.properties).not.toHaveProperty('remoteplace');
 				expect(searchTool?.outputSchema).toMatchObject({
 					type: 'object',
 					properties: {

@@ -80,7 +80,6 @@ describe('MCP tool handlers', () => {
 			keyword: 'jay',
 			page: 2,
 			limit: 5,
-			remoteplace: 'song',
 			response_format: 'json',
 		});
 
