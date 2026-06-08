@@ -23,6 +23,26 @@
 				"types": "./dist/index.d.cts",
 				"default": "./dist/index.cjs"
 			}
+		},
+		"./services": {
+			"import": {
+				"types": "./dist/services.d.mts",
+				"default": "./dist/services.js"
+			},
+			"require": {
+				"types": "./dist/services.d.cts",
+				"default": "./dist/services.cjs"
+			}
+		},
+		"./sdk": {
+			"import": {
+				"types": "./dist/sdk.d.mts",
+				"default": "./dist/sdk.js"
+			},
+			"require": {
+				"types": "./dist/sdk.d.cts",
+				"default": "./dist/sdk.cjs"
+			}
 		}
 	},
 	"bin": {
@@ -41,6 +61,16 @@
 		"dist/index.cjs",
 		"dist/index.d.cts",
 		"dist/index.d.mts",
+		"dist/sdk.js",
+		"dist/sdk.cjs",
+		"dist/sdk.d.cts",
+		"dist/sdk.d.mts",
+		"dist/sdk.d.ts",
+		"dist/services.js",
+		"dist/services.cjs",
+		"dist/services.d.cts",
+		"dist/services.d.mts",
+		"dist/services.d.ts",
 		"dist/app.d.ts",
 		"dist/index.d.ts",
 		"dist/config",

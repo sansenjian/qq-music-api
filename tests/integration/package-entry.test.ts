@@ -62,11 +62,21 @@ const writeTypesFixture = () => {
 		path.join(typesDir, 'esm-consumer.mts'),
 		[
 			"import app from '@sansenjian/qq-music-api';",
+			"import { getMusicPlay } from '@sansenjian/qq-music-api/services';",
+			"import { checkQQLoginQr, getLyric, getMusicPlay as sdkGetMusicPlay, getQQLoginQr, search } from '@sansenjian/qq-music-api/sdk';",
 			"import type Koa = require('koa');",
 			'',
 			'const typedApp: Koa = app;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'const serviceResult = getMusicPlay({ params: { songmid: "003rJSwm3TechU" } });',
+			'const sdkResult = search({ key: "周杰伦" });',
 			'void callback;',
+			'void serviceResult;',
+			'void sdkResult;',
+			'void sdkGetMusicPlay;',
+			'void getLyric;',
+			'void getQQLoginQr;',
+			'void checkQQLoginQr;',
 			'',
 		].join('\n'),
 	);
@@ -88,11 +98,21 @@ const writeTypesFixture = () => {
 		path.join(typesDir, 'cjs-consumer.cts'),
 		[
 			"import app = require('@sansenjian/qq-music-api');",
+			"import { getMusicPlay } from '@sansenjian/qq-music-api/services';",
+			"import { checkQQLoginQr, getLyric, getMusicPlay as sdkGetMusicPlay, getQQLoginQr, search } from '@sansenjian/qq-music-api/sdk';",
 			"import type Koa = require('koa');",
 			'',
 			'const typedApp: Koa = app;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'const serviceResult = getMusicPlay({ params: { songmid: "003rJSwm3TechU" } });',
+			'const sdkResult = search({ key: "周杰伦" });',
 			'void callback;',
+			'void serviceResult;',
+			'void sdkResult;',
+			'void sdkGetMusicPlay;',
+			'void getLyric;',
+			'void getQQLoginQr;',
+			'void checkQQLoginQr;',
 			'',
 		].join('\n'),
 	);
@@ -278,6 +298,91 @@ describe('Package Entry Compatibility', () => {
 			]);
 
 			expect(stdout.trim()).toBe('cjs ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should expose service functions through the ESM services entry',
+		async () => {
+			const { stdout } = await runNode([
+				'--input-type=module',
+				'--eval',
+				`
+					const mod = await import('@sansenjian/qq-music-api/services');
+					if (typeof mod.getMusicPlay !== 'function' || typeof mod.getSearchByKey !== 'function') {
+						throw new Error('Expected ESM services entry to expose service functions');
+					}
+					console.log('esm services ok');
+				`,
+			]);
+
+			expect(stdout.trim()).toBe('esm services ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should expose service functions through the CJS services entry',
+		async () => {
+			const { stdout } = await runNode([
+				'--eval',
+				`
+					const mod = require('@sansenjian/qq-music-api/services');
+					if (typeof mod.getMusicPlay !== 'function' || typeof mod.getSearchByKey !== 'function') {
+						throw new Error('Expected CJS services entry to expose service functions');
+					}
+					console.log('cjs services ok');
+				`,
+			]);
+
+			expect(stdout.trim()).toBe('cjs services ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should expose SDK helpers through ESM and CJS sdk entries',
+		async () => {
+			const { stdout: esmStdout } = await runNode([
+				'--input-type=module',
+				'--eval',
+				`
+					const mod = await import('@sansenjian/qq-music-api/sdk');
+					if (
+						typeof mod.search !== 'function' ||
+						typeof mod.getMusicPlay !== 'function' ||
+						typeof mod.getLyric !== 'function' ||
+						typeof mod.getQQLoginQr !== 'function' ||
+						typeof mod.checkQQLoginQr !== 'function'
+					) {
+						throw new Error('Expected ESM sdk entry to expose helper functions');
+					}
+					console.log('esm sdk ok');
+				`,
+			]);
+			const { stdout: cjsStdout } = await runNode([
+				'--eval',
+				`
+					const mod = require('@sansenjian/qq-music-api/sdk');
+					if (
+						typeof mod.search !== 'function' ||
+						typeof mod.getMusicPlay !== 'function' ||
+						typeof mod.getLyric !== 'function' ||
+						typeof mod.getQQLoginQr !== 'function' ||
+						typeof mod.checkQQLoginQr !== 'function'
+					) {
+						throw new Error('Expected CJS sdk entry to expose helper functions');
+					}
+					console.log('cjs sdk ok');
+				`,
+			]);
+
+			expect(esmStdout.trim()).toBe('esm sdk ok');
+			expect(cjsStdout.trim()).toBe('cjs sdk ok');
 			expect(fs.existsSync(configDir)).toBe(false);
 		},
 		60_000,

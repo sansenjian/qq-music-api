@@ -1,9 +1,16 @@
 import { defineConfig, normalizePath } from 'vite';
 import { resolve } from 'node:path';
+import { builtinModules } from 'node:module';
 import { oxcTransform } from './plugins/vite-plugin-oxc-transform';
 import type { Plugin } from 'vite';
 
+const nodeBuiltins = [
+	...builtinModules,
+	...builtinModules.map(moduleName => `node:${moduleName}`),
+];
+
 const externalPackages = [
+	...nodeBuiltins,
 	'koa',
 	'@koa/router',
 	'axios',
@@ -58,6 +65,8 @@ export default defineConfig({
 				app: resolve(__dirname, 'src/app.ts'),
 				cli: resolve(__dirname, 'src/cli.ts'),
 				index: resolve(__dirname, 'src/index.ts'),
+				services: resolve(__dirname, 'src/services/index.ts'),
+				sdk: resolve(__dirname, 'src/sdk.ts'),
 			},
 			formats: ['es', 'cjs'],
 		},

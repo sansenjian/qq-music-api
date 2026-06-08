@@ -35,6 +35,7 @@ export default defineConfig({
           { text: '使用指南', link: '/guide/' },
           { text: '安装指南', link: '/guide/installation' },
           { text: '快速开始', link: '/guide/quickstart' },
+          { text: 'SDK 函数式调用', link: '/guide/sdk-usage' },
           { text: '快速使用指南', link: '/QUICK_START' },
           { text: '降级服务示例', link: '/DEGRADE_EXAMPLES' },
         ],
@@ -153,4 +154,3 @@ export default defineConfig({
     },
   },
 })
-

@@ -74,6 +74,25 @@ spawn('node', [qqMusicPath], {
 });
 ```
 
+也可以直接在 Node.js 项目中函数式调用，不需要单独启动 HTTP 服务：
+
+```javascript
+import { search, getMusicPlay, getLyric } from '@sansenjian/qq-music-api/sdk';
+
+const searchResult = await search({ key: '周杰伦', limit: 20 });
+const playResult = await getMusicPlay({
+	songmid: '003rJSwm3TechU',
+	quality: '320',
+	cookie: 'uin=o123456; qqmusic_key=your-key',
+});
+const lyricResult = await getLyric({
+	songmid: '003rJSwm3TechU',
+	isFormat: true,
+});
+
+console.log(searchResult, playResult, lyricResult);
+```
+
 ## 项目启动
 
 ```bash

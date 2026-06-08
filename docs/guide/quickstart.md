@@ -17,6 +17,8 @@ npm run dev
 
 当前项目以 `GET` 接口为主，同时提供少量 `POST` 接口用于批量查询和扫码登录状态轮询。
 
+如果你的项目只需要在 Node.js 后端直接调用 QQ 音乐能力，也可以使用 [SDK 函数式调用](/guide/sdk-usage)，不需要单独启动 HTTP 服务。
+
 ### 常见 GET 请求示例
 
 ```bash
