@@ -42,7 +42,9 @@ import {
 	type ApiCatalogEntry,
 	type ServiceCall,
 	type ServiceResponse,
+	type UserOffsetServiceCall,
 	type UserInfoSnapshot,
+	type UserReadonlyServiceCall,
 } from './root-compat';
 
 const CHARACTER_LIMIT = 24_000;
@@ -100,14 +102,46 @@ interface AlbumInfoInput extends CommonInput {
 	albummid: string;
 }
 
-export interface QqMusicMcpServices {
+interface QqMusicMcpServiceDependencies {
 	getAlbumInfo: ServiceCall;
+	getAlbumSongs: ServiceCall;
+	getComments: ServiceCall;
+	getDigitalAlbumLists: ServiceCall;
 	getHotKey: ServiceCall;
+	getLyric: ServiceCall;
+	getMusicPlay: ServiceCall;
+	getMvByTag: ServiceCall;
+	getMvCategory: ServiceCall;
+	getRadioLists: ServiceCall;
+	getRecommendBanner: ServiceCall;
+	getRelatedMv: ServiceCall;
+	getRelatedPlaylists: ServiceCall;
 	getSearchByKey: ServiceCall;
+	getSimilarSinger: ServiceCall;
+	getSingerCategory: ServiceCall;
+	getSingerDesc: ServiceCall;
+	getSingerMv: ServiceCall;
+	getSingerStarNum: ServiceCall;
+	getSmartbox: ServiceCall;
+	getSongListCategories: ServiceCall;
 	getTopLists: ServiceCall;
+	getUserCollectedAlbums: UserReadonlyServiceCall;
+	getUserCollectedSongLists: UserReadonlyServiceCall;
+	getUserDetail: UserReadonlyServiceCall;
+	getUserFans: UserReadonlyServiceCall;
+	getUserFollowSingers: UserReadonlyServiceCall;
+	getUserFollowUsers: UserReadonlyServiceCall;
+	getUserLikedSongs: UserOffsetServiceCall;
+	getUserPlaylists: UserOffsetServiceCall;
 	songListDetail: ServiceCall;
+	songLists: ServiceCall;
+}
+
+export interface QqMusicMcpServices extends Partial<QqMusicMcpServiceDependencies> {
 	apiCalls?: QqMusicApiCallMap;
 }
+
+type ResolvedQqMusicMcpServices = QqMusicMcpServiceDependencies & Pick<QqMusicMcpServices, 'apiCalls'>;
 
 export type QqMusicApiCall = (params: Record<string, unknown>) => Promise<ServiceResponse>;
 
@@ -182,141 +216,194 @@ const userOffsetApiCall =
 			cookie: toText(params.cookie),
 		});
 
-const searchByKeyApiCall: QqMusicApiCall = params => {
-	const remoteplace = toText(params.remoteplace) || 'song';
-	const normalizedRemoteplace = remoteplace.startsWith('txt.yqq.') ? remoteplace : `txt.yqq.${remoteplace}`;
+const searchByKeyApiCall =
+	(service: ServiceCall): QqMusicApiCall =>
+	params => {
+		const remoteplace = toText(params.remoteplace) || 'song';
+		const normalizedRemoteplace = remoteplace.startsWith('txt.yqq.') ? remoteplace : `txt.yqq.${remoteplace}`;
 
-	return getSearchByKey({
-		method: 'get',
-		params: {
-			w: toText(params.key),
-			n: toNumber(params.limit, 10),
-			p: toNumber(params.page, 1),
-			catZhida: toNumber(params.catZhida, 1),
-			remoteplace: normalizedRemoteplace,
-		},
-		option: {},
-	});
-};
-
-const songListsApiCall: QqMusicApiCall = params => {
-	const limit = toNumber(params.limit, 20);
-	const page = toNumber(params.page, 0);
-
-	return songLists({
-		method: 'get',
-		params: {
-			categoryId: params.categoryId ?? 10000000,
-			sortId: params.sortId ?? 5,
-			sin: page * limit,
-			ein: limit * (page + 1) - 1,
-		},
-		option: {},
-	});
-};
-
-const getCommentsApiCall: QqMusicApiCall = params =>
-	getComments({
-		method: 'get',
-		params: {
-			cid: params.cid ?? 205360772,
-			reqtype: params.reqtype ?? 2,
-			biztype: params.biztype ?? 1,
-			topid: params.id,
-			cmd: params.cmd ?? 8,
-			pagenum: params.pagenum ?? 0,
-			pagesize: params.pagesize ?? 25,
-			lasthotcommentid: params.rootcommentid ?? '',
-		},
-		option: {},
-	});
-
-const getLyricApiCall: QqMusicApiCall = params => {
-	const cookie = toText(params.cookie);
-	const option = cookie ? { headers: { Cookie: cookie } } : {};
-
-	return getLyric({
-		method: 'get',
-		params: { songmid: toText(params.songmid) },
-		option,
-		isFormat: toText(params.isFormat),
-	});
-};
-
-const getMusicPlayApiCall: QqMusicApiCall = params => {
-	const cookie = toText(params.cookie);
-	const option = cookie ? { headers: { Cookie: cookie } } : {};
-
-	return getMusicPlay({
-		method: 'get',
-		params: {
-			songmid: toText(params.songmid),
-			resType: params.resType,
-			mediaId: params.mediaId,
-			quality: params.quality,
-		},
-		option,
-	});
-};
-
-const getSingerMvApiCall: QqMusicApiCall = params => {
-	const order = toText(params.order);
-	const serviceParams: Record<string, unknown> = {
-		singermid: toText(params.singermid),
-		order,
-		num: params.num ?? params.limit ?? 5,
+		return service({
+			method: 'get',
+			params: {
+				w: toText(params.key),
+				n: toNumber(params.limit, 10),
+				p: toNumber(params.page, 1),
+				catZhida: toNumber(params.catZhida, 1),
+				remoteplace: normalizedRemoteplace,
+			},
+			option: {},
+		});
 	};
 
-	if (order?.toLowerCase() === 'time') {
-		serviceParams.cmd = 1;
-	}
+const songListsApiCall =
+	(service: ServiceCall): QqMusicApiCall =>
+	params => {
+		const limit = toNumber(params.limit, 20);
+		const page = toNumber(params.page, 0);
 
-	return getSingerMv({ method: 'get', params: serviceParams, option: {} });
-};
+		return service({
+			method: 'get',
+			params: {
+				categoryId: params.categoryId ?? 10000000,
+				sortId: params.sortId ?? 5,
+				sin: page * limit,
+				ein: limit * (page + 1) - 1,
+			},
+			option: {},
+		});
+	};
 
-export const defaultApiCalls: QqMusicApiCallMap = {
-	getAlbumInfo: serviceApiCall(getAlbumInfo),
-	getAlbumSongs: musicuPostApiCall(getAlbumSongs),
-	getComments: getCommentsApiCall,
-	getDigitalAlbumLists: serviceApiCall(getDigitalAlbumLists),
-	getHotKey: serviceApiCall(getHotKey),
-	getLyric: getLyricApiCall,
-	getMusicPlay: getMusicPlayApiCall,
-	getMvByTag: serviceApiCall(getMvByTag),
-	getMvCategory: musicuPostApiCall(getMvCategory),
-	getRadioLists: serviceApiCall(getRadioLists),
-	getRecommendBanner: musicuPostApiCall(getRecommendBanner),
-	getRelatedMv: musicuPostApiCall(getRelatedMv),
-	getRelatedPlaylists: musicuPostApiCall(getRelatedPlaylists),
-	getSearchByKey: searchByKeyApiCall,
-	getSimilarSinger: serviceApiCall(getSimilarSinger),
-	getSingerCategory: musicuPostApiCall(getSingerCategory),
-	getSingerDesc: serviceApiCall(getSingerDesc),
-	getSingerMv: getSingerMvApiCall,
-	getSingerStarNum: serviceApiCall(getSingerStarNum),
-	getSmartbox: serviceApiCall(getSmartbox),
-	getSongListCategories: serviceApiCall(getSongListCategories),
-	getSongListDetail: serviceApiCall(songListDetail),
-	getSongLists: songListsApiCall,
-	getTopLists: serviceApiCall(getTopLists),
-	getUserCollectedAlbums: userPageApiCall(getUserCollectedAlbums),
-	getUserCollectedSongLists: userPageApiCall(getUserCollectedSongLists),
-	getUserDetail: userPageApiCall(getUserDetail),
-	getUserFans: userPageApiCall(getUserFans),
-	getUserFollowSingers: userPageApiCall(getUserFollowSingers),
-	getUserFollowUsers: userPageApiCall(getUserFollowUsers),
-	getUserLikedSongs: userOffsetApiCall(getUserLikedSongs),
-	getUserPlaylists: userOffsetApiCall(getUserPlaylists),
-};
+const getCommentsApiCall =
+	(service: ServiceCall): QqMusicApiCall =>
+	params =>
+		service({
+			method: 'get',
+			params: {
+				cid: params.cid ?? 205360772,
+				reqtype: params.reqtype ?? 2,
+				biztype: params.biztype ?? 1,
+				topid: params.id,
+				cmd: params.cmd ?? 8,
+				pagenum: params.pagenum ?? 0,
+				pagesize: params.pagesize ?? 25,
+				lasthotcommentid: params.rootcommentid ?? '',
+			},
+			option: {},
+		});
 
-export const defaultMcpServices: QqMusicMcpServices = {
+const getLyricApiCall =
+	(service: ServiceCall): QqMusicApiCall =>
+	params => {
+		const cookie = toText(params.cookie);
+		const option = cookie ? { headers: { Cookie: cookie } } : {};
+		const isFormat =
+			typeof params.isFormat === 'boolean'
+				? params.isFormat
+				: typeof params.isFormat === 'string'
+					? toText(params.isFormat)
+					: undefined;
+
+		return service({
+			method: 'get',
+			params: { songmid: toText(params.songmid) },
+			option,
+			isFormat,
+		});
+	};
+
+const getMusicPlayApiCall =
+	(service: ServiceCall): QqMusicApiCall =>
+	params => {
+		const cookie = toText(params.cookie);
+		const option = cookie ? { headers: { Cookie: cookie } } : {};
+
+		return service({
+			method: 'get',
+			params: {
+				songmid: toText(params.songmid),
+				resType: params.resType,
+				mediaId: params.mediaId,
+				quality: params.quality,
+			},
+			option,
+		});
+	};
+
+const getSingerMvApiCall =
+	(service: ServiceCall): QqMusicApiCall =>
+	params => {
+		const order = toText(params.order);
+		const serviceParams: Record<string, unknown> = {
+			singermid: toText(params.singermid),
+			order,
+			num: params.num ?? params.limit ?? 5,
+		};
+
+		if (order?.toLowerCase() === 'time') {
+			serviceParams.cmd = 1;
+		}
+
+		return service({ method: 'get', params: serviceParams, option: {} });
+	};
+
+const defaultMcpServiceDependencies: QqMusicMcpServiceDependencies = {
 	getAlbumInfo,
+	getAlbumSongs,
+	getComments,
+	getDigitalAlbumLists,
 	getHotKey,
+	getLyric,
+	getMusicPlay,
+	getMvByTag,
+	getMvCategory,
+	getRadioLists,
+	getRecommendBanner,
+	getRelatedMv,
+	getRelatedPlaylists,
 	getSearchByKey,
+	getSimilarSinger,
+	getSingerCategory,
+	getSingerDesc,
+	getSingerMv,
+	getSingerStarNum,
+	getSmartbox,
+	getSongListCategories,
 	getTopLists,
+	getUserCollectedAlbums,
+	getUserCollectedSongLists,
+	getUserDetail,
+	getUserFans,
+	getUserFollowSingers,
+	getUserFollowUsers,
+	getUserLikedSongs,
+	getUserPlaylists,
 	songListDetail,
-	apiCalls: defaultApiCalls,
+	songLists,
 };
+
+const createDefaultApiCalls = (services: QqMusicMcpServiceDependencies): QqMusicApiCallMap => ({
+	getAlbumInfo: serviceApiCall(services.getAlbumInfo),
+	getAlbumSongs: musicuPostApiCall(services.getAlbumSongs),
+	getComments: getCommentsApiCall(services.getComments),
+	getDigitalAlbumLists: serviceApiCall(services.getDigitalAlbumLists),
+	getHotKey: serviceApiCall(services.getHotKey),
+	getLyric: getLyricApiCall(services.getLyric),
+	getMusicPlay: getMusicPlayApiCall(services.getMusicPlay),
+	getMvByTag: serviceApiCall(services.getMvByTag),
+	getMvCategory: musicuPostApiCall(services.getMvCategory),
+	getRadioLists: serviceApiCall(services.getRadioLists),
+	getRecommendBanner: musicuPostApiCall(services.getRecommendBanner),
+	getRelatedMv: musicuPostApiCall(services.getRelatedMv),
+	getRelatedPlaylists: musicuPostApiCall(services.getRelatedPlaylists),
+	getSearchByKey: searchByKeyApiCall(services.getSearchByKey),
+	getSimilarSinger: serviceApiCall(services.getSimilarSinger),
+	getSingerCategory: musicuPostApiCall(services.getSingerCategory),
+	getSingerDesc: serviceApiCall(services.getSingerDesc),
+	getSingerMv: getSingerMvApiCall(services.getSingerMv),
+	getSingerStarNum: serviceApiCall(services.getSingerStarNum),
+	getSmartbox: serviceApiCall(services.getSmartbox),
+	getSongListCategories: serviceApiCall(services.getSongListCategories),
+	getSongListDetail: serviceApiCall(services.songListDetail),
+	getSongLists: songListsApiCall(services.songLists),
+	getTopLists: serviceApiCall(services.getTopLists),
+	getUserCollectedAlbums: userPageApiCall(services.getUserCollectedAlbums),
+	getUserCollectedSongLists: userPageApiCall(services.getUserCollectedSongLists),
+	getUserDetail: userPageApiCall(services.getUserDetail),
+	getUserFans: userPageApiCall(services.getUserFans),
+	getUserFollowSingers: userPageApiCall(services.getUserFollowSingers),
+	getUserFollowUsers: userPageApiCall(services.getUserFollowUsers),
+	getUserLikedSongs: userOffsetApiCall(services.getUserLikedSongs),
+	getUserPlaylists: userOffsetApiCall(services.getUserPlaylists),
+});
+
+export const defaultApiCalls: QqMusicApiCallMap = createDefaultApiCalls(defaultMcpServiceDependencies);
+
+export const defaultMcpServices: QqMusicMcpServices = { ...defaultMcpServiceDependencies };
+
+const resolveMcpServices = (services: QqMusicMcpServices = {}): ResolvedQqMusicMcpServices => ({
+	...defaultMcpServiceDependencies,
+	...services,
+});
 
 const getResponseFormat = (value: CommonInput): ResponseFormat => value.response_format || 'markdown';
 
@@ -440,10 +527,10 @@ const createErrorToolResult = (
 	return createToolResult(payload, responseFormat, `Error: ${message}`);
 };
 
-const getApiCalls = (services: QqMusicMcpServices): QqMusicApiCallMap => ({
-	...defaultApiCalls,
-	...services.apiCalls,
-});
+const getApiCalls = (services: ResolvedQqMusicMcpServices): QqMusicApiCallMap => {
+	const defaultApiCallMap = createDefaultApiCalls(services);
+	return services.apiCalls ? { ...defaultApiCallMap, ...services.apiCalls } : defaultApiCallMap;
+};
 
 const getRequiredParams = (item: ApiCatalogEntry): string[] =>
 	[...(item.pathParams || []), ...(item.queryParams || [])].filter(param => param.required).map(param => param.name);
@@ -478,6 +565,34 @@ const enrichApiCatalogEntry = (item: ApiCatalogEntry, apiCalls: QqMusicApiCallMa
 const getMissingRequiredParams = (item: McpApiCatalogEntry, params: Record<string, unknown>): string[] =>
 	item.requiredParams.filter(paramName => toText(params[paramName]) === undefined);
 
+const requiredParamAliasesByApiName: Record<string, Record<string, string[]>> = {
+	getUserCollectedAlbums: { uin: ['id'] },
+	getUserCollectedSongLists: { uin: ['id'] },
+	getUserDetail: { uin: ['id'] },
+	getUserFans: { uin: ['id'] },
+	getUserFollowSingers: { uin: ['id'] },
+	getUserFollowUsers: { uin: ['id'] },
+	getUserLikedSongs: { uin: ['id'] },
+	getUserPlaylists: { uin: ['id'] },
+};
+
+const normalizeRequiredParamAliases = (apiName: string, params: Record<string, unknown>): Record<string, unknown> => {
+	const aliases = requiredParamAliasesByApiName[apiName];
+	if (!aliases) return params;
+
+	const normalizedParams = { ...params };
+	Object.entries(aliases).forEach(([requiredParam, aliasNames]) => {
+		if (toText(normalizedParams[requiredParam]) !== undefined) return;
+
+		const matchingAliasName = aliasNames.find(aliasName => toText(normalizedParams[aliasName]) !== undefined);
+		if (matchingAliasName) {
+			normalizedParams[requiredParam] = normalizedParams[matchingAliasName];
+		}
+	});
+
+	return normalizedParams;
+};
+
 const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
 	const data = payload.data as {
 		total: number;
@@ -508,7 +623,13 @@ const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
 };
 
 export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultMcpServices) => {
-	const apiCalls = getApiCalls(services);
+	const resolvedServices = resolveMcpServices(services);
+	const apiCalls = getApiCalls(resolvedServices);
+	let enrichedApiCatalogCache: McpApiCatalogEntry[] | undefined;
+	const getEnrichedApiCatalog = (): McpApiCatalogEntry[] => {
+		enrichedApiCatalogCache ??= apiMetadata.map(item => enrichApiCatalogEntry(item, apiCalls));
+		return enrichedApiCatalogCache;
+	};
 
 	return {
 		getConfigStatus: async (input: CommonInput): Promise<CallToolResult> => {
@@ -578,7 +699,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 			const limit = Math.min(Math.max(input.limit || 20, 1), 100);
 			const offset = Math.max(input.offset || 0, 0);
 			const category = input.category?.trim();
-			const catalog = apiMetadata.map(item => enrichApiCatalogEntry(item, apiCalls));
+			const catalog = getEnrichedApiCatalog();
 			const categoryFiltered = category ? catalog.filter(item => item.category === category) : catalog;
 			const filtered =
 				input.mcp_callable === undefined
@@ -607,9 +728,9 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 			const responseFormat = getResponseFormat(input);
 			const name = input.name.trim();
 			const params = input.params || {};
-			const metadataItem = apiMetadata.find(item => item.name === name);
+			const catalogItem = getEnrichedApiCatalog().find(item => item.name === name);
 
-			if (!metadataItem) {
+			if (!catalogItem) {
 				return createErrorToolResult(
 					'qq_music_call_api',
 					'API_NOT_FOUND',
@@ -619,7 +740,6 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 				);
 			}
 
-			const catalogItem = enrichApiCatalogEntry(metadataItem, apiCalls);
 			if (!catalogItem.mcpCallable) {
 				return createErrorToolResult(
 					'qq_music_call_api',
@@ -634,7 +754,8 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 				);
 			}
 
-			const missingParams = getMissingRequiredParams(catalogItem, params);
+			const paramsForValidation = normalizeRequiredParamAliases(name, params);
+			const missingParams = getMissingRequiredParams(catalogItem, paramsForValidation);
 			if (missingParams.length > 0) {
 				return createErrorToolResult(
 					'qq_music_call_api',
@@ -666,7 +787,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 		getHotKeys: async (input: CommonInput): Promise<CallToolResult> => {
 			const responseFormat = getResponseFormat(input);
 			try {
-				const response = await services.getHotKey({ method: 'get', params: {}, option: {} });
+				const response = await resolvedServices.getHotKey({ method: 'get', params: {}, option: {} });
 				return serviceResult('qq_music_get_hot_keys', response, responseFormat, 'QQ Music Hot Keys');
 			} catch (error) {
 				return errorResult('qq_music_get_hot_keys', error, responseFormat);
@@ -676,7 +797,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 		searchSongs: async (input: SearchSongsInput): Promise<CallToolResult> => {
 			const responseFormat = getResponseFormat(input);
 			try {
-				const response = await services.getSearchByKey({
+				const response = await resolvedServices.getSearchByKey({
 					method: 'get',
 					params: {
 						w: input.keyword,
@@ -696,7 +817,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 		getTopLists: async (input: CommonInput): Promise<CallToolResult> => {
 			const responseFormat = getResponseFormat(input);
 			try {
-				const response = await services.getTopLists({ method: 'get', params: {}, option: {} });
+				const response = await resolvedServices.getTopLists({ method: 'get', params: {}, option: {} });
 				return serviceResult('qq_music_get_top_lists', response, responseFormat, 'QQ Music Top Lists');
 			} catch (error) {
 				return errorResult('qq_music_get_top_lists', error, responseFormat);
@@ -706,7 +827,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 		getPlaylistDetail: async (input: PlaylistDetailInput): Promise<CallToolResult> => {
 			const responseFormat = getResponseFormat(input);
 			try {
-				const response = await services.songListDetail({
+				const response = await resolvedServices.songListDetail({
 					method: 'get',
 					params: {
 						disstid: input.disstid,
@@ -722,7 +843,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 		getAlbumInfo: async (input: AlbumInfoInput): Promise<CallToolResult> => {
 			const responseFormat = getResponseFormat(input);
 			try {
-				const response = await services.getAlbumInfo({
+				const response = await resolvedServices.getAlbumInfo({
 					method: 'get',
 					params: {
 						albummid: input.albummid,

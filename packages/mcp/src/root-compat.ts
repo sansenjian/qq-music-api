@@ -45,7 +45,6 @@ export interface ServiceCallOptions {
 	params?: Record<string, unknown>;
 	option?: Record<string, unknown>;
 	isFormat?: boolean | string;
-	[key: string]: unknown;
 }
 
 export interface ServiceResponseBody {
