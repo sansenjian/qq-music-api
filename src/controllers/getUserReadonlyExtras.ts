@@ -25,6 +25,14 @@ const getSingleQueryValue = (value: unknown): string | undefined => {
 	return text || undefined;
 };
 
+const getPaginationValue = (value: unknown, fallback: number) => {
+	const rawValue = getSingleQueryValue(value);
+	if (!rawValue) return fallback;
+
+	const parsedValue = Number(rawValue);
+	return Number.isFinite(parsedValue) ? parsedValue : fallback;
+};
+
 const createUserReadonlyController = (service: UserReadonlyService, name: string) =>
 	withErrorHandler(async (ctx: KoaContext) => {
 		const uin = getSingleQueryValue(ctx.query.uin) || getSingleQueryValue(ctx.query.id);
@@ -35,10 +43,13 @@ const createUserReadonlyController = (service: UserReadonlyService, name: string
 		}
 
 		const { cookie } = resolveRequestCookie(ctx);
+		const page = getPaginationValue(ctx.query.page || ctx.query.pageNo, 1);
+		const limit = getPaginationValue(ctx.query.limit || ctx.query.pageSize, 20);
+
 		const result = await service({
 			uin,
-			page: Number(ctx.query.page || ctx.query.pageNo || 1),
-			limit: Number(ctx.query.limit || ctx.query.pageSize || 20),
+			page,
+			limit,
 			cookie,
 		});
 		setApiResponse(ctx, result);

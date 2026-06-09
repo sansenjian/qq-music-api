@@ -116,6 +116,14 @@ describe('API Integration Tests', () => {
 			const firstCallConfig = mockService.mock.calls[0][0] as { params: { disstid: string } };
 			expect(firstCallConfig.params.disstid).toBe('7077188304');
 		});
+
+		test('should read disstid from query param', async () => {
+			await request(callback).get('/getSongListDetail').query({ disstid: '7077188304' }).expect(200);
+
+			const lastCallIndex = mockService.mock.calls.length - 1;
+			const lastCallConfig = mockService.mock.calls[lastCallIndex][0] as { params: { disstid: string } };
+			expect(lastCallConfig.params.disstid).toBe('7077188304');
+		});
 	});
 
 	describe('GET /getLyric', () => {

@@ -126,10 +126,7 @@ describe('readonly jsososo parity APIs', () => {
 	});
 
 	test('GET /getRelatedMv builds related MV payload', async () => {
-		await request(callback)
-			.get('/getRelatedMv')
-			.query({ songid: '5105986', limit: '8' })
-			.expect(200);
+		await request(callback).get('/getRelatedMv').query({ songid: '5105986', limit: '8' }).expect(200);
 
 		expect(getLatestRequestPayload(mockFn).video).toMatchObject({
 			module: 'MvService.MvInfoProServer',
@@ -178,6 +175,21 @@ describe('readonly jsososo parity APIs', () => {
 		expect(options.url).toContain(expectedUrl);
 		expect(options.params).toMatchObject(expectedParams);
 		expect(getLatestRequestCookie(mockFn)).toBe('uin=o123456789; qqmusic_key=mock');
+	});
+
+	test('user readonly APIs normalize pagination and avoid NaN values', async () => {
+		await request(callback)
+			.get('/user/getUserCollectedSongLists?uin=123456789&uin=987654321&page=abc&limit=bad')
+			.expect(200);
+
+		const options = getLatestRequestOptions(mockFn) as {
+			params?: Record<string, unknown>;
+		};
+		expect(options.params).toMatchObject({
+			userid: '123456789',
+			sin: 0,
+			ein: 20,
+		});
 	});
 
 	test('user readonly APIs reject missing uin', async () => {

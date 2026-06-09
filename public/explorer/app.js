@@ -30,11 +30,10 @@ const elements = {
 };
 
 const methodOrder = ['GET', 'POST', 'DELETE'];
+const metadataPath = document.currentScript?.dataset.metadataPath;
+if (!metadataPath) throw new Error('Explorer metadata path is not configured.');
 
 const normalize = value => String(value || '').toLowerCase();
-
-const escapeHtml = value =>
-	String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
 const formatJson = value => {
 	try {
@@ -105,7 +104,14 @@ const createField = (kind, param) => {
 	label.className = 'field';
 
 	const text = document.createElement('span');
-	text.innerHTML = `${escapeHtml(param.name)}${param.required ? ' <b class="required">*</b>' : ''}`;
+	text.append(document.createTextNode(param.name));
+	if (param.required) {
+		text.append(document.createTextNode(' '));
+		const requiredMark = document.createElement('b');
+		requiredMark.className = 'required';
+		requiredMark.textContent = '*';
+		text.append(requiredMark);
+	}
 
 	const input = document.createElement('input');
 	input.name = getInputName(kind, param.name);
@@ -118,7 +124,7 @@ const createField = (kind, param) => {
 };
 
 const renderParamSection = (section, title, kind, params) => {
-	section.innerHTML = '';
+	section.replaceChildren();
 	if (!params.length) return;
 
 	const heading = document.createElement('h3');
@@ -139,8 +145,8 @@ const renderActiveEndpoint = () => {
 		elements.activeName.textContent = '选择一个接口';
 		elements.activePath.textContent = '从左侧列表选择接口后填写参数。';
 		setMethodPill(elements.activeMethod, 'GET');
-		elements.pathParamSection.innerHTML = '';
-		elements.queryParamSection.innerHTML = '';
+		elements.pathParamSection.replaceChildren();
+		elements.queryParamSection.replaceChildren();
 		elements.bodySection.classList.add('hidden');
 		elements.bodyInput.value = '';
 		updateRequestUrl();
@@ -165,7 +171,7 @@ const renderActiveEndpoint = () => {
 };
 
 const renderEndpointList = () => {
-	elements.endpointList.innerHTML = '';
+	elements.endpointList.replaceChildren();
 
 	if (!state.filteredEndpoints.length) {
 		const empty = document.createElement('p');
@@ -182,15 +188,26 @@ const renderEndpointList = () => {
 		button.className = 'endpoint-item';
 		button.setAttribute('role', 'option');
 		button.setAttribute('aria-selected', endpoint === state.activeEndpoint ? 'true' : 'false');
-		button.innerHTML = `
-      <span>
-        <span class="endpoint-title">
-          <span class="endpoint-name">${escapeHtml(endpoint.name)}</span>
-          <span class="method-pill" data-method="${escapeHtml(endpoint.method)}">${escapeHtml(endpoint.method)}</span>
-        </span>
-        <span class="endpoint-path">${escapeHtml(endpoint.path)}</span>
-      </span>
-    `;
+
+		const container = document.createElement('span');
+		const title = document.createElement('span');
+		title.className = 'endpoint-title';
+
+		const name = document.createElement('span');
+		name.className = 'endpoint-name';
+		name.textContent = endpoint.name;
+
+		const method = document.createElement('span');
+		method.className = 'method-pill';
+		setMethodPill(method, endpoint.method);
+
+		const path = document.createElement('span');
+		path.className = 'endpoint-path';
+		path.textContent = endpoint.path;
+
+		title.append(name, method);
+		container.append(title, path);
+		button.append(container);
 		button.addEventListener('click', () => {
 			state.activeEndpoint = endpoint;
 			renderEndpointList();
@@ -248,7 +265,7 @@ const addLog = ({ endpoint, url, status, duration }) => {
 };
 
 const renderLogs = () => {
-	elements.requestLogs.innerHTML = '';
+	elements.requestLogs.replaceChildren();
 	if (!state.logs.length) {
 		const empty = document.createElement('p');
 		empty.className = 'empty-state';
@@ -261,10 +278,14 @@ const renderLogs = () => {
 		const item = document.createElement('button');
 		item.type = 'button';
 		item.className = 'log-item';
-		item.innerHTML = `
-      <strong>${escapeHtml(log.method)} ${escapeHtml(log.endpointName)}</strong>
-      <span>${escapeHtml(log.status)} · ${escapeHtml(log.duration)}ms · ${escapeHtml(log.url)}</span>
-    `;
+
+		const summary = document.createElement('strong');
+		summary.textContent = `${log.method} ${log.endpointName}`;
+
+		const meta = document.createElement('span');
+		meta.textContent = `${log.status} · ${log.duration}ms · ${log.url}`;
+
+		item.append(summary, meta);
 		item.addEventListener('click', () => {
 			elements.responseMeta.textContent = `${log.status} · ${log.duration}ms`;
 			elements.requestUrl.textContent = log.url;
@@ -322,7 +343,7 @@ const resetActiveEndpoint = () => {
 };
 
 const loadMetadata = async () => {
-	const response = await fetch('/explorer/metadata');
+	const response = await fetch(metadataPath);
 	if (!response.ok) throw new Error(`Metadata request failed: ${response.status}`);
 
 	const metadata = await response.json();

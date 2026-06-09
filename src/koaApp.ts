@@ -78,7 +78,7 @@ app.use(bodyParser());
 
 // Cookie + fallback (merged: resolves cookie once)
 app.use(cookieMiddleware());
-app.use(apiExplorer());
+app.use(apiExplorer({ publicDir }));
 app.use(staticServe(publicDir));
 
 app.use(router.routes());
