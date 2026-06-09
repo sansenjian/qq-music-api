@@ -22,6 +22,14 @@ const getRouteEntries = () => {
 const getMetadataEntries = () =>
 	apiMetadata.flatMap(item => [item.path, ...(item.aliases || [])].map(path => `${item.method} ${path}`));
 
+const getMetadataItem = (name: string) => {
+	const item = apiMetadata.find(entry => entry.name === name);
+	if (!item) throw new Error(`Missing metadata item: ${name}`);
+	return item;
+};
+
+const getQueryParamNames = (name: string) => new Set((getMetadataItem(name).queryParams || []).map(param => param.name));
+
 describe('routes/api-metadata', () => {
 	test('should keep metadata paths in sync with registered routes', () => {
 		const routePaths = getRoutePaths();
@@ -54,5 +62,36 @@ describe('routes/api-metadata', () => {
 	test('should avoid duplicate method and path entries across paths and aliases', () => {
 		const keys = getMetadataEntries();
 		expect(new Set(keys).size).toBe(keys.length);
+	});
+
+	test('should document controller query params for metadata-sensitive APIs', () => {
+		expect(getQueryParamNames('getUserPlaylists')).toEqual(new Set(['uin', 'offset', 'limit', 'cookie']));
+		expect(getQueryParamNames('getUserLikedSongs')).toEqual(new Set(['uin', 'offset', 'limit', 'cookie']));
+		expect(getQueryParamNames('getImageUrl')).toEqual(new Set(['id', 'size', 'maxAge']));
+		expect(getQueryParamNames('getSearchByKey')).toEqual(
+			new Set(['key', 'limit', 'page', 'catZhida', 'remoteplace']),
+		);
+		expect(getQueryParamNames('getSongListDetail')).toEqual(new Set(['disstid']));
+		expect(getQueryParamNames('getAlbumSongs')).toEqual(
+			new Set(['albummid', 'albumid', 'begin', 'limit', 'order']),
+		);
+		expect(getQueryParamNames('getRelatedPlaylists')).toEqual(
+			new Set(['songid', 'sin', 'lastId', 'songType']),
+		);
+		expect(getQueryParamNames('getRelatedMv')).toEqual(
+			new Set(['songid', 'songtype', 'lastmvid', 'limit']),
+		);
+	});
+
+	test('should mark login-dependent API metadata as cookie required', () => {
+		expect(getMetadataItem('getUserPlaylists').cookieRequired).toBe(true);
+		expect(getMetadataItem('getUserLikedSongs').cookieRequired).toBe(true);
+		expect(getMetadataItem('getUserCollectedSongLists').cookieRequired).toBe(true);
+		expect(getMetadataItem('getUserCollectedAlbums').cookieRequired).toBe(true);
+		expect(getMetadataItem('getUserFollowSingers').cookieRequired).toBe(true);
+		expect(getMetadataItem('getUserFollowUsers').cookieRequired).toBe(true);
+		expect(getMetadataItem('getUserFans').cookieRequired).toBe(true);
+		expect(getMetadataItem('getMusicPlay').cookieRequired).toBe(true);
+		expect(getMetadataItem('getLyric').cookieRequired).toBe(true);
 	});
 });
