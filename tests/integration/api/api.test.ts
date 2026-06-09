@@ -102,6 +102,30 @@ describe('API Integration Tests', () => {
 		});
 	});
 
+	describe('GET /getSongListDetail', () => {
+		test('should return 400 when disstid is missing', async () => {
+			const response = await request(callback).get('/getSongListDetail').expect(400);
+
+			expect(response.body.response).toBe('no disstid');
+			expect(mockService).not.toHaveBeenCalled();
+		});
+
+		test('should read disstid from path param', async () => {
+			await request(callback).get('/getSongListDetail/7077188304').expect(200);
+
+			const firstCallConfig = mockService.mock.calls[0][0] as { params: { disstid: string } };
+			expect(firstCallConfig.params.disstid).toBe('7077188304');
+		});
+
+		test('should read disstid from query param', async () => {
+			await request(callback).get('/getSongListDetail').query({ disstid: '7077188304' }).expect(200);
+
+			const lastCallIndex = mockService.mock.calls.length - 1;
+			const lastCallConfig = mockService.mock.calls[lastCallIndex][0] as { params: { disstid: string } };
+			expect(lastCallConfig.params.disstid).toBe('7077188304');
+		});
+	});
+
 	describe('GET /getLyric', () => {
 		test('should return lyric with query param', async () => {
 			const response = await request(callback).get('/getLyric').query({ songmid: 'test123' }).expect(200);

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>QQ Music API Explorer</title>
+		<link rel="icon" href="data:," />
+		<link rel="stylesheet" href="/explorer/styles.css" />
+	</head>
+	<body>
+		<div class="app-shell">
+			<header class="topbar">
+				<div class="brand">
+					<span class="brand-mark" aria-hidden="true">Q</span>
+					<div>
+						<h1>QQ Music API Explorer</h1>
+						<p id="endpoint-count">加载接口中...</p>
+					</div>
+				</div>
+				<nav class="nav" aria-label="页面导航">
+					<a href="/index.html">Playground</a>
+					<a href="/api/metadata" target="_blank" rel="noreferrer">Metadata</a>
+				</nav>
+			</header>
+
+			<main class="workspace">
+				<aside class="sidebar" aria-label="接口列表">
+					<div class="filters">
+						<label class="field">
+							<span>搜索</span>
+							<input id="search-input" type="search" placeholder="接口名、路径、分类" />
+						</label>
+						<div class="filter-grid">
+							<label class="field">
+								<span>方法</span>
+								<select id="method-filter">
+									<option value="ALL">ALL</option>
+								</select>
+							</label>
+							<label class="field">
+								<span>分类</span>
+								<select id="category-filter">
+									<option value="ALL">全部</option>
+								</select>
+							</label>
+						</div>
+					</div>
+					<div id="endpoint-list" class="endpoint-list" role="listbox" aria-label="接口"></div>
+				</aside>
+
+				<section class="request-panel" aria-label="请求面板">
+					<div class="panel-header">
+						<div>
+							<p id="active-category" class="eyebrow">未选择</p>
+							<h2 id="active-name">选择一个接口</h2>
+							<p id="active-path" class="path-preview">从左侧列表选择接口后填写参数。</p>
+						</div>
+						<span id="active-method" class="method-pill">GET</span>
+					</div>
+
+					<form id="request-form" class="request-form">
+						<div id="path-param-section" class="param-section"></div>
+						<div id="query-param-section" class="param-section"></div>
+						<label id="body-section" class="field body-editor hidden">
+							<span>JSON Body</span>
+							<textarea id="body-input" spellcheck="false" rows="8"></textarea>
+						</label>
+
+						<div class="url-box">
+							<span id="request-url">/</span>
+						</div>
+
+						<div class="actions">
+							<button id="send-button" type="submit" class="primary">发送请求</button>
+							<button id="reset-button" type="button">重置参数</button>
+						</div>
+					</form>
+				</section>
+
+				<section class="result-panel" aria-label="响应和日志">
+					<div class="response-box">
+						<div class="section-heading">
+							<h2>响应</h2>
+							<span id="response-meta">等待请求</span>
+						</div>
+						<pre id="response-output">{}</pre>
+					</div>
+
+					<div class="log-box">
+						<div class="section-heading">
+							<h2>请求日志</h2>
+							<button id="clear-logs-button" type="button">清空</button>
+						</div>
+						<div id="request-logs" class="request-logs"></div>
+					</div>
+				</section>
+			</main>
+		</div>
+
+		<script src="/explorer/app.js" data-metadata-path="__API_EXPLORER_METADATA_PATH__"></script>
+	</body>
+</html>

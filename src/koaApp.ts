@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import staticServe from './middlewares/static-serve';
 import cors from './middlewares/koa-cors';
 import securityHeaders from './middlewares/security-headers';
+import apiExplorer from './middlewares/api-explorer';
 import router from './routes/router';
 import cookieMiddleware from './util/cookie';
 import colors from './util/colors';
@@ -77,6 +78,7 @@ app.use(bodyParser());
 
 // Cookie + fallback (merged: resolves cookie once)
 app.use(cookieMiddleware());
+app.use(apiExplorer({ publicDir }));
 app.use(staticServe(publicDir));
 
 app.use(router.routes());

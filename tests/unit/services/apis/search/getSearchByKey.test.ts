@@ -40,7 +40,7 @@ describe('services/apis/search/getSearchByKey', () => {
     );
   });
 
-  test('should pass key param to y_common', async () => {
+  test('should normalize key param to upstream w param', async () => {
     (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
 
     await getSearchByKey({
@@ -53,11 +53,13 @@ describe('services/apis/search/getSearchByKey', () => {
       expect.objectContaining({
         options: expect.objectContaining({
           params: expect.objectContaining({
-            key: 'test music'
+            w: 'test music'
           })
         })
       })
     );
+    const callArgs = (y_common as Mock).mock.calls[0][0];
+    expect(callArgs.options.params).not.toHaveProperty('key');
   });
 
   test('should add default params', async () => {
@@ -71,7 +73,7 @@ describe('services/apis/search/getSearchByKey', () => {
 
     const callArgs = (y_common as Mock).mock.calls[0][0];
     expect(callArgs.options.params).toMatchObject({
-      key: 'test',
+      w: 'test',
       format: 'json',
       outCharset: 'utf-8',
       ct: 24,
@@ -97,10 +99,27 @@ describe('services/apis/search/getSearchByKey', () => {
 
     const callArgs = (y_common as Mock).mock.calls[0][0];
     expect(callArgs.options.params).toMatchObject({
-      key: 'test',
+      w: 'test',
       n: 50,
       p: 3
     });
+  });
+
+  test('should preserve explicit w param over key alias', async () => {
+    (y_common as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+
+    await getSearchByKey({
+      method: 'get',
+      params: { key: 'ignored', w: 'actual', remoteplace: 'txt.yqq.album' },
+      option: {}
+    });
+
+    const callArgs = (y_common as Mock).mock.calls[0][0];
+    expect(callArgs.options.params).toMatchObject({
+      w: 'actual',
+      remoteplace: 'txt.yqq.album'
+    });
+    expect(callArgs.options.params).not.toHaveProperty('key');
   });
 
   test('should merge custom options', async () => {
@@ -137,6 +156,7 @@ describe('services/apis/search/getSearchByKey', () => {
     await getSearchByKey({ method: 'get', params: { key: '' }, option: {} });
 
     const callArgs = (y_common as Mock).mock.calls[0][0];
-    expect(callArgs.options.params.key).toBe('');
+    expect(callArgs.options.params.w).toBe('');
+    expect(callArgs.options.params).not.toHaveProperty('key');
   });
 });
