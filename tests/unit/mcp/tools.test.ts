@@ -50,6 +50,178 @@ describe('MCP tool handlers', () => {
 		expect(data.hasMore).toBe(true);
 	});
 
+	test('marks metadata entries with MCP callable status and required params', async () => {
+		const handlers = createQqMusicMcpHandlers(createServices());
+		const result = await handlers.listApis({ category: 'album', limit: 10, response_format: 'json' });
+		const payload = payloadOf(result);
+		const data = payload.data as {
+			items: Array<{
+				name: string;
+				mcpCallable: boolean;
+				requiredParams: string[];
+			}>;
+		};
+		const albumSongs = data.items.find(item => item.name === 'getAlbumSongs');
+
+		expect(albumSongs).toMatchObject({
+			mcpCallable: true,
+			requiredParams: ['albummid'],
+		});
+	});
+
+	test('filters API metadata to MCP-callable APIs', async () => {
+		const handlers = createQqMusicMcpHandlers(createServices());
+		const result = await handlers.listApis({
+			category: 'user',
+			mcp_callable: true,
+			limit: 20,
+			response_format: 'json',
+		});
+		const payload = payloadOf(result);
+		const data = payload.data as {
+			items: Array<{
+				name: string;
+				mcpCallable: boolean;
+			}>;
+		};
+
+		expect(data.items.every(item => item.mcpCallable)).toBe(true);
+		expect(data.items.map(item => item.name)).toEqual(
+			expect.arrayContaining(['getUserCollectedAlbums', 'getUserFollowSingers']),
+		);
+		expect(data.items.map(item => item.name)).not.toContain('setCookie');
+	});
+
+	test('calls metadata-backed readonly APIs through the generic MCP API tool', async () => {
+		const getAlbumSongs = vi.fn().mockResolvedValue(okResponse({ songs: [{ songmid: 's1' }] }));
+		const handlers = createQqMusicMcpHandlers(
+			createServices({
+				apiCalls: {
+					getAlbumSongs,
+				},
+			}),
+		);
+
+		const result = await handlers.callApi({
+			name: 'getAlbumSongs',
+			params: { albummid: '002MAeob3zLXwZ', begin: 10, limit: 30 },
+			response_format: 'json',
+		});
+		const payload = payloadOf(result);
+
+		expect(getAlbumSongs).toHaveBeenCalledWith({ albummid: '002MAeob3zLXwZ', begin: 10, limit: 30 });
+		expect(payload).toMatchObject({
+			ok: true,
+			tool: 'qq_music_call_api',
+			status: 200,
+			data: {
+				songs: [{ songmid: 's1' }],
+			},
+			metadata: {
+				api: 'getAlbumSongs',
+				category: 'album',
+				path: '/getAlbumSongs',
+				paramsRedacted: true,
+			},
+		});
+	});
+
+	test('uses injected services for default generic API adapters', async () => {
+		const getRelatedMv = vi.fn().mockResolvedValue(okResponse({ mvs: [{ vid: 'mv1' }] }));
+		const handlers = createQqMusicMcpHandlers(createServices({ getRelatedMv }));
+
+		const result = await handlers.callApi({
+			name: 'getRelatedMv',
+			params: { songid: '12345', limit: 3 },
+			response_format: 'json',
+		});
+
+		expect(getRelatedMv).toHaveBeenCalledWith({
+			method: 'post',
+			params: { songid: '12345', limit: 3 },
+			option: {},
+		});
+		expect(payloadOf(result)).toMatchObject({
+			ok: true,
+			tool: 'qq_music_call_api',
+			status: 200,
+			data: {
+				mvs: [{ vid: 'mv1' }],
+			},
+		});
+	});
+
+	test('allows supported parameter aliases before required-param validation', async () => {
+		const getUserDetail = vi.fn().mockResolvedValue(okResponse({ profile: { uin: '12345' } }));
+		const handlers = createQqMusicMcpHandlers(createServices({ getUserDetail }));
+
+		const result = await handlers.callApi({
+			name: 'getUserDetail',
+			params: { id: '12345', cookie: 'uin=o12345; qqmusic_key=secret-value' },
+			response_format: 'json',
+		});
+
+		expect(result.isError).not.toBe(true);
+		expect(getUserDetail).toHaveBeenCalledWith({
+			uin: '12345',
+			page: 1,
+			limit: 20,
+			cookie: 'uin=o12345; qqmusic_key=secret-value',
+		});
+		expect(payloadOf(result)).toMatchObject({
+			ok: true,
+			tool: 'qq_music_call_api',
+			status: 200,
+		});
+	});
+
+	test('rejects catalog-only and missing-param generic API calls', async () => {
+		const handlers = createQqMusicMcpHandlers(createServices());
+
+		const setCookieResult = await handlers.callApi({
+			name: 'setCookie',
+			params: { cookie: 'uin=o123; qqmusic_key=secret-value' },
+			response_format: 'json',
+		});
+		const missingParamResult = await handlers.callApi({
+			name: 'getRelatedMv',
+			params: {},
+			response_format: 'json',
+		});
+		const unknownApiResult = await handlers.callApi({
+			name: 'nonexistentApi',
+			params: {},
+			response_format: 'json',
+		});
+
+		expect(setCookieResult.isError).toBe(true);
+		expect(payloadOf(setCookieResult)).toMatchObject({
+			error: {
+				code: 'API_NOT_CALLABLE',
+			},
+		});
+		expect(JSON.stringify(payloadOf(setCookieResult))).not.toContain('secret-value');
+		expect(missingParamResult.isError).toBe(true);
+		expect(payloadOf(missingParamResult)).toMatchObject({
+			error: {
+				code: 'MISSING_REQUIRED_PARAMS',
+				message: 'getRelatedMv requires: songid',
+			},
+			metadata: {
+				missingParams: ['songid'],
+			},
+		});
+		expect(unknownApiResult.isError).toBe(true);
+		expect(payloadOf(unknownApiResult)).toMatchObject({
+			error: {
+				code: 'API_NOT_FOUND',
+			},
+			metadata: {
+				listTool: 'qq_music_list_apis',
+			},
+		});
+	});
+
 	test('reports auth status without leaking cookie values', async () => {
 		setUserInfo({
 			loginUin: 'o123456',
@@ -73,7 +245,8 @@ describe('MCP tool handlers', () => {
 	});
 
 	test('searches songs through the service layer with normalized params', async () => {
-		const services = createServices();
+		const getSearchByKey = vi.fn().mockResolvedValue(okResponse({ songs: [{ songmid: 'abc', name: 'Mock Song' }] }));
+		const services = createServices({ getSearchByKey });
 		const handlers = createQqMusicMcpHandlers(services);
 
 		const result = await handlers.searchSongs({
@@ -83,7 +256,7 @@ describe('MCP tool handlers', () => {
 			response_format: 'json',
 		});
 
-		expect(services.getSearchByKey).toHaveBeenCalledWith({
+		expect(getSearchByKey).toHaveBeenCalledWith({
 			method: 'get',
 			params: {
 				w: 'jay',
