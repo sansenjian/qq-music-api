@@ -1,3 +1,9 @@
+## 2.4.0 (2026-06-10)
+
+### Features
+
+* release MCP package and readonly API updates (#28) ([e501776](https://github.com/sansenjian/qq-music-api/commit/e501776cea81f311f4138f9be6e1788ecf61ad65))
+
 ## 2.3.4 (2026-06-01)
 
 ### Other Changes
