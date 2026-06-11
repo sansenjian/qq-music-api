@@ -35,6 +35,8 @@ if (!metadataPath) throw new Error('Explorer metadata path is not configured.');
 
 const normalize = value => String(value || '').toLowerCase();
 
+const getDeepLinkParams = () => new URLSearchParams(window.location.search);
+
 const formatJson = value => {
 	try {
 		return JSON.stringify(value, null, 2);
@@ -72,6 +74,11 @@ const getInputName = (kind, name) => `${kind}:${name}`;
 const getInputValue = (kind, name) => {
 	const input = document.querySelector(`[name="${CSS.escape(getInputName(kind, name))}"]`);
 	return input ? input.value.trim() : '';
+};
+
+const setInputValue = (kind, name, value) => {
+	const input = document.querySelector(`[name="${CSS.escape(getInputName(kind, name))}"]`);
+	if (input) input.value = String(value);
 };
 
 const buildUrl = () => {
@@ -113,13 +120,42 @@ const createField = (kind, param) => {
 		text.append(requiredMark);
 	}
 
-	const input = document.createElement('input');
-	input.name = getInputName(kind, param.name);
-	input.placeholder = param.description || param.name;
-	input.required = Boolean(param.required);
-	input.addEventListener('input', updateRequestUrl);
+	const control = param.enumValues?.length ? document.createElement('select') : document.createElement('input');
+	control.name = getInputName(kind, param.name);
+	control.required = Boolean(param.required);
 
-	label.append(text, input);
+	if (control.tagName === 'SELECT') {
+		if (!param.required) {
+			control.append(createOption('', '默认'));
+		}
+		param.enumValues.forEach(value => control.append(createOption(String(value))));
+	} else {
+		const placeholder = param.example ?? param.description ?? param.name;
+		control.placeholder = String(placeholder);
+	}
+
+	if (param.defaultValue !== undefined) {
+		control.value = String(param.defaultValue);
+	}
+
+	control.addEventListener('input', updateRequestUrl);
+	control.addEventListener('change', updateRequestUrl);
+
+	label.append(text, control);
+
+	const hints = [];
+	if (param.description) hints.push(param.description);
+	if (param.defaultValue !== undefined) hints.push(`默认: ${param.defaultValue}`);
+	if (param.example !== undefined) hints.push(`示例: ${param.example}`);
+	if (param.enumValues?.length) hints.push(`可选: ${param.enumValues.join(', ')}`);
+
+	if (hints.length > 0) {
+		const help = document.createElement('small');
+		help.className = 'field-help';
+		help.textContent = hints.join(' · ');
+		label.append(help);
+	}
+
 	return label;
 };
 
@@ -158,7 +194,9 @@ const renderActiveEndpoint = () => {
 
 	elements.activeCategory.textContent = endpoint.category;
 	elements.activeName.textContent = endpoint.name;
-	elements.activePath.textContent = getEndpointPaths(endpoint).join(' | ');
+	elements.activePath.textContent = [endpoint.description, getEndpointPaths(endpoint).join(' | ')]
+		.filter(Boolean)
+		.join(' · ');
 	setMethodPill(elements.activeMethod, endpoint.method);
 
 	renderParamSection(elements.pathParamSection, '路径参数', 'path', pathParams);
@@ -167,6 +205,50 @@ const renderActiveEndpoint = () => {
 	const hasBody = endpoint.method !== 'GET' && endpoint.bodyExample !== undefined;
 	elements.bodySection.classList.toggle('hidden', !hasBody);
 	elements.bodyInput.value = hasBody ? formatJson(endpoint.bodyExample) : '';
+	updateRequestUrl();
+};
+
+const findDeepLinkedEndpoint = endpoints => {
+	const params = getDeepLinkParams();
+	const apiName = params.get('api') || params.get('name');
+	if (!apiName) return null;
+
+	const normalizedApiName = normalize(apiName);
+	return (
+		endpoints.find(endpoint => {
+			const paths = getEndpointPaths(endpoint);
+			return (
+				normalize(endpoint.name) === normalizedApiName || paths.some(path => normalize(path) === normalizedApiName)
+			);
+		}) || null
+	);
+};
+
+const applyDeepLinkParams = endpoint => {
+	if (!endpoint) return;
+
+	const params = getDeepLinkParams();
+	const activePath = getActivePath(endpoint);
+
+	getPathParams(activePath).forEach(name => {
+		const value = params.get(name);
+		if (value !== null) setInputValue('path', name, value);
+	});
+
+	(endpoint.queryParams || []).forEach(param => {
+		const value = params.get(param.name);
+		if (value !== null) setInputValue('query', param.name, value);
+	});
+
+	const rawBody = params.get('body');
+	if (rawBody && !elements.bodySection.classList.contains('hidden')) {
+		try {
+			elements.bodyInput.value = formatJson(JSON.parse(rawBody));
+		} catch {
+			elements.bodyInput.value = rawBody;
+		}
+	}
+
 	updateRequestUrl();
 };
 
@@ -351,10 +433,11 @@ const loadMetadata = async () => {
 		`${a.category}.${a.name}`.localeCompare(`${b.category}.${b.name}`),
 	);
 	state.filteredEndpoints = state.endpoints;
-	state.activeEndpoint = state.endpoints[0] || null;
+	state.activeEndpoint = findDeepLinkedEndpoint(state.endpoints) || state.endpoints[0] || null;
 	populateFilters();
 	renderEndpointList();
 	renderActiveEndpoint();
+	applyDeepLinkParams(state.activeEndpoint);
 	renderLogs();
 };
 

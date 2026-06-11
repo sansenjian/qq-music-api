@@ -47,6 +47,9 @@ import getTopLists from './apis/rank/getTopLists';
 
 // recommend
 import getRecommendBanner from './apis/recommend/getRecommendBanner';
+import { getDailyRecommend, getPrivateFM, getNewSongs } from './apis/recommend/getDailyRecommend';
+import { getPersonalRecommend, getSimilarSongs } from './apis/recommend/getPersonalRecommend';
+import { getPlaylistTags, getPlaylistsByTag, getHotComments, getSingerListByArea } from './apis/extend/getPlaylistTags';
 
 // getQQLoginQr
 import getQQLoginQr from './apis/user/getQQLoginQr';
@@ -107,6 +110,15 @@ export {
 	getTopLists,
 	// recommend
 	getRecommendBanner,
+	getDailyRecommend,
+	getPrivateFM,
+	getNewSongs,
+	getPersonalRecommend,
+	getSimilarSongs,
+	getPlaylistTags,
+	getPlaylistsByTag,
+	getHotComments,
+	getSingerListByArea,
 	// login
 	getQQLoginQr,
 	checkQQLoginQr,
@@ -119,5 +131,5 @@ export {
 	getUserCollectedAlbums,
 	getUserFollowSingers,
 	getUserFollowUsers,
-	getUserFans
+	getUserFans,
 };

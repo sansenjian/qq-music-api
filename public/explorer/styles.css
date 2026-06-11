@@ -177,6 +177,14 @@ button:disabled {
 	font-weight: 700;
 }
 
+.field-help {
+	margin-top: -2px;
+	color: var(--muted);
+	font-size: 12px;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
 input,
 select,
 textarea {

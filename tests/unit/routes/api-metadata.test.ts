@@ -13,9 +13,7 @@ const getRouteEntries = () => {
 	const stack = (router as unknown as { stack: Array<{ path: string; methods: string[] }> }).stack;
 
 	return stack.flatMap(layer =>
-		layer.methods
-			.filter(method => !IGNORED_ROUTER_METHODS.has(method))
-			.map(method => `${method} ${layer.path}`),
+		layer.methods.filter(method => !IGNORED_ROUTER_METHODS.has(method)).map(method => `${method} ${layer.path}`),
 	);
 };
 
@@ -28,7 +26,8 @@ const getMetadataItem = (name: string) => {
 	return item;
 };
 
-const getQueryParamNames = (name: string) => new Set((getMetadataItem(name).queryParams || []).map(param => param.name));
+const getQueryParamNames = (name: string) =>
+	new Set((getMetadataItem(name).queryParams || []).map(param => param.name));
 
 describe('routes/api-metadata', () => {
 	test('should keep metadata paths in sync with registered routes', () => {
@@ -52,9 +51,7 @@ describe('routes/api-metadata', () => {
 
 	test('should reference existing controllers', () => {
 		const controllerNames = new Set(Object.keys(context));
-		const missingControllers = apiMetadata
-			.filter(item => !controllerNames.has(item.name))
-			.map(item => item.name);
+		const missingControllers = apiMetadata.filter(item => !controllerNames.has(item.name)).map(item => item.name);
 
 		expect(missingControllers).toEqual([]);
 	});
@@ -68,19 +65,11 @@ describe('routes/api-metadata', () => {
 		expect(getQueryParamNames('getUserPlaylists')).toEqual(new Set(['uin', 'offset', 'limit', 'cookie']));
 		expect(getQueryParamNames('getUserLikedSongs')).toEqual(new Set(['uin', 'offset', 'limit', 'cookie']));
 		expect(getQueryParamNames('getImageUrl')).toEqual(new Set(['id', 'size', 'maxAge']));
-		expect(getQueryParamNames('getSearchByKey')).toEqual(
-			new Set(['key', 'limit', 'page', 'catZhida', 'remoteplace']),
-		);
+		expect(getQueryParamNames('getSearchByKey')).toEqual(new Set(['key', 'limit', 'page', 'catZhida', 'remoteplace']));
 		expect(getQueryParamNames('getSongListDetail')).toEqual(new Set(['disstid']));
-		expect(getQueryParamNames('getAlbumSongs')).toEqual(
-			new Set(['albummid', 'albumid', 'begin', 'limit', 'order']),
-		);
-		expect(getQueryParamNames('getRelatedPlaylists')).toEqual(
-			new Set(['songid', 'sin', 'lastId', 'songType']),
-		);
-		expect(getQueryParamNames('getRelatedMv')).toEqual(
-			new Set(['songid', 'songtype', 'lastmvid', 'limit']),
-		);
+		expect(getQueryParamNames('getAlbumSongs')).toEqual(new Set(['albummid', 'albumid', 'begin', 'limit', 'order']));
+		expect(getQueryParamNames('getRelatedPlaylists')).toEqual(new Set(['songid', 'sin', 'lastId', 'songType']));
+		expect(getQueryParamNames('getRelatedMv')).toEqual(new Set(['songid', 'songtype', 'lastmvid', 'limit']));
 	});
 
 	test('should mark login-dependent API metadata as cookie required', () => {
@@ -93,5 +82,40 @@ describe('routes/api-metadata', () => {
 		expect(getMetadataItem('getUserFans').cookieRequired).toBe(true);
 		expect(getMetadataItem('getMusicPlay').cookieRequired).toBe(true);
 		expect(getMetadataItem('getLyric').cookieRequired).toBe(true);
+	});
+
+	test('should expose rich parameter metadata for explorer and MCP clients', () => {
+		const searchParams = getMetadataItem('getSearchByKey').queryParams || [];
+		const limit = searchParams.find(param => param.name === 'limit');
+		const remoteplace = searchParams.find(param => param.name === 'remoteplace');
+		const imageSize = (getMetadataItem('getImageUrl').queryParams || []).find(param => param.name === 'size');
+		const musicQuality = (getMetadataItem('getMusicPlay').queryParams || []).find(param => param.name === 'quality');
+
+		expect(getMetadataItem('getSearchByKey').description).toContain('Search QQ Music');
+		expect(limit).toMatchObject({
+			description: expect.any(String),
+			defaultValue: 10,
+		});
+		expect(remoteplace).toMatchObject({
+			defaultValue: 'song',
+			enumValues: expect.arrayContaining(['song', 'album', 'mv', 'singer', 'playlist']),
+		});
+		expect(imageSize).toMatchObject({
+			defaultValue: '300x300',
+			example: '300x300',
+			enumValues: expect.arrayContaining(['150x150', '300x300', '800x800']),
+		});
+		expect(musicQuality).toMatchObject({
+			defaultValue: '128',
+			enumValues: expect.arrayContaining(['128', '320', 'flac']),
+		});
+		expect(getMetadataItem('getImageUrl').examples).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					label: 'Album cover',
+					params: expect.objectContaining({ id: '000MkMni19ClKG' }),
+				}),
+			]),
+		);
 	});
 });

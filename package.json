@@ -114,6 +114,7 @@
 		"test:unit": "vitest run tests/unit",
 		"test:flags": "tsx scripts/run-tests-with-flags.ts all",
 		"test:flags:unit": "tsx scripts/run-tests-with-flags.ts unit",
+		"smoke:e2e": "npm run build && tsx scripts/smoke-mcp-explorer.ts",
 		"docs:dev": "vitepress dev docs --port 9611",
 		"docs:preview": "vitepress preview docs",
 		"commit-push": "./scripts/commit-push.sh",

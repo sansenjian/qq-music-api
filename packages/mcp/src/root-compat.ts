@@ -5,15 +5,23 @@ import {
 import { getUserInfo as rootGetUserInfo } from '../../../src/config/user-info-store';
 import { apiMetadata as rootApiMetadata } from '../../../src/routes/api-metadata';
 import {
+	downloadQQMusic as rootDownloadQQMusic,
 	getAlbumInfo as rootGetAlbumInfo,
 	getAlbumSongs as rootGetAlbumSongs,
 	getComments as rootGetComments,
+	getDailyRecommend as rootGetDailyRecommend,
 	getDigitalAlbumLists as rootGetDigitalAlbumLists,
+	getHotComments as rootGetHotComments,
 	getHotKey as rootGetHotKey,
 	getLyric as rootGetLyric,
 	getMusicPlay as rootGetMusicPlay,
 	getMvByTag as rootGetMvByTag,
 	getMvCategory as rootGetMvCategory,
+	getNewSongs as rootGetNewSongs,
+	getPersonalRecommend as rootGetPersonalRecommend,
+	getPlaylistTags as rootGetPlaylistTags,
+	getPlaylistsByTag as rootGetPlaylistsByTag,
+	getPrivateFM as rootGetPrivateFM,
 	getRadioLists as rootGetRadioLists,
 	getRecommendBanner as rootGetRecommendBanner,
 	getRelatedMv as rootGetRelatedMv,
@@ -26,8 +34,11 @@ import {
 	getSingerStarNum as rootGetSingerStarNum,
 	getSmartbox as rootGetSmartbox,
 	getTopLists as rootGetTopLists,
+	getSimilarSongs as rootGetSimilarSongs,
+	getSingerListByArea as rootGetSingerListByArea,
 	getUserCollectedAlbums as rootGetUserCollectedAlbums,
 	getUserCollectedSongLists as rootGetUserCollectedSongLists,
+	getUserAvatar as rootGetUserAvatar,
 	getUserDetail as rootGetUserDetail,
 	getUserFans as rootGetUserFans,
 	getUserFollowSingers as rootGetUserFollowSingers,
@@ -73,17 +84,29 @@ export interface ApiCatalogEntry {
 	method: string;
 	path: string;
 	aliases?: string[];
+	description?: string;
 	queryParams?: Array<{
 		name: string;
 		required?: boolean;
 		description?: string;
+		defaultValue?: string | number | boolean;
+		example?: string | number | boolean;
+		enumValues?: Array<string | number | boolean>;
 	}>;
 	pathParams?: Array<{
 		name: string;
 		required?: boolean;
 		description?: string;
+		defaultValue?: string | number | boolean;
+		example?: string | number | boolean;
+		enumValues?: Array<string | number | boolean>;
 	}>;
 	bodyExample?: unknown;
+	examples?: Array<{
+		label: string;
+		params?: Record<string, unknown>;
+		body?: unknown;
+	}>;
 	authRequired?: boolean;
 	cookieRequired?: boolean;
 }
@@ -102,6 +125,38 @@ export type UserOffsetServiceCall = (params: {
 	cookie?: string;
 }) => Promise<ServiceResponse>;
 
+export type UserAvatarServiceCall = (params: { uin?: string; k?: string; size?: number }) => Promise<{
+	avatarUrl: string;
+	message: string;
+}>;
+
+export type DailyRecommendServiceCall = (cookie?: string) => Promise<ServiceResponse>;
+
+export type NewSongsServiceCall = (areaId?: number, limit?: number) => Promise<ServiceResponse>;
+
+export type PersonalRecommendServiceCall = (type?: number, cookie?: string) => Promise<ServiceResponse>;
+
+export type SimilarSongsServiceCall = (songmid: string, cookie?: string) => Promise<ServiceResponse>;
+
+export type PlaylistTagsServiceCall = () => Promise<ServiceResponse>;
+
+export type PlaylistsByTagServiceCall = (tagId?: number, page?: number, num?: number) => Promise<ServiceResponse>;
+
+export type HotCommentsServiceCall = (
+	id: string,
+	type?: number,
+	page?: number,
+	pagesize?: number,
+) => Promise<ServiceResponse>;
+
+export type SingerListByAreaServiceCall = (
+	area?: number,
+	sex?: number,
+	genre?: number,
+	page?: number,
+	pagesize?: number,
+) => Promise<ServiceResponse>;
+
 export const getConfigDir = (): string => rootGetConfigDir();
 
 export const resolveConfigPath = (fileName: string): string => rootResolveConfigPath(fileName);
@@ -117,13 +172,20 @@ export const getUserInfo = (): UserInfoSnapshot => {
 
 export const apiMetadata: ApiCatalogEntry[] = rootApiMetadata as ApiCatalogEntry[];
 
+export const downloadQQMusic: ServiceCall = options => rootDownloadQQMusic(options);
+
 export const getAlbumInfo: ServiceCall = options => rootGetAlbumInfo(options);
 
 export const getAlbumSongs: ServiceCall = options => rootGetAlbumSongs(options);
 
 export const getComments: ServiceCall = options => rootGetComments(options);
 
+export const getDailyRecommend: DailyRecommendServiceCall = cookie => rootGetDailyRecommend(cookie);
+
 export const getDigitalAlbumLists: ServiceCall = options => rootGetDigitalAlbumLists(options);
+
+export const getHotComments: HotCommentsServiceCall = (id, type, page, pagesize) =>
+	rootGetHotComments(id, type, page, pagesize);
 
 export const getHotKey: ServiceCall = options => rootGetHotKey(options);
 
@@ -134,6 +196,18 @@ export const getMusicPlay: ServiceCall = options => rootGetMusicPlay(options);
 export const getMvByTag: ServiceCall = options => rootGetMvByTag(options);
 
 export const getMvCategory: ServiceCall = options => rootGetMvCategory(options);
+
+export const getNewSongs: NewSongsServiceCall = (areaId, limit) => rootGetNewSongs(areaId, limit);
+
+export const getPersonalRecommend: PersonalRecommendServiceCall = (type, cookie) =>
+	rootGetPersonalRecommend(type, cookie);
+
+export const getPlaylistTags: PlaylistTagsServiceCall = () => rootGetPlaylistTags();
+
+export const getPlaylistsByTag: PlaylistsByTagServiceCall = (tagId, page, num) =>
+	rootGetPlaylistsByTag(tagId, page, num);
+
+export const getPrivateFM: DailyRecommendServiceCall = cookie => rootGetPrivateFM(cookie);
 
 export const getRadioLists: ServiceCall = options => rootGetRadioLists(options);
 
@@ -160,6 +234,13 @@ export const getSmartbox: ServiceCall = options => rootGetSmartbox(options);
 export const getSongListCategories: ServiceCall = options => rootSongListCategories(options);
 
 export const getTopLists: ServiceCall = options => rootGetTopLists(options);
+
+export const getSimilarSongs: SimilarSongsServiceCall = (songmid, cookie) => rootGetSimilarSongs(songmid, cookie);
+
+export const getSingerListByArea: SingerListByAreaServiceCall = (area, sex, genre, page, pagesize) =>
+	rootGetSingerListByArea(area, sex, genre, page, pagesize);
+
+export const getUserAvatar: UserAvatarServiceCall = params => rootGetUserAvatar(params);
 
 export const getUserCollectedAlbums: UserReadonlyServiceCall = params => rootGetUserCollectedAlbums(params);
 

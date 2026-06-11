@@ -63,7 +63,7 @@ export const startServer = (options: StartServerOptions = {}) => {
 		}
 
 		console.log(colors.prompt(`server running @ http://localhost:${port}`));
-		console.log(colors.info(`open playground @ http://localhost:${port}/index.html`));
+		console.log(colors.info(`open home @ http://localhost:${port}/index.html`));
 		console.log(colors.info(`open explorer @ http://localhost:${port}/explorer`));
 	});
 

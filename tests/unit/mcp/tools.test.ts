@@ -14,10 +14,23 @@ const okResponse = (data: unknown) => ({
 });
 
 const createServices = (overrides: Partial<QqMusicMcpServices> = {}): QqMusicMcpServices => ({
+	downloadQQMusic: vi.fn().mockResolvedValue(okResponse({ version: 'mock' })),
 	getAlbumInfo: vi.fn().mockResolvedValue(okResponse({ album: 'mock' })),
+	getDailyRecommend: vi.fn().mockResolvedValue(okResponse({ songs: [] })),
 	getHotKey: vi.fn().mockResolvedValue(okResponse({ hotkeys: ['test'] })),
+	getHotComments: vi.fn().mockResolvedValue(okResponse({ comments: [] })),
+	getNewSongs: vi.fn().mockResolvedValue(okResponse({ songs: [] })),
+	getPersonalRecommend: vi.fn().mockResolvedValue(okResponse({ items: [] })),
+	getPlaylistTags: vi.fn().mockResolvedValue(okResponse({ tags: [] })),
+	getPlaylistsByTag: vi.fn().mockResolvedValue(okResponse({ playlists: [] })),
+	getPrivateFM: vi.fn().mockResolvedValue(okResponse({ songs: [] })),
 	getSearchByKey: vi.fn().mockResolvedValue(okResponse({ songs: [{ songmid: 'abc', name: 'Mock Song' }] })),
+	getSimilarSongs: vi.fn().mockResolvedValue(okResponse({ songs: [] })),
+	getSingerListByArea: vi.fn().mockResolvedValue(okResponse({ singers: [] })),
 	getTopLists: vi.fn().mockResolvedValue(okResponse({ topLists: [] })),
+	getUserAvatar: vi
+		.fn()
+		.mockResolvedValue({ avatarUrl: 'https://q.qlogo.cn/headimg_dl?dst_uin=123&spec=140', message: 'ok' }),
 	songListDetail: vi.fn().mockResolvedValue(okResponse({ dissid: '123' })),
 	...overrides,
 });
@@ -59,6 +72,11 @@ describe('MCP tool handlers', () => {
 				name: string;
 				mcpCallable: boolean;
 				requiredParams: string[];
+				queryParams?: Array<{
+					name: string;
+					defaultValue?: unknown;
+					enumValues?: unknown[];
+				}>;
 			}>;
 		};
 		const albumSongs = data.items.find(item => item.name === 'getAlbumSongs');
@@ -67,6 +85,14 @@ describe('MCP tool handlers', () => {
 			mcpCallable: true,
 			requiredParams: ['albummid'],
 		});
+		expect(albumSongs?.queryParams).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: 'order',
+					defaultValue: 2,
+				}),
+			]),
+		);
 	});
 
 	test('filters API metadata to MCP-callable APIs', async () => {
@@ -175,6 +201,47 @@ describe('MCP tool handlers', () => {
 		});
 	});
 
+	test('calls newly covered low-risk readonly APIs through generic MCP API tool', async () => {
+		const getPlaylistsByTag = vi.fn().mockResolvedValue(okResponse({ playlists: [{ dissid: '1' }] }));
+		const getUserAvatar = vi
+			.fn()
+			.mockResolvedValue({ avatarUrl: 'https://q.qlogo.cn/headimg_dl?dst_uin=123&spec=140', message: 'ok' });
+		const handlers = createQqMusicMcpHandlers(createServices({ getPlaylistsByTag, getUserAvatar }));
+
+		const playlistsResult = await handlers.callApi({
+			name: 'getPlaylistsByTag',
+			params: { tagId: 3317, page: 2, num: 5 },
+			response_format: 'json',
+		});
+		const avatarResult = await handlers.callApi({
+			name: 'getUserAvatar',
+			params: { uin: '123', size: 140 },
+			response_format: 'json',
+		});
+
+		expect(getPlaylistsByTag).toHaveBeenCalledWith(3317, 2, 5);
+		expect(payloadOf(playlistsResult)).toMatchObject({
+			ok: true,
+			tool: 'qq_music_call_api',
+			status: 200,
+			data: {
+				playlists: [{ dissid: '1' }],
+			},
+		});
+		expect(getUserAvatar).toHaveBeenCalledWith({ uin: '123', k: undefined, size: 140 });
+		expect(payloadOf(avatarResult)).toMatchObject({
+			ok: true,
+			tool: 'qq_music_call_api',
+			status: 200,
+			data: {
+				code: 0,
+				data: {
+					avatarUrl: expect.any(String),
+				},
+			},
+		});
+	});
+
 	test('rejects catalog-only and missing-param generic API calls', async () => {
 		const handlers = createQqMusicMcpHandlers(createServices());
 
@@ -209,6 +276,12 @@ describe('MCP tool handlers', () => {
 			},
 			metadata: {
 				missingParams: ['songid'],
+				params: [
+					expect.objectContaining({
+						name: 'songid',
+						description: expect.any(String),
+					}),
+				],
 			},
 		});
 		expect(unknownApiResult.isError).toBe(true);

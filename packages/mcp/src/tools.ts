@@ -2,20 +2,30 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
+	downloadQQMusic,
 	getAlbumInfo,
 	getAlbumSongs,
 	getComments,
+	getDailyRecommend,
 	getHotKey,
+	getHotComments,
 	getLyric,
 	getMusicPlay,
 	getMvByTag,
 	getMvCategory,
+	getNewSongs,
+	getPersonalRecommend,
+	getPlaylistTags,
+	getPlaylistsByTag,
+	getPrivateFM,
 	getRadioLists,
 	getRecommendBanner,
 	getRelatedMv,
 	getRelatedPlaylists,
 	getSearchByKey,
+	getSimilarSongs,
 	getSimilarSinger,
+	getSingerListByArea,
 	getSingerCategory,
 	getSingerDesc,
 	getSingerMv,
@@ -27,6 +37,7 @@ import {
 	getCookieKeys,
 	getDigitalAlbumLists,
 	getUserInfo,
+	getUserAvatar,
 	getUserCollectedAlbums,
 	getUserCollectedSongLists,
 	getUserDetail,
@@ -40,9 +51,18 @@ import {
 	songListDetail,
 	songLists,
 	type ApiCatalogEntry,
+	type DailyRecommendServiceCall,
+	type HotCommentsServiceCall,
+	type NewSongsServiceCall,
+	type PersonalRecommendServiceCall,
+	type PlaylistTagsServiceCall,
+	type PlaylistsByTagServiceCall,
 	type ServiceCall,
 	type ServiceResponse,
+	type SimilarSongsServiceCall,
+	type SingerListByAreaServiceCall,
 	type UserOffsetServiceCall,
+	type UserAvatarServiceCall,
 	type UserInfoSnapshot,
 	type UserReadonlyServiceCall,
 } from './root-compat';
@@ -103,21 +123,31 @@ interface AlbumInfoInput extends CommonInput {
 }
 
 interface QqMusicMcpServiceDependencies {
+	downloadQQMusic: ServiceCall;
 	getAlbumInfo: ServiceCall;
 	getAlbumSongs: ServiceCall;
 	getComments: ServiceCall;
+	getDailyRecommend: DailyRecommendServiceCall;
 	getDigitalAlbumLists: ServiceCall;
+	getHotComments: HotCommentsServiceCall;
 	getHotKey: ServiceCall;
 	getLyric: ServiceCall;
 	getMusicPlay: ServiceCall;
 	getMvByTag: ServiceCall;
 	getMvCategory: ServiceCall;
+	getNewSongs: NewSongsServiceCall;
+	getPersonalRecommend: PersonalRecommendServiceCall;
+	getPlaylistTags: PlaylistTagsServiceCall;
+	getPlaylistsByTag: PlaylistsByTagServiceCall;
+	getPrivateFM: DailyRecommendServiceCall;
 	getRadioLists: ServiceCall;
 	getRecommendBanner: ServiceCall;
 	getRelatedMv: ServiceCall;
 	getRelatedPlaylists: ServiceCall;
 	getSearchByKey: ServiceCall;
+	getSimilarSongs: SimilarSongsServiceCall;
 	getSimilarSinger: ServiceCall;
+	getSingerListByArea: SingerListByAreaServiceCall;
 	getSingerCategory: ServiceCall;
 	getSingerDesc: ServiceCall;
 	getSingerMv: ServiceCall;
@@ -125,6 +155,7 @@ interface QqMusicMcpServiceDependencies {
 	getSmartbox: ServiceCall;
 	getSongListCategories: ServiceCall;
 	getTopLists: ServiceCall;
+	getUserAvatar: UserAvatarServiceCall;
 	getUserCollectedAlbums: UserReadonlyServiceCall;
 	getUserCollectedSongLists: UserReadonlyServiceCall;
 	getUserDetail: UserReadonlyServiceCall;
@@ -326,22 +357,107 @@ const getSingerMvApiCall =
 		return service({ method: 'get', params: serviceParams, option: {} });
 	};
 
+const userAvatarApiCall =
+	(service: UserAvatarServiceCall): QqMusicApiCall =>
+	async params => {
+		const data = await service({
+			uin: toText(params.uin) || toText(params.id),
+			k: toText(params.k),
+			size: toNumber(params.size, 140),
+		});
+
+		return {
+			status: 200,
+			body: {
+				response: {
+					code: 0,
+					data,
+				},
+			},
+		};
+	};
+
+const cookieOnlyApiCall =
+	(service: DailyRecommendServiceCall): QqMusicApiCall =>
+	params =>
+		service(toText(params.cookie));
+
+const newSongsApiCall =
+	(service: NewSongsServiceCall): QqMusicApiCall =>
+	params =>
+		service(toNumber(params.areaId ?? params.type, 5), toNumber(params.limit ?? params.num, 20));
+
+const personalRecommendApiCall =
+	(service: PersonalRecommendServiceCall): QqMusicApiCall =>
+	params =>
+		service(toNumber(params.type, 1), toText(params.cookie));
+
+const similarSongsApiCall =
+	(service: SimilarSongsServiceCall): QqMusicApiCall =>
+	params =>
+		service(toText(params.songmid) || '', toText(params.cookie));
+
+const playlistTagsApiCall =
+	(service: PlaylistTagsServiceCall): QqMusicApiCall =>
+	() =>
+		service();
+
+const playlistsByTagApiCall =
+	(service: PlaylistsByTagServiceCall): QqMusicApiCall =>
+	params =>
+		service(
+			toNumber(params.tagId ?? params.categoryId, 1),
+			toNumber(params.page, 0),
+			toNumber(params.num ?? params.limit, 20),
+		);
+
+const hotCommentsApiCall =
+	(service: HotCommentsServiceCall): QqMusicApiCall =>
+	params =>
+		service(
+			toText(params.id) || '',
+			toNumber(params.type ?? params.biztype, 1),
+			toNumber(params.page ?? params.pagenum, 0),
+			toNumber(params.pagesize ?? params.limit, 20),
+		);
+
+const singerListByAreaApiCall =
+	(service: SingerListByAreaServiceCall): QqMusicApiCall =>
+	params =>
+		service(
+			toNumber(params.area, -1),
+			toNumber(params.sex, -1),
+			toNumber(params.genre, -1),
+			toNumber(params.page, 1),
+			toNumber(params.pagesize ?? params.limit, 80),
+		);
+
 const defaultMcpServiceDependencies: QqMusicMcpServiceDependencies = {
+	downloadQQMusic,
 	getAlbumInfo,
 	getAlbumSongs,
 	getComments,
+	getDailyRecommend,
 	getDigitalAlbumLists,
+	getHotComments,
 	getHotKey,
 	getLyric,
 	getMusicPlay,
 	getMvByTag,
 	getMvCategory,
+	getNewSongs,
+	getPersonalRecommend,
+	getPlaylistTags,
+	getPlaylistsByTag,
+	getPrivateFM,
 	getRadioLists,
 	getRecommendBanner,
 	getRelatedMv,
 	getRelatedPlaylists,
 	getSearchByKey,
+	getSimilarSongs,
 	getSimilarSinger,
+	getSingerListByArea,
 	getSingerCategory,
 	getSingerDesc,
 	getSingerMv,
@@ -349,6 +465,7 @@ const defaultMcpServiceDependencies: QqMusicMcpServiceDependencies = {
 	getSmartbox,
 	getSongListCategories,
 	getTopLists,
+	getUserAvatar,
 	getUserCollectedAlbums,
 	getUserCollectedSongLists,
 	getUserDetail,
@@ -362,21 +479,31 @@ const defaultMcpServiceDependencies: QqMusicMcpServiceDependencies = {
 };
 
 const createDefaultApiCalls = (services: QqMusicMcpServiceDependencies): QqMusicApiCallMap => ({
+	getDownloadQQMusic: serviceApiCall(services.downloadQQMusic),
 	getAlbumInfo: serviceApiCall(services.getAlbumInfo),
 	getAlbumSongs: musicuPostApiCall(services.getAlbumSongs),
 	getComments: getCommentsApiCall(services.getComments),
+	getDailyRecommend: cookieOnlyApiCall(services.getDailyRecommend),
 	getDigitalAlbumLists: serviceApiCall(services.getDigitalAlbumLists),
+	getHotComments: hotCommentsApiCall(services.getHotComments),
 	getHotKey: serviceApiCall(services.getHotKey),
 	getLyric: getLyricApiCall(services.getLyric),
 	getMusicPlay: getMusicPlayApiCall(services.getMusicPlay),
 	getMvByTag: serviceApiCall(services.getMvByTag),
 	getMvCategory: musicuPostApiCall(services.getMvCategory),
+	getNewSongs: newSongsApiCall(services.getNewSongs),
+	getPersonalRecommend: personalRecommendApiCall(services.getPersonalRecommend),
+	getPlaylistTags: playlistTagsApiCall(services.getPlaylistTags),
+	getPlaylistsByTag: playlistsByTagApiCall(services.getPlaylistsByTag),
+	getPrivateFM: cookieOnlyApiCall(services.getPrivateFM),
 	getRadioLists: serviceApiCall(services.getRadioLists),
 	getRecommendBanner: musicuPostApiCall(services.getRecommendBanner),
 	getRelatedMv: musicuPostApiCall(services.getRelatedMv),
 	getRelatedPlaylists: musicuPostApiCall(services.getRelatedPlaylists),
 	getSearchByKey: searchByKeyApiCall(services.getSearchByKey),
+	getSimilarSongs: similarSongsApiCall(services.getSimilarSongs),
 	getSimilarSinger: serviceApiCall(services.getSimilarSinger),
+	getSingerListByArea: singerListByAreaApiCall(services.getSingerListByArea),
 	getSingerCategory: musicuPostApiCall(services.getSingerCategory),
 	getSingerDesc: serviceApiCall(services.getSingerDesc),
 	getSingerMv: getSingerMvApiCall(services.getSingerMv),
@@ -386,6 +513,7 @@ const createDefaultApiCalls = (services: QqMusicMcpServiceDependencies): QqMusic
 	getSongListDetail: serviceApiCall(services.songListDetail),
 	getSongLists: songListsApiCall(services.songLists),
 	getTopLists: serviceApiCall(services.getTopLists),
+	getUserAvatar: userAvatarApiCall(services.getUserAvatar),
 	getUserCollectedAlbums: userPageApiCall(services.getUserCollectedAlbums),
 	getUserCollectedSongLists: userPageApiCall(services.getUserCollectedSongLists),
 	getUserDetail: userPageApiCall(services.getUserDetail),
@@ -565,6 +693,43 @@ const enrichApiCatalogEntry = (item: ApiCatalogEntry, apiCalls: QqMusicApiCallMa
 const getMissingRequiredParams = (item: McpApiCatalogEntry, params: Record<string, unknown>): string[] =>
 	item.requiredParams.filter(paramName => toText(params[paramName]) === undefined);
 
+const getParamDetails = (item: ApiCatalogEntry) => [...(item.pathParams || []), ...(item.queryParams || [])];
+
+const formatParamValue = (value: string | number | boolean): string => String(value);
+
+const summarizeParamHints = (item: ApiCatalogEntry): string => {
+	const hints = getParamDetails(item)
+		.flatMap(param => {
+			const details: string[] = [];
+			if (param.defaultValue !== undefined) {
+				details.push(`${param.name}=${formatParamValue(param.defaultValue)}`);
+			}
+			if (param.enumValues?.length) {
+				details.push(`${param.name}: ${param.enumValues.map(formatParamValue).join('/')}`);
+			}
+			return details;
+		})
+		.slice(0, 4);
+
+	return hints.join('; ') || '-';
+};
+
+const describeParams = (item: ApiCatalogEntry, paramNames: string[]) => {
+	const detailsByName = new Map(getParamDetails(item).map(param => [param.name, param]));
+
+	return paramNames.map(paramName => {
+		const param = detailsByName.get(paramName);
+		return {
+			name: paramName,
+			required: Boolean(param?.required),
+			description: param?.description,
+			defaultValue: param?.defaultValue,
+			example: param?.example,
+			enumValues: param?.enumValues,
+		};
+	});
+};
+
 const requiredParamAliasesByApiName: Record<string, Record<string, string[]>> = {
 	getUserCollectedAlbums: { uin: ['id'] },
 	getUserCollectedSongLists: { uin: ['id'] },
@@ -607,15 +772,17 @@ const apiCatalogMarkdown = (payload: QqMusicToolPayload): string => {
 		'',
 		`Showing ${data.count} of ${data.total} APIs from offset ${data.offset}.`,
 		'',
-		'| Name | Category | Method | Path | Auth | MCP | Required Params |',
-		'| --- | --- | --- | --- | --- | --- | --- |',
+		'| Name | Category | Method | Path | Auth | MCP | Required Params | Defaults / Enums |',
+		'| --- | --- | --- | --- | --- | --- | --- | --- |',
 	];
 
 	data.items.forEach(item => {
 		lines.push(
 			`| ${item.name} | ${item.category} | ${item.method} | ${item.path} | ${
 				item.cookieRequired ? 'cookie' : 'public'
-			} | ${item.mcpCallable ? 'callable' : 'catalog only'} | ${item.requiredParams.join(', ') || '-'} |`,
+			} | ${item.mcpCallable ? 'callable' : 'catalog only'} | ${
+				item.requiredParams.join(', ') || '-'
+			} | ${summarizeParamHints(item)} |`,
 		);
 	});
 
@@ -766,6 +933,7 @@ export const createQqMusicMcpHandlers = (services: QqMusicMcpServices = defaultM
 						api: name,
 						missingParams,
 						requiredParams: catalogItem.requiredParams,
+						params: describeParams(catalogItem, catalogItem.requiredParams),
 					},
 				);
 			}
