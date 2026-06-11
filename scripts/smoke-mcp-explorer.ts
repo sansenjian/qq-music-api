@@ -62,8 +62,14 @@ const readStream = (stream: NodeJS.ReadableStream): (() => string) => {
 	return () => output;
 };
 
+const fetchWithTimeout = (url: string, init: RequestInit = {}) =>
+	fetch(url, {
+		...init,
+		signal: init.signal ?? AbortSignal.timeout(timeoutMs),
+	});
+
 const fetchText = async (path: string) => {
-	const response = await fetch(`${baseUrl}${path}`);
+	const response = await fetchWithTimeout(`${baseUrl}${path}`);
 	const text = await response.text();
 	return { response, text };
 };
@@ -215,7 +221,7 @@ const runExplorerSmoke = async () => {
 		assert(!home.text.includes('request-builder'), 'Home page still contains the old request builder');
 		assert(!home.text.includes('playground-utils.js'), 'Home page still imports playground utilities');
 
-		const explorerRedirect = await fetch(`${baseUrl}/explorer?api=getImageUrl&id=abc`, {
+		const explorerRedirect = await fetchWithTimeout(`${baseUrl}/explorer?api=getImageUrl&id=abc`, {
 			redirect: 'manual',
 		});
 		assert(explorerRedirect.status === 302, `Explorer redirect returned ${explorerRedirect.status}`);
