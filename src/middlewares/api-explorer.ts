@@ -28,7 +28,7 @@ const apiExplorer =
 		}
 
 		if (ctx.path === API_EXPLORER_ROUTE_PATH) {
-			ctx.redirect(API_EXPLORER_INDEX_PATH);
+			ctx.redirect(`${API_EXPLORER_INDEX_PATH}${ctx.search}`);
 			return;
 		}
 

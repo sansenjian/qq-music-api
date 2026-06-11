@@ -1,966 +1,423 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>QQ 音乐 API</title>
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --panel-soft: #f9fbff;
-      --text: #172033;
-      --muted: #647084;
-      --line: #dfe5ef;
-      --brand: #12b7a7;
-      --brand-dark: #0a7f75;
-      --accent: #f0b429;
-      --danger: #d94b4b;
-      --shadow: 0 18px 45px rgba(28, 38, 61, 0.11);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      background: var(--bg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      letter-spacing: 0;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .shell {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 26px 0 48px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 12px 0 22px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .logo {
-      display: grid;
-      width: 42px;
-      height: 42px;
-      flex: 0 0 auto;
-      place-items: center;
-      border-radius: 10px;
-      color: white;
-      background: var(--brand);
-      font-weight: 800;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: 21px;
-      line-height: 1.2;
-    }
-
-    .brand p {
-      margin: 3px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .nav a,
-    .action,
-    button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 38px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 0 13px;
-      color: var(--text);
-      background: var(--panel);
-      font-weight: 650;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .nav a.primary,
-    .action.primary,
-    button.primary {
-      border-color: var(--brand);
-      color: white;
-      background: var(--brand);
-    }
-
-    .nav a:hover,
-    .action:hover,
-    button:hover {
-      border-color: rgba(18, 183, 167, 0.55);
-      background: #eefbf8;
-    }
-
-    .nav a.primary:hover,
-    .action.primary:hover,
-    button.primary:hover {
-      background: var(--brand-dark);
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.62;
-    }
-
-    .ghost-button {
-      color: var(--muted);
-      background: var(--panel-soft);
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-      gap: 22px;
-      align-items: stretch;
-    }
-
-    .intro {
-      min-height: 330px;
-      padding: 34px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background:
-        linear-gradient(90deg, rgba(18, 183, 167, 0.12), rgba(240, 180, 41, 0.08)),
-        var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 18px;
-      color: var(--brand-dark);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #26c281;
-      box-shadow: 0 0 0 5px rgba(38, 194, 129, 0.16);
-    }
-
-    .intro h2 {
-      max-width: 720px;
-      margin: 0;
-      font-size: clamp(32px, 5vw, 58px);
-      line-height: 1;
-      letter-spacing: 0;
-    }
-
-    .intro p {
-      max-width: 640px;
-      margin: 18px 0 0;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.8;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 26px;
-    }
-
-    .status-card {
-      display: grid;
-      gap: 14px;
-      padding: 22px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .status-row:last-child {
-      padding-bottom: 0;
-      border-bottom: 0;
-    }
-
-    .status-label {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .status-value {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 13px;
-      font-weight: 700;
-      text-align: right;
-    }
-
-    .base-control {
-      display: grid;
-      gap: 8px;
-    }
-
-    .base-control input {
-      min-height: 38px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 13px;
-    }
-
-    .tester {
-      margin-top: 22px;
-      padding: 22px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .section-head h2 {
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.2;
-    }
-
-    .section-head p {
-      max-width: 620px;
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
-    .request-builder {
-      display: grid;
-      grid-template-columns: 150px 120px minmax(0, 1fr) 116px;
-      gap: 10px;
-      align-items: stretch;
-    }
-
-    select,
-    input {
-      width: 100%;
-      min-height: 42px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 0 12px;
-      color: var(--text);
-      background: var(--panel-soft);
-      font: inherit;
-    }
-
-    select:focus,
-    input:focus,
-    button:focus-visible,
-    a:focus-visible {
-      outline: 3px solid rgba(18, 183, 167, 0.22);
-      outline-offset: 2px;
-      border-color: var(--brand);
-    }
-
-    .request-actions,
-    .result-toolbar,
-    .history {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .request-actions {
-      justify-content: flex-end;
-    }
-
-    .result-toolbar {
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 14px;
-    }
-
-    .result-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      min-height: 28px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 0 10px;
-      background: var(--panel-soft);
-      font-weight: 700;
-    }
-
-    .badge.success {
-      border-color: rgba(18, 183, 167, 0.34);
-      color: var(--brand-dark);
-      background: #eefbf8;
-    }
-
-    .badge.error {
-      border-color: rgba(217, 75, 75, 0.34);
-      color: var(--danger);
-      background: #fff1f1;
-    }
-
-    .history {
-      min-height: 34px;
-      align-items: center;
-    }
-
-    .history:empty {
-      display: none;
-    }
-
-    .history button {
-      max-width: 100%;
-      min-height: 32px;
-      color: var(--muted);
-      background: var(--panel-soft);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 12px;
-      font-weight: 650;
-    }
-
-    .result {
-      display: grid;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .request-url {
-      overflow-wrap: anywhere;
-      padding: 11px 12px;
-      border: 1px dashed var(--line);
-      border-radius: 7px;
-      color: var(--muted);
-      background: var(--panel-soft);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 13px;
-    }
-
-    pre {
-      min-height: 130px;
-      max-height: 360px;
-      overflow: auto;
-      margin: 0;
-      padding: 14px;
-      border-radius: 7px;
-      color: #d7e2f3;
-      background: #172033;
-      font-size: 13px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .group {
-      display: grid;
-      align-content: start;
-      gap: 10px;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-    }
-
-    .group h3 {
-      margin: 0 0 4px;
-      font-size: 17px;
-    }
-
-    .endpoint {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      min-height: 42px;
-      padding: 9px 10px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: var(--panel-soft);
-    }
-
-    .endpoint:hover,
-    .endpoint.active {
-      border-color: rgba(18, 183, 167, 0.55);
-      background: #eefbf8;
-    }
-
-    .endpoint span {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-weight: 650;
-      font-size: 14px;
-    }
-
-    .endpoint code {
-      flex: 0 0 auto;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .notice {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: center;
-      margin-top: 22px;
-      padding: 18px;
-      border: 1px solid #ecd996;
-      border-radius: 8px;
-      background: #fff8df;
-    }
-
-    .notice strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .notice p {
-      margin: 0;
-      color: #6f5b17;
-      line-height: 1.7;
-      font-size: 14px;
-    }
-
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      margin-top: 26px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    @media (max-width: 900px) {
-      .topbar,
-      .hero,
-      .notice,
-      .footer {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar,
-      .notice,
-      .footer {
-        display: grid;
-      }
-
-      .nav {
-        justify-content: flex-start;
-      }
-
-      .grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 640px) {
-      .shell {
-        width: min(100% - 22px, 1180px);
-        padding-top: 12px;
-      }
-
-      .intro,
-      .status-card,
-      .tester,
-      .group,
-      .notice {
-        padding: 16px;
-      }
-
-      .request-builder,
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .request-actions,
-      .result-toolbar {
-        justify-content: stretch;
-      }
-
-      .request-actions button,
-      .result-toolbar button {
-        flex: 1 1 120px;
-      }
-
-      .intro {
-        min-height: auto;
-      }
-
-      .endpoint {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="shell">
-    <header class="topbar">
-      <a class="brand" href="/">
-        <span class="logo">QQ</span>
-        <span>
-          <h1>QQ 音乐 API</h1>
-          <p>Koa 2 + TypeScript 服务</p>
-        </span>
-      </a>
-      <nav class="nav" aria-label="快捷导航">
-        <a href="/getHotkey" target="_blank" rel="noreferrer">热词</a>
-        <a href="/user/getCookie" target="_blank" rel="noreferrer">Cookie</a>
-        <a class="primary" href="https://sansenjian.github.io/qq-music-api/" target="_blank" rel="noreferrer">在线文档</a>
-      </nav>
-    </header>
-
-    <section class="hero">
-      <div class="intro">
-        <div class="eyebrow"><span class="dot"></span> 服务已启动</div>
-        <h2>用于调试和集成的 QQ 音乐 API 服务</h2>
-        <p>当前实例监听在本机 3200 端口，提供搜索、歌单、歌词、播放链接、用户能力和扫码登录等接口。下面可以直接发起一次本地请求，快速确认服务与上游接口状态。</p>
-        <div class="hero-actions">
-          <a class="action primary" href="/getMusicPlay?songmid=003rJSwm3TechU" target="_blank" rel="noreferrer">测试播放链接</a>
-          <a class="action" href="/getLyric?songmid=003rJSwm3TechU&isFormat=1" target="_blank" rel="noreferrer">测试歌词</a>
-        </div>
-      </div>
-
-      <aside class="status-card" aria-label="服务信息">
-        <div class="status-row">
-          <span class="status-label">Base URL</span>
-          <span class="status-value" id="baseUrlText">http://localhost:3200</span>
-        </div>
-        <div class="base-control">
-          <span class="status-label">接口地址</span>
-          <input id="baseUrlInput" value="http://localhost:3200" spellcheck="false" aria-label="接口服务地址">
-        </div>
-        <div class="status-row">
-          <span class="status-label">运行模式</span>
-          <span class="status-value">HTTP API</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">公开接口</span>
-          <span class="status-value">GET / POST</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">登录态</span>
-          <span class="status-value">Cookie 可选</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">文档服务</span>
-          <span class="status-value">npm run docs:dev</span>
-        </div>
-      </aside>
-    </section>
-
-    <section class="tester">
-      <div class="section-head">
-        <div>
-          <h2>快速请求</h2>
-          <p>选择一个常用接口，或直接编辑路径与参数。请求会从当前浏览器发往本地服务。</p>
-        </div>
-      </div>
-
-      <div class="request-builder">
-        <select id="preset" aria-label="选择接口">
-          <option value="/getHotkey">搜索热词</option>
-          <option value="/getSearchByKey?key=周杰伦&limit=10&page=1">关键词搜索</option>
-          <option value="/getMusicPlay?songmid=003rJSwm3TechU">播放链接</option>
-          <option value="/getLyric?songmid=003rJSwm3TechU&isFormat=1">歌词</option>
-          <option value="/getTopLists">榜单列表</option>
-          <option value="/user/getCookie">Cookie 信息</option>
-        </select>
-        <select id="methodInput" aria-label="请求方法">
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-        </select>
-        <input id="pathInput" value="/getHotkey" spellcheck="false" aria-label="请求路径">
-        <button class="primary" id="sendButton" type="button">发送</button>
-      </div>
-      <div class="request-actions" aria-label="请求操作">
-        <button class="ghost-button" id="copyUrlButton" type="button">复制 URL</button>
-        <button class="ghost-button" id="openUrlButton" type="button">新窗口打开</button>
-        <button class="ghost-button" id="clearButton" type="button">清空结果</button>
-        <button class="ghost-button" id="abortButton" type="button" disabled>取消请求</button>
-      </div>
-
-      <div class="result-toolbar" aria-live="polite">
-        <div class="result-meta">
-          <span class="badge" id="statusBadge">待发送</span>
-          <span class="badge" id="timeBadge">耗时 --</span>
-          <span class="badge" id="sizeBadge">大小 --</span>
-        </div>
-        <button class="ghost-button" id="copyResultButton" type="button">复制结果</button>
-      </div>
-
-      <div class="result" aria-label="请求结果">
-        <div class="request-url" id="requestUrl">http://localhost:3200/getHotkey</div>
-        <pre id="responseBox">响应会显示在这里</pre>
-      </div>
-      <div class="history" id="historyList" aria-label="最近请求"></div>
-    </section>
-
-    <section class="grid" aria-label="接口分组">
-      <div class="group">
-        <h3>搜索</h3>
-        <a class="endpoint" href="/getHotkey" data-method="GET" target="_blank" rel="noreferrer"><span>搜索热词</span><code>GET</code></a>
-        <a class="endpoint" href="/getSearchByKey?key=周杰伦" data-method="GET" target="_blank" rel="noreferrer"><span>关键词搜索</span><code>GET</code></a>
-        <a class="endpoint" href="/getSmartbox?key=周杰伦" data-method="GET" target="_blank" rel="noreferrer"><span>智能提示</span><code>GET</code></a>
-      </div>
-
-      <div class="group">
-        <h3>音乐</h3>
-        <a class="endpoint" href="/getSongInfo?songmid=003DQQ5Z1JYVgJ" data-method="GET" target="_blank" rel="noreferrer"><span>歌曲信息</span><code>GET</code></a>
-        <a class="endpoint" href="/getMusicPlay?songmid=003rJSwm3TechU" data-method="GET" target="_blank" rel="noreferrer"><span>播放链接</span><code>GET</code></a>
-        <a class="endpoint" href="/getLyric?songmid=003rJSwm3TechU&isFormat=1" data-method="GET" target="_blank" rel="noreferrer"><span>歌词</span><code>GET</code></a>
-      </div>
-
-      <div class="group">
-        <h3>歌单</h3>
-        <a class="endpoint" href="/getSongListCategories" data-method="GET" target="_blank" rel="noreferrer"><span>歌单分类</span><code>GET</code></a>
-        <a class="endpoint" href="/getSongLists?categoryId=10000000" data-method="GET" target="_blank" rel="noreferrer"><span>歌单列表</span><code>GET</code></a>
-        <a class="endpoint" href="/getSongListDetail?disstid=7707261125" data-method="GET" target="_blank" rel="noreferrer"><span>歌单详情</span><code>GET</code></a>
-      </div>
-
-      <div class="group">
-        <h3>歌手</h3>
-        <a class="endpoint" href="/getSingerList" data-method="GET" target="_blank" rel="noreferrer"><span>歌手列表</span><code>GET</code></a>
-        <a class="endpoint" href="/getSingerAlbum?singermid=0025NhlN2yWrP4" data-method="GET" target="_blank" rel="noreferrer"><span>歌手专辑</span><code>GET</code></a>
-        <a class="endpoint" href="/getSingerHotsong?singermid=0025NhlN2yWrP4" data-method="GET" target="_blank" rel="noreferrer"><span>热门歌曲</span><code>GET</code></a>
-      </div>
-
-      <div class="group">
-        <h3>榜单与推荐</h3>
-        <a class="endpoint" href="/getTopLists" data-method="GET" target="_blank" rel="noreferrer"><span>榜单列表</span><code>GET</code></a>
-        <a class="endpoint" href="/getRanks" data-method="GET" target="_blank" rel="noreferrer"><span>榜单详情</span><code>GET</code></a>
-        <a class="endpoint" href="/getRecommend" data-method="GET" target="_blank" rel="noreferrer"><span>首页推荐</span><code>GET</code></a>
-      </div>
-
-      <div class="group">
-        <h3>用户</h3>
-        <a class="endpoint" href="/getQQLoginQr" data-method="GET" target="_blank" rel="noreferrer"><span>登录二维码</span><code>GET</code></a>
-        <a class="endpoint" href="/user/getCookie" data-method="GET" target="_blank" rel="noreferrer"><span>Cookie 信息</span><code>GET</code></a>
-        <a class="endpoint" href="/user/getUserAvatar?uin=123456789" data-method="GET" target="_blank" rel="noreferrer"><span>用户头像</span><code>GET</code></a>
-      </div>
-    </section>
-
-    <section class="notice">
-      <div>
-        <strong>需要会员或登录态的接口</strong>
-        <p>可以通过 query 参数 `cookie=...` 或请求头 `X-Custom-Cookie` 传入登录态。播放链接接口会把 `qqmusic_key` 转发为上游需要的 `authst`。</p>
-      </div>
-      <a class="action" href="https://sansenjian.github.io/qq-music-api/api/playground" target="_blank" rel="noreferrer">打开调试台</a>
-    </section>
-
-    <footer class="footer">
-      <span>QQ Music API · 本地服务首页</span>
-      <span>默认端口 3200</span>
-    </footer>
-  </main>
-
-  <script type="module">
-    import {
-      buildFetchOptions,
-      buildRequestUrl,
-      fetchPlaygroundRequest,
-      formatBytes,
-      getErrorMessage,
-      getInitialBaseUrl,
-      isAbortError,
-      normalizeBaseUrl,
-      normalizePath
-    } from './playground-utils.js';
-
-    const preset = document.querySelector('#preset');
-    const methodInput = document.querySelector('#methodInput');
-    const pathInput = document.querySelector('#pathInput');
-    const requestUrl = document.querySelector('#requestUrl');
-    const responseBox = document.querySelector('#responseBox');
-    const baseUrlText = document.querySelector('#baseUrlText');
-    const baseUrlInput = document.querySelector('#baseUrlInput');
-    const sendButton = document.querySelector('#sendButton');
-    const copyUrlButton = document.querySelector('#copyUrlButton');
-    const openUrlButton = document.querySelector('#openUrlButton');
-    const clearButton = document.querySelector('#clearButton');
-    const abortButton = document.querySelector('#abortButton');
-    const copyResultButton = document.querySelector('#copyResultButton');
-    const statusBadge = document.querySelector('#statusBadge');
-    const timeBadge = document.querySelector('#timeBadge');
-    const sizeBadge = document.querySelector('#sizeBadge');
-    const historyList = document.querySelector('#historyList');
-    const endpoints = Array.from(document.querySelectorAll('.endpoint'));
-    const apiLinks = Array.from(document.querySelectorAll('a[href^="/"]'));
-    const initialResponseText = '响应会显示在这里';
-    let activeController = null;
-    let baseUrl = getInitialBaseUrl();
-    let lastResult = '';
-    let requestHistory = [];
-
-    baseUrlInput.value = baseUrl;
-
-    function updateApiLinks() {
-      apiLinks.forEach(link => {
-        const path = link.dataset.path || link.getAttribute('href');
-        link.dataset.path = path;
-        link.href = `${baseUrl}${normalizePath(path)}`;
-      });
-    }
-
-    function setBaseUrl(value) {
-      baseUrl = normalizeBaseUrl(value);
-      baseUrlInput.value = baseUrl;
-      baseUrlText.textContent = baseUrl;
-      updateApiLinks();
-      updateUrl();
-    }
-
-    function getRequestUrl() {
-      return buildRequestUrl({
-        baseUrl,
-        path: pathInput.value
-      });
-    }
-
-    function updateUrl(options = {}) {
-      const path = normalizePath(pathInput.value);
-
-      if (options.commit) {
-        pathInput.value = path;
-      }
-
-      requestUrl.textContent = `${baseUrl}${path}`;
-      highlightEndpoint(path);
-      return getRequestUrl();
-    }
-
-    function setStatus(text, type) {
-      statusBadge.textContent = text;
-      statusBadge.className = `badge${type ? ` ${type}` : ''}`;
-    }
-
-    function resetMetrics() {
-      setStatus('待发送');
-      timeBadge.textContent = '耗时 --';
-      sizeBadge.textContent = '大小 --';
-    }
-
-    function setLoading(isLoading) {
-      sendButton.disabled = isLoading;
-      abortButton.disabled = !isLoading;
-      methodInput.disabled = isLoading;
-      preset.disabled = isLoading;
-      sendButton.textContent = isLoading ? '请求中' : '发送';
-    }
-
-    async function writeClipboard(text, successLabel) {
-      if (!text) {
-        return;
-      }
-
-      try {
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          const textarea = document.createElement('textarea');
-          textarea.value = text;
-          textarea.setAttribute('readonly', '');
-          textarea.style.position = 'fixed';
-          textarea.style.opacity = '0';
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand('copy');
-          textarea.remove();
-        }
-
-        setStatus(successLabel, 'success');
-      } catch (error) {
-        setStatus('复制失败', 'error');
-      }
-    }
-
-    function renderHistory() {
-      historyList.replaceChildren();
-
-      requestHistory.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.title = `${item.method} ${item.path}`;
-        button.textContent = `${item.method} ${item.path}`;
-        button.addEventListener('click', () => {
-          methodInput.value = item.method;
-          pathInput.value = item.path;
-          updateUrl();
-          pathInput.focus();
-        });
-        historyList.appendChild(button);
-      });
-    }
-
-    function pushHistory(method, path) {
-      requestHistory = [
-        { method, path },
-        ...requestHistory.filter(item => item.method !== method || item.path !== path),
-      ].slice(0, 5);
-      renderHistory();
-    }
-
-    function highlightEndpoint(path) {
-      const pathOnly = path.split('#')[0];
-      endpoints.forEach(endpoint => {
-        const endpointPath = endpoint.dataset.path || endpoint.getAttribute('href');
-        endpoint.classList.toggle('active', normalizePath(endpointPath) === pathOnly);
-      });
-    }
-
-    async function sendRequest() {
-      const url = updateUrl({ commit: true });
-      const method = methodInput.value;
-      const path = normalizePath(pathInput.value);
-
-      if (activeController) {
-        activeController.abort();
-      }
-
-      activeController = new AbortController();
-      setLoading(true);
-      setStatus('请求中');
-      timeBadge.textContent = '耗时 --';
-      sizeBadge.textContent = '大小 --';
-      responseBox.textContent = '请求中...';
-
-      try {
-        const result = await fetchPlaygroundRequest({
-          url,
-          options: buildFetchOptions({
-            method,
-            signal: activeController.signal
-          })
-        });
-
-        lastResult = result.formattedText;
-        responseBox.textContent = result.formattedText;
-        setStatus(result.statusText, result.ok ? 'success' : 'error');
-        timeBadge.textContent = `耗时 ${result.elapsedMs}ms`;
-        sizeBadge.textContent = `大小 ${formatBytes(result.sizeBytes)}`;
-        pushHistory(method, path);
-      } catch (error) {
-        const isAbort = isAbortError(error);
-        lastResult = '';
-        responseBox.textContent = isAbort ? '请求已取消' : getErrorMessage(error);
-        setStatus(isAbort ? '已取消' : '请求失败', isAbort ? '' : 'error');
-      } finally {
-        activeController = null;
-        setLoading(false);
-      }
-    }
-
-    preset.addEventListener('change', () => {
-      pathInput.value = preset.value;
-      updateUrl();
-    });
-
-    baseUrlInput.addEventListener('change', () => setBaseUrl(baseUrlInput.value));
-    baseUrlInput.addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        setBaseUrl(baseUrlInput.value);
-      }
-    });
-
-    pathInput.addEventListener('input', updateUrl);
-    pathInput.addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        sendRequest();
-      }
-    });
-
-    endpoints.forEach(endpoint => {
-      endpoint.addEventListener('click', event => {
-        event.preventDefault();
-        methodInput.value = endpoint.dataset.method || 'GET';
-        pathInput.value = endpoint.dataset.path || endpoint.getAttribute('href') || '/';
-        updateUrl({ commit: true });
-        document.querySelector('.tester').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        pathInput.focus();
-      });
-    });
-
-    sendButton.addEventListener('click', sendRequest);
-    copyUrlButton.addEventListener('click', () => writeClipboard(getRequestUrl(), 'URL 已复制'));
-    copyResultButton.addEventListener('click', () => writeClipboard(lastResult || responseBox.textContent, '结果已复制'));
-    openUrlButton.addEventListener('click', () => window.open(getRequestUrl(), '_blank', 'noopener,noreferrer'));
-    clearButton.addEventListener('click', () => {
-      lastResult = '';
-      responseBox.textContent = initialResponseText;
-      resetMetrics();
-    });
-    abortButton.addEventListener('click', () => {
-      if (activeController) {
-        activeController.abort();
-      }
-    });
-
-    resetMetrics();
-    setBaseUrl(baseUrl);
-    updateUrl({ commit: true });
-  </script>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>QQ 音乐 API</title>
+		<link rel="icon" href="data:," />
+		<style>
+			:root {
+				--bg: #f5f7fb;
+				--surface: #ffffff;
+				--surface-soft: #f9fbff;
+				--line: #dfe5ef;
+				--text: #172033;
+				--muted: #647084;
+				--brand: #12a594;
+				--brand-strong: #087a70;
+				--blue: #2e6de6;
+				--amber: #a86700;
+				--shadow: 0 14px 34px rgba(28, 38, 61, 0.1);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				min-height: 100vh;
+				color: var(--text);
+				background: var(--bg);
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+				letter-spacing: 0;
+			}
+
+			a {
+				color: inherit;
+				text-decoration: none;
+			}
+
+			.shell {
+				width: min(1180px, calc(100% - 28px));
+				margin: 0 auto;
+				padding: 22px 0 34px;
+			}
+
+			.topbar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 18px;
+				padding-bottom: 18px;
+			}
+
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				min-width: 0;
+			}
+
+			.logo {
+				display: grid;
+				width: 42px;
+				height: 42px;
+				flex: 0 0 auto;
+				place-items: center;
+				border-radius: 8px;
+				color: #ffffff;
+				background: var(--brand);
+				font-weight: 800;
+			}
+
+			h1,
+			h2,
+			h3,
+			p {
+				margin: 0;
+			}
+
+			.brand h1 {
+				font-size: 21px;
+				line-height: 1.25;
+			}
+
+			.brand p,
+			.section-copy,
+			.status-label,
+			.link-path,
+			.footer {
+				color: var(--muted);
+			}
+
+			.brand p {
+				margin-top: 3px;
+				font-size: 13px;
+			}
+
+			.nav,
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+
+			.nav {
+				justify-content: flex-end;
+			}
+
+			.action {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 38px;
+				border: 1px solid var(--line);
+				border-radius: 7px;
+				padding: 0 13px;
+				color: var(--text);
+				background: var(--surface);
+				font-size: 14px;
+				font-weight: 650;
+			}
+
+			.action.primary {
+				border-color: var(--brand);
+				color: #ffffff;
+				background: var(--brand);
+			}
+
+			.action:hover {
+				border-color: rgba(18, 165, 148, 0.55);
+				background: #eefbf8;
+			}
+
+			.action.primary:hover {
+				background: var(--brand-strong);
+			}
+
+			.layout {
+				display: grid;
+				grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+				gap: 16px;
+				align-items: start;
+			}
+
+			.section {
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				background: var(--surface);
+				box-shadow: var(--shadow);
+			}
+
+			.main-panel {
+				display: grid;
+				gap: 18px;
+				padding: 24px;
+			}
+
+			.status-panel {
+				display: grid;
+				gap: 0;
+				overflow: hidden;
+			}
+
+			.section-header {
+				display: grid;
+				gap: 8px;
+			}
+
+			.section-header h2 {
+				font-size: 24px;
+				line-height: 1.25;
+			}
+
+			.section-copy {
+				max-width: 760px;
+				font-size: 14px;
+				line-height: 1.7;
+			}
+
+			.quick-links {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 10px;
+			}
+
+			.quick-link {
+				display: grid;
+				gap: 5px;
+				min-height: 78px;
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				padding: 13px;
+				background: var(--surface-soft);
+			}
+
+			.quick-link:hover {
+				border-color: rgba(18, 165, 148, 0.55);
+				background: #eefbf8;
+			}
+
+			.link-title {
+				font-weight: 750;
+			}
+
+			.link-path {
+				overflow: hidden;
+				font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+				font-size: 12px;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.status-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				min-height: 58px;
+				padding: 0 18px;
+				border-bottom: 1px solid var(--line);
+			}
+
+			.status-row:last-child {
+				border-bottom: 0;
+			}
+
+			.status-label {
+				font-size: 13px;
+			}
+
+			.status-value {
+				font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+				font-size: 13px;
+				font-weight: 750;
+				text-align: right;
+			}
+
+			.status-value.ok {
+				color: var(--brand-strong);
+			}
+
+			.status-value.warn {
+				color: var(--amber);
+			}
+
+			.notice {
+				margin-top: 16px;
+				padding: 16px 18px;
+				border: 1px solid #ecd996;
+				border-radius: 8px;
+				color: #6f5b17;
+				background: #fff8df;
+				font-size: 14px;
+				line-height: 1.7;
+			}
+
+			.footer {
+				display: flex;
+				justify-content: space-between;
+				gap: 12px;
+				margin-top: 22px;
+				font-size: 13px;
+			}
+
+			@media (max-width: 860px) {
+				.topbar,
+				.layout,
+				.footer {
+					display: grid;
+					grid-template-columns: 1fr;
+				}
+
+				.nav {
+					justify-content: flex-start;
+				}
+			}
+
+			@media (max-width: 620px) {
+				.shell {
+					width: min(100% - 22px, 1180px);
+					padding-top: 14px;
+				}
+
+				.main-panel {
+					padding: 16px;
+				}
+
+				.quick-links {
+					grid-template-columns: 1fr;
+				}
+
+				.actions .action,
+				.nav .action {
+					flex: 1 1 130px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main class="shell">
+			<header class="topbar">
+				<a class="brand" href="/">
+					<span class="logo">QQ</span>
+					<span>
+						<h1>QQ 音乐 API</h1>
+						<p>Koa 2 + TypeScript 服务</p>
+					</span>
+				</a>
+				<nav class="nav" aria-label="快捷导航">
+					<a class="action primary" href="/explorer">Explorer</a>
+					<a class="action" href="/explorer/metadata" target="_blank" rel="noreferrer">Metadata</a>
+					<a class="action" href="https://sansenjian.github.io/qq-music-api/" target="_blank" rel="noreferrer">
+						在线文档
+					</a>
+				</nav>
+			</header>
+
+			<div class="layout">
+				<section class="section main-panel" aria-labelledby="home-title">
+					<div class="section-header">
+						<h2 id="home-title">本地服务入口</h2>
+						<p class="section-copy">HTTP API · Metadata · MCP</p>
+					</div>
+
+					<div class="actions" aria-label="主要操作">
+						<a class="action primary" href="/explorer">打开 Explorer</a>
+						<a class="action" href="/explorer?api=getSearchByKey&key=周杰伦&limit=10&page=1">搜索接口</a>
+						<a class="action" href="/explorer?api=getImageUrl&id=000MkMni19ClKG&size=300x300">图片 URL</a>
+					</div>
+
+					<div class="quick-links" aria-label="常用接口">
+						<a class="quick-link" href="/explorer?api=getSearchByKey&key=周杰伦&limit=10&page=1">
+							<span class="link-title">关键词搜索</span>
+							<span class="link-path">getSearchByKey</span>
+						</a>
+						<a class="quick-link" href="/explorer?api=getLyric&songmid=003rJSwm3TechU&isFormat=1">
+							<span class="link-title">歌词</span>
+							<span class="link-path">getLyric</span>
+						</a>
+						<a class="quick-link" href="/explorer?api=getSongListDetail&disstid=7707261125">
+							<span class="link-title">歌单详情</span>
+							<span class="link-path">getSongListDetail</span>
+						</a>
+						<a class="quick-link" href="/explorer?api=getTopLists">
+							<span class="link-title">榜单列表</span>
+							<span class="link-path">getTopLists</span>
+						</a>
+						<a class="quick-link" href="/explorer?api=getQQLoginQr">
+							<span class="link-title">登录二维码</span>
+							<span class="link-path">getQQLoginQr</span>
+						</a>
+						<a class="quick-link" href="/explorer?api=getImageUrl&id=000MkMni19ClKG&size=300x300">
+							<span class="link-title">图片 URL</span>
+							<span class="link-path">getImageUrl</span>
+						</a>
+					</div>
+				</section>
+
+				<aside class="section status-panel" aria-label="服务信息">
+					<div class="status-row">
+						<span class="status-label">Base URL</span>
+						<span class="status-value" id="base-url">http://localhost:3200</span>
+					</div>
+					<div class="status-row">
+						<span class="status-label">Explorer</span>
+						<span class="status-value ok">/explorer</span>
+					</div>
+					<div class="status-row">
+						<span class="status-label">Metadata</span>
+						<span class="status-value" id="metadata-status">检查中</span>
+					</div>
+					<div class="status-row">
+						<span class="status-label">接口数量</span>
+						<span class="status-value" id="endpoint-count">--</span>
+					</div>
+					<div class="status-row">
+						<span class="status-label">MCP</span>
+						<span class="status-value">npm run mcp</span>
+					</div>
+				</aside>
+			</div>
+
+			<section class="notice">登录态接口: cookie 参数 / X-Custom-Cookie 请求头。</section>
+
+			<footer class="footer">
+				<span>QQ Music API · 本地服务首页</span>
+				<span>默认端口 3200</span>
+			</footer>
+		</main>
+
+		<script>
+			const httpProtocols = new Set(['http:', 'https:']);
+			const fallbackOrigin = 'http://localhost:3200';
+			const origin = httpProtocols.has(window.location.protocol) ? window.location.origin : fallbackOrigin;
+			const baseUrl = document.querySelector('#base-url');
+			const metadataStatus = document.querySelector('#metadata-status');
+			const endpointCount = document.querySelector('#endpoint-count');
+
+			baseUrl.textContent = origin;
+
+			fetch('/explorer/metadata')
+				.then(response => {
+					if (!response.ok) {
+						throw new Error(String(response.status));
+					}
+					return response.json();
+				})
+				.then(metadata => {
+					const count = Array.isArray(metadata.endpoints) ? metadata.endpoints.length : 0;
+					metadataStatus.textContent = '在线';
+					metadataStatus.className = 'status-value ok';
+					endpointCount.textContent = String(count);
+				})
+				.catch(() => {
+					metadataStatus.textContent = '不可用';
+					metadataStatus.className = 'status-value warn';
+					endpointCount.textContent = '--';
+				});
+		</script>
+	</body>
 </html>

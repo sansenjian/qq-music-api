@@ -100,7 +100,8 @@
 	"scripts": {
 		"dev": "tsx src/app.ts",
 		"build": "npm run build:core && npm run build:mcp",
-		"build:core": "vite build && tsc --emitDeclarationOnly && node scripts/fix-cjs-declarations.js",
+		"build:explorer": "tsx scripts/build-explorer-app.ts",
+		"build:core": "npm run build:explorer && vite build && tsc --emitDeclarationOnly && node scripts/fix-cjs-declarations.js",
 		"build:mcp": "npm --workspace @sansenjian/qq-music-api-mcp run build",
 		"start": "node dist/app.js",
 		"mcp": "npm --workspace @sansenjian/qq-music-api-mcp run start",
@@ -114,6 +115,7 @@
 		"test:unit": "vitest run tests/unit",
 		"test:flags": "tsx scripts/run-tests-with-flags.ts all",
 		"test:flags:unit": "tsx scripts/run-tests-with-flags.ts unit",
+		"smoke:e2e": "npm run build && tsx scripts/smoke-mcp-explorer.ts",
 		"docs:dev": "vitepress dev docs --port 9611",
 		"docs:preview": "vitepress preview docs",
 		"commit-push": "./scripts/commit-push.sh",
