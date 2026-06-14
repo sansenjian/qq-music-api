@@ -599,7 +599,7 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		method: 'GET',
 		path: '/getRanks',
 		description: 'Fetch ranking detail songs by top list ID.',
-		queryParams: params([{ name: 'topId' }, { name: 'page', defaultValue: 0 }, { name: 'limit' }]),
+		queryParams: params([{ name: 'topId' }, { name: 'page', defaultValue: 0 }, { name: 'limit' }, { name: 'resolveMid', description: 'Resolve songmid for songs without it (calls detail API per-song).', defaultValue: false, enumValues: [false, true] }]),
 	},
 	{
 		name: 'getTicketInfo',

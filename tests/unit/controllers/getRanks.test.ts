@@ -13,7 +13,7 @@ describe('controllers/getRanks', () => {
     mockCtx = {
       status: 200,
       body: null,
-      query: {}
+      query: {},
     };
     mockNext = vi.fn();
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -33,9 +33,9 @@ describe('controllers/getRanks', () => {
       method: 'get',
       params: {
         format: 'json',
-        data: expect.any(String)
+        data: expect.any(String),
       },
-      option: {}
+      option: {},
     });
   });
 
@@ -112,7 +112,7 @@ describe('controllers/getRanks', () => {
   });
 
   test('should calculate week number correctly', async () => {
-    const fixedDate = new Date('2023-01-05T12:00:00Z'); // fixed, deterministic date
+    const fixedDate = new Date('2023-01-05T12:00:00Z');
     vi.useFakeTimers().setSystemTime(fixedDate);
 
     try {
@@ -141,7 +141,7 @@ describe('controllers/getRanks', () => {
 
     expect(mockCtx.status).toBe(200);
     expect(mockCtx.body).toEqual({
-      response: mockResponse
+      response: mockResponse,
     });
   });
 
@@ -169,7 +169,7 @@ describe('controllers/getRanks', () => {
       format: 'json',
       inCharset: 'utf-8',
       needNewCode: 1,
-      uin: 0
+      uin: 0,
     });
   });
 
@@ -189,9 +189,329 @@ describe('controllers/getRanks', () => {
         topId: 10,
         offset: 2,
         num: 30,
-        period: expect.any(String)
-      }
+        period: expect.any(String),
+      },
     });
+  });
+
+  test('should normalize song_mid from mid field in song list', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, mid: 'test_mid_1', songName: 'Song 1' },
+              { songId: 456, mid: 'test_mid_2', songName: 'Song 2' },
+            ],
+          },
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_mid).toBe('test_mid_1');
+    expect(songList[0].mid).toBe('test_mid_1');
+    expect(songList[1].song_mid).toBe('test_mid_2');
+    expect(songList[1].mid).toBe('test_mid_2');
+  });
+
+  test('should normalize song_id from songId field in song list', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, mid: 'test_mid_1', songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_id).toBe(123);
+    expect(songList[0].songId).toBe(123);
+  });
+
+  test('should normalize song_id from id field in song list', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { id: 123, mid: 'test_mid_1', songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_id).toBe(123);
+    expect(songList[0].songId).toBe(123);
+  });
+
+  test('should preserve existing song_mid field', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, song_mid: 'existing_mid', songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_mid).toBe('existing_mid');
+    expect(songList[0].mid).toBe('existing_mid');
+  });
+
+  test('should NOT auto-resolve song_mid by default even when only songId is present', async () => {
+    const rankResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, songName: 'Song without mid' },
+            ],
+          },
+        },
+      },
+    };
+
+    (UCommon as Mock).mockResolvedValue({ data: rankResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    expect(UCommon).toHaveBeenCalledTimes(1);
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].songId).toBe(123);
+    expect(songList[0].song_mid).toBeUndefined();
+    expect(songList[0].mid).toBeUndefined();
+  });
+
+  test('should populate song_mid via detail API when resolveMid=true', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
+    const rankResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, songName: 'Song without mid' },
+            ],
+          },
+        },
+      },
+    };
+
+    const detailResponse = {
+      songinfo: {
+        data: {
+          track_info: {
+            mid: 'detail_mid_123',
+          },
+        },
+      },
+    };
+
+    (UCommon as Mock)
+      .mockResolvedValueOnce({ data: rankResponse })
+      .mockResolvedValueOnce({ data: detailResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    expect(UCommon).toHaveBeenCalledTimes(2);
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].songId).toBe(123);
+    expect(songList[0].song_mid).toBe('detail_mid_123');
+    expect(songList[0].mid).toBe('detail_mid_123');
+  });
+
+  test('should log error when song detail API fails during resolveMid=true', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
+    const rankResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+
+    (UCommon as Mock)
+      .mockResolvedValueOnce({ data: rankResponse })
+      .mockRejectedValueOnce(new Error('song detail failed'));
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].songId).toBe(123);
+    expect(songList[0].song_mid).toBeUndefined();
+    expect(songList[0].mid).toBeUndefined();
+    expect(consoleErrorSpy).toHaveBeenCalled();
+  });
+
+  test('should keep song_mid undefined when detail API returns empty payload', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
+    const rankResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+
+    const emptyDetailResponse = {};
+
+    (UCommon as Mock)
+      .mockResolvedValueOnce({ data: rankResponse })
+      .mockResolvedValueOnce({ data: emptyDetailResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].songId).toBe(123);
+    expect(songList[0].song_mid).toBeUndefined();
+    expect(songList[0].mid).toBeUndefined();
+  });
+
+  test('should skip detail API calls when song already has mid', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, mid: 'already_have_mid', songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    expect(UCommon).toHaveBeenCalledTimes(1);
+  });
+
+  test('should handle song list at data.songList path', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          songList: [
+            { songId: 123, mid: 'test_mid', songName: 'Song 1' },
+          ],
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.songList;
+    expect(songList[0].song_mid).toBe('test_mid');
+  });
+
+  test('should handle song list at data.data.song_info_list path', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            song_info_list: [
+              { songId: 123, mid: 'test_mid', songName: 'Song 1' },
+            ],
+          },
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.song_info_list;
+    expect(songList[0].song_mid).toBe('test_mid');
+  });
+
+  test('should handle song list at data.song_list path', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          song_list: [
+            { songId: 123, mid: 'test_mid', songName: 'Song 1' },
+          ],
+        },
+      },
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.song_list;
+    expect(songList[0].song_mid).toBe('test_mid');
+  });
+
+  test('should handle songId of value 0 with resolveMid=true', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
+    const rankResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 0, songName: 'Edge case song' },
+            ],
+          },
+        },
+      },
+    };
+
+    const detailResponse = {
+      songinfo: {
+        data: {
+          track_info: {
+            mid: 'mid_for_zero',
+          },
+        },
+      },
+    };
+
+    (UCommon as Mock)
+      .mockResolvedValueOnce({ data: rankResponse })
+      .mockResolvedValueOnce({ data: detailResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].songId).toBe(0);
+    expect(songList[0].song_mid).toBe('mid_for_zero');
+    expect(songList[0].mid).toBe('mid_for_zero');
   });
 });
 

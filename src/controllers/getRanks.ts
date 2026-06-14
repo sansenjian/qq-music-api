@@ -2,6 +2,68 @@ import { KoaContext } from '../routes/types';
 import { UCommon } from '../services';
 import { setApiResponse, withErrorHandler } from './util';
 import { customResponse } from '../util/apiResponse';
+import {
+  findSongListLocation,
+  normalizeSongItem,
+  type NormalizedSong,
+  type RankResponseShape,
+} from '../util/song-normalize';
+
+interface SongDetailResponse {
+  songinfo?: {
+    data?: {
+      track_info?: {
+        mid?: string;
+        id?: number;
+      };
+      trackInfo?: {
+        mid?: string;
+        id?: number;
+      };
+    };
+  };
+}
+
+/**
+ * Fetch song mid by song id using the song detail API.
+ * Logs errors so upstream / network issues remain visible while returning
+ * undefined when no mid is available for a given song.
+ */
+const fetchSongMidBySongId = async (songId: number): Promise<string | undefined> => {
+  try {
+    const response = await UCommon({
+      method: 'get',
+      params: {
+        format: 'json',
+        data: {
+          comm: {
+            ct: 24,
+            cv: 0,
+          },
+          songinfo: {
+            method: 'get_song_detail_yqq',
+            param: {
+              song_type: 0,
+              song_mid: '',
+              song_id: songId,
+            },
+            module: 'music.pf_song_detail_svr',
+          },
+        },
+      },
+      option: {},
+    });
+
+    const data = response.data as SongDetailResponse;
+    return (
+      data?.songinfo?.data?.track_info?.mid ??
+      data?.songinfo?.data?.trackInfo?.mid
+    );
+  } catch (error) {
+    console.error('[getRanks] Failed to resolve song mid by song id:', error);
+    return undefined;
+  }
+};
 
 const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
   const getWeekNumber = (d: Date): number => {
@@ -15,7 +77,11 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
   const topId = +ctx.query.topId || 4;
   const num = +ctx.query.limit || 20;
   const offset = +ctx.query.page || 0;
-  
+  const resolveMidRaw = Array.isArray(ctx.query.resolveMid)
+    ? ctx.query.resolveMid[0]
+    : ctx.query.resolveMid;
+  const resolveMid = resolveMidRaw === 'true';
+
   const date = new Date();
   const week = getWeekNumber(date);
   const isoWeekYearVal = date.getFullYear();
@@ -28,7 +94,7 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
       format: 'json',
       inCharset: 'utf-8',
       needNewCode: 1,
-      uin: 0
+      uin: 0,
     },
     req_1: {
       module: 'musicToplist.ToplistInfoServer',
@@ -37,24 +103,54 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
         topId,
         offset,
         num,
-        period
-      }
-    }
+        period,
+      },
+    },
   };
-  
+
   const params = {
     format: 'json',
-    data: JSON.stringify(data)
+    data: JSON.stringify(data),
   };
-  
+
   const props = {
     method: 'get',
     params,
-    option: {}
+    option: {},
   };
-  
+
   const response = await UCommon(props);
-  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+  const responseData = response.data as RankResponseShape;
+
+  const location = findSongListLocation(responseData);
+  if (location) {
+    const songList = location.container[location.key] as NormalizedSong[];
+
+    const normalizedList: NormalizedSong[] = await Promise.all(
+      songList.map(async (song) => {
+        const normalized = normalizeSongItem(song);
+
+        if (
+          resolveMid &&
+          !normalized.song_mid &&
+          !normalized.mid &&
+          normalized.songId !== undefined
+        ) {
+          const fetchedMid = await fetchSongMidBySongId(Number(normalized.songId));
+          if (fetchedMid) {
+            normalized.song_mid = fetchedMid;
+            normalized.mid = fetchedMid;
+          }
+        }
+
+        return normalized;
+      }),
+    );
+
+    location.container[location.key] = normalizedList;
+  }
+
+  setApiResponse(ctx, customResponse({ response: responseData }, 200));
 });
 
 export default getRanksController;
