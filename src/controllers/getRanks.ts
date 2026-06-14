@@ -77,7 +77,10 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
   const topId = +ctx.query.topId || 4;
   const num = +ctx.query.limit || 20;
   const offset = +ctx.query.page || 0;
-  const resolveMid = ctx.query.resolveMid === 'true';
+  const resolveMidRaw = Array.isArray(ctx.query.resolveMid)
+    ? ctx.query.resolveMid[0]
+    : ctx.query.resolveMid;
+  const resolveMid = resolveMidRaw === 'true';
 
   const date = new Date();
   const week = getWeekNumber(date);
