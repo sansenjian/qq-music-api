@@ -40,6 +40,10 @@ curl "http://localhost:3200/getRanks?topId=4&limit=20"
     },
     "songList": [
       {
+        "songId": 123456,
+        "song_id": 123456,
+        "song_mid": "0039MnYb0qxYhV",
+        "mid": "0039MnYb0qxYhV",
         "songName": "歌曲名",
         "singerName": "歌手名",
         "rank": 1
@@ -48,6 +52,18 @@ curl "http://localhost:3200/getRanks?topId=4&limit=20"
   }
 }
 ```
+
+**返回字段说明：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| songId / song_id | number | 歌曲 ID |
+| song_mid / mid | string | 歌曲 MID，用于获取播放链接 |
+| songName | string | 歌曲名称 |
+| singerName | string | 歌手名称 |
+| rank | number | 排名 |
+
+> **注意：** 返回数据中会同时包含 `song_mid` 和 `mid` 字段，两者值相同，可用于调用 `/getMusicPlay` 接口获取播放链接。
 
 ## 常见榜单 ID
 

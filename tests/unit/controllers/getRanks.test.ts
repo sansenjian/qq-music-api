@@ -193,6 +193,90 @@ describe('controllers/getRanks', () => {
       }
     });
   });
+
+  test('should normalize song_mid from mid field in song list', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, mid: 'test_mid_1', songName: 'Song 1' },
+              { songId: 456, mid: 'test_mid_2', songName: 'Song 2' }
+            ]
+          }
+        }
+      }
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_mid).toBe('test_mid_1');
+    expect(songList[0].mid).toBe('test_mid_1');
+    expect(songList[1].song_mid).toBe('test_mid_2');
+    expect(songList[1].mid).toBe('test_mid_2');
+  });
+
+  test('should normalize song_id from songId field in song list', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, mid: 'test_mid_1', songName: 'Song 1' }
+            ]
+          }
+        }
+      }
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_id).toBe(123);
+    expect(songList[0].songId).toBe(123);
+  });
+
+  test('should preserve existing song_mid field', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, song_mid: 'existing_mid', songName: 'Song 1' }
+            ]
+          }
+        }
+      }
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].song_mid).toBe('existing_mid');
+    expect(songList[0].mid).toBe('existing_mid');
+  });
+
+  test('should handle song list in different response paths', async () => {
+    const mockResponse = {
+      req_1: {
+        data: {
+          songList: [
+            { songId: 123, mid: 'test_mid', songName: 'Song 1' }
+          ]
+        }
+      }
+    };
+    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    const songList = mockCtx.body.response.req_1.data.songList;
+    expect(songList[0].song_mid).toBe('test_mid');
+  });
 });
 
 function getWeekNumber(d: Date): number {
