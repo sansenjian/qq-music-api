@@ -281,7 +281,33 @@ describe('controllers/getRanks', () => {
     expect(songList[0].mid).toBe('existing_mid');
   });
 
-  test('should populate song_mid via detail API when only songId is present', async () => {
+  test('should NOT auto-resolve song_mid by default even when only songId is present', async () => {
+    const rankResponse = {
+      req_1: {
+        data: {
+          data: {
+            songInfoList: [
+              { songId: 123, songName: 'Song without mid' },
+            ],
+          },
+        },
+      },
+    };
+
+    (UCommon as Mock).mockResolvedValue({ data: rankResponse });
+
+    await getRanksController(mockCtx, mockNext);
+
+    expect(UCommon).toHaveBeenCalledTimes(1);
+    const songList = mockCtx.body.response.req_1.data.data.songInfoList;
+    expect(songList[0].songId).toBe(123);
+    expect(songList[0].song_mid).toBeUndefined();
+    expect(songList[0].mid).toBeUndefined();
+  });
+
+  test('should populate song_mid via detail API when resolveMid=true', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
     const rankResponse = {
       req_1: {
         data: {
@@ -310,13 +336,16 @@ describe('controllers/getRanks', () => {
 
     await getRanksController(mockCtx, mockNext);
 
+    expect(UCommon).toHaveBeenCalledTimes(2);
     const songList = mockCtx.body.response.req_1.data.data.songInfoList;
     expect(songList[0].songId).toBe(123);
     expect(songList[0].song_mid).toBe('detail_mid_123');
     expect(songList[0].mid).toBe('detail_mid_123');
   });
 
-  test('should handle missing song_mid when song detail API fails', async () => {
+  test('should log error when song detail API fails during resolveMid=true', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
     const rankResponse = {
       req_1: {
         data: {
@@ -342,7 +371,9 @@ describe('controllers/getRanks', () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
-  test('should handle missing song_mid when song detail API returns empty payload', async () => {
+  test('should keep song_mid undefined when detail API returns empty payload', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
     const rankResponse = {
       req_1: {
         data: {
@@ -369,7 +400,9 @@ describe('controllers/getRanks', () => {
     expect(songList[0].mid).toBeUndefined();
   });
 
-  test('should not attempt detail API lookup when mid already present', async () => {
+  test('should skip detail API calls when song already has mid', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
     const mockResponse = {
       req_1: {
         data: {
@@ -444,7 +477,9 @@ describe('controllers/getRanks', () => {
     expect(songList[0].song_mid).toBe('test_mid');
   });
 
-  test('should handle songId of value 0 without skipping mid normalization', async () => {
+  test('should handle songId of value 0 with resolveMid=true', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
     const rankResponse = {
       req_1: {
         data: {

@@ -77,6 +77,7 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
   const topId = +ctx.query.topId || 4;
   const num = +ctx.query.limit || 20;
   const offset = +ctx.query.page || 0;
+  const resolveMid = ctx.query.resolveMid === 'true';
 
   const date = new Date();
   const week = getWeekNumber(date);
@@ -126,7 +127,12 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
       songList.map(async (song) => {
         const normalized = normalizeSongItem(song);
 
-        if (!normalized.song_mid && !normalized.mid && normalized.songId !== undefined) {
+        if (
+          resolveMid &&
+          !normalized.song_mid &&
+          !normalized.mid &&
+          normalized.songId !== undefined
+        ) {
           const fetchedMid = await fetchSongMidBySongId(Number(normalized.songId));
           if (fetchedMid) {
             normalized.song_mid = fetchedMid;
