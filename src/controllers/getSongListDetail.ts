@@ -1,5 +1,5 @@
 import { KoaContext } from '../routes/types';
-import { songListDetail, songListDetailNew } from '../services';
+import { songListDetail } from '../services';
 import { setApiResponse, withErrorHandler } from './util';
 
 const getSongListDetailController = withErrorHandler(async (ctx: KoaContext) => {
@@ -19,16 +19,6 @@ const getSongListDetailController = withErrorHandler(async (ctx: KoaContext) => 
 	};
 
 	const result = await songListDetail(props);
-	const response = result?.body?.response as Record<string, any> | undefined;
-	const subcode = response?.subcode;
-
-	// 旧接口返回隐私校验错误时，尝试新版接口兜底
-	if (subcode === 4000) {
-		const newResult = await songListDetailNew(props);
-		setApiResponse(ctx, newResult);
-		return;
-	}
-
 	setApiResponse(ctx, result);
 });
 

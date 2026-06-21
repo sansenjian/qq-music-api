@@ -363,7 +363,7 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		method: 'GET',
 		path: '/getSongListDetail',
 		aliases: ['/getSongListDetail/:disstid'],
-		description: 'Fetch playlist details by disstid. Automatically falls back to new API if old API returns privacy error.',
+		description: 'Fetch playlist details by disstid.',
 		queryParams: params([{ name: 'disstid', required: true }]),
 	},
 	{

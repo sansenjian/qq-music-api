@@ -8,7 +8,6 @@ import getSmartbox from './apis/search/getSmartbox';
 import songLists from './apis/songLists/songLists';
 import songListCategories from './apis/songLists/songListCategories';
 import songListDetail from './apis/songLists/songListDetail';
-import songListDetailNew from './apis/songLists/songListDetailNew';
 
 // MV
 import getMvByTag from './apis/mv/getMvByTag';
@@ -82,7 +81,6 @@ export {
 	songLists,
 	songListCategories,
 	songListDetail,
-	songListDetailNew,
 	// MV
 	getMvByTag,
 	getMvCategory,
