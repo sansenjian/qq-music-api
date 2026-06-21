@@ -1,6 +1,6 @@
 import type { ApiFunction, ApiOptions, ApiResponse } from '../../../types/api';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
-import { getGtk, getGuid } from '../../../util/loginUtils';
+import { getGtk, getGuid, toBooleanParam } from '../../../util/loginUtils';
 import { setUserInfo } from '../../../config/user-info-store';
 
 interface LoginSession {
@@ -212,7 +212,7 @@ const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise
 		const sessionCookie = allCookie().join('; ');
 		const session = buildLoginSession(sessionCookie);
 
-		if (persistCookie === '1' || persistCookie === 'true' || persistCookie === true) {
+		if (toBooleanParam(persistCookie)) {
 			setUserInfo({ ...session, refreshData: () => ({}) });
 		}
 

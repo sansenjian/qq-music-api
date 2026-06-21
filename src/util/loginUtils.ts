@@ -6,6 +6,10 @@ export const hash33 = (t: string): number => {
 	return 2147483647 & e;
 };
 
+export const toBooleanParam = (value: unknown): boolean => {
+	return value === true || value === '1' || value === 'true';
+};
+
 export const getGtk = (p_skey: string): number => {
 	const str = p_skey;
 	let hash = 5381;
