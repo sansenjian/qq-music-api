@@ -98,6 +98,11 @@ const joinUrl = (domain: string, path: string): string => {
   return `${domain}${path}`;
 };
 
+const isUnauthenticated = (midurlinfo: MidUrlInfo[]): boolean => {
+  if (midurlinfo.length === 0) return true;
+  return midurlinfo.every(item => !item.purl);
+};
+
 const buildPlayUrl = (domain: string, info: MidUrlInfo, guid: string): string => {
   if (!domain) return '';
 
@@ -211,13 +216,24 @@ export default async ({
       }
     });
 
+    const allUnauthenticated = isUnauthenticated(midurlinfo);
+    const noCookieHint = !cookie;
+
     songmidList.forEach(songmid => {
       const item = midInfoMap.get(songmid);
       const url = item ? buildPlayUrl(domain, item, guid) : '';
-      playUrl[songmid] = {
-        url,
-        error: url ? undefined : '\u6682\u65e0\u64ad\u653e\u94fe\u63a5'
-      };
+      if (url) {
+        playUrl[songmid] = { url };
+      } else if (allUnauthenticated) {
+        playUrl[songmid] = {
+          url: '',
+          error: noCookieHint
+            ? '播放链接需要登录态才能获取，请通过 cookie 参数或 X-Custom-Cookie Header 传递有效 Cookie'
+            : 'Cookie 已失效或 uin 缺失，请重新获取有效的登录 Cookie'
+        };
+      } else {
+        playUrl[songmid] = { url: '', error: '暂无播放链接' };
+      }
     });
 
     upstreamData.playUrl = playUrl;

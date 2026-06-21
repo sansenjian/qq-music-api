@@ -535,7 +535,7 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		method: 'GET',
 		path: '/getMusicPlay',
 		aliases: ['/getMusicPlay/:songmid'],
-		description: 'Fetch playable audio URLs by song MID.',
+		description: 'Fetch playable audio URLs by song MID. Requires valid QQ Music login cookie; returns specific error message when unauthenticated.',
 		queryParams: params([
 			{ name: 'songmid', required: true },
 			{ name: 'resType' },

@@ -9,7 +9,7 @@ const getSongListDetailController = withErrorHandler(async (ctx: KoaContext) => 
     setApiResponse(ctx, { status: 400, body: { response: 'no disstid' } });
     return;
   }
-  
+
   const props = {
     method: 'get',
     params: {
@@ -17,7 +17,7 @@ const getSongListDetailController = withErrorHandler(async (ctx: KoaContext) => 
     },
     option: {}
   };
-  
+
   const result = await songListDetail(props);
   setApiResponse(ctx, result);
 });
