@@ -1,6 +1,7 @@
 import type { ApiFunction, ApiOptions, ApiResponse } from '../../../types/api';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
 import { getGtk, getGuid } from '../../../util/loginUtils';
+import { setUserInfo } from '../../../config/user-info-store';
 
 interface LoginSession {
 	loginUin: string;
@@ -72,7 +73,7 @@ const buildLoginSession = (cookie: string): LoginSession => {
 };
 
 const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise<ApiResponse> => {
-	const { ptqrtoken, qrsig } = params;
+	const { ptqrtoken, qrsig, setCookie: persistCookie } = params;
 	if (!ptqrtoken || !qrsig) {
 		return errorResponse('参数错误', 400);
 	}
@@ -209,12 +210,17 @@ const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise
 		setCookie(loginRes.headers.get('Set-Cookie'));
 
 		const sessionCookie = allCookie().join('; ');
+		const session = buildLoginSession(sessionCookie);
+
+		if (persistCookie === '1' || persistCookie === 'true' || persistCookie === true) {
+			setUserInfo({ ...session, refreshData: () => ({}) });
+		}
 
 		return customResponse(
 			{
 				isOk: true,
 				message: '登录成功',
-				session: buildLoginSession(sessionCookie),
+				session,
 			},
 			200,
 		);

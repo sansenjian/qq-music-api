@@ -3,9 +3,9 @@ import { checkQQLoginQr } from '../services';
 import { setApiResponse } from './util';
 
 const controller: Controller = async (ctx, _next) => {
-	const { ptqrtoken, qrsig } = ctx.query.ptqrtoken ? ctx.query : ctx.request.body || {};
+	const { ptqrtoken, qrsig, setCookie } = ctx.query.ptqrtoken ? ctx.query : ctx.request.body || {};
 
-	const params = { ptqrtoken, qrsig };
+	const params = { ptqrtoken, qrsig, setCookie };
 	const props = {
 		method: 'get',
 		option: {},
