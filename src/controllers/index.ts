@@ -13,6 +13,7 @@ import batchGetSongListsController from './batchGetSongLists';
 import getSongInfoController from './getSongInfo';
 import batchGetSongInfoController from './batchGetSongInfo';
 import getSongListDetailController from './getSongListDetail';
+import resolveSongListShareUrlController from './resolveSongListShareUrl';
 import getAlbumSongsController from './getAlbumSongs';
 import getNewDisksController from './getNewDisks';
 import getMvByTagController from './getMvByTag';
@@ -78,6 +79,7 @@ const controllers: Controllers = {
 	getSongInfo: getSongInfoController,
 	batchGetSongInfo: batchGetSongInfoController,
 	getSongListDetail: getSongListDetailController,
+	resolveSongListShareUrl: resolveSongListShareUrlController,
 	getAlbumSongs: getAlbumSongsController,
 	getNewDisks: getNewDisksController,
 	getMvByTag: getMvByTagController,

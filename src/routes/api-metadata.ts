@@ -367,6 +367,36 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		queryParams: params([{ name: 'disstid', required: true }]),
 	},
 	{
+		name: 'resolveSongListShareUrl',
+		category: 'playlist',
+		method: 'GET',
+		path: '/resolveSongListShareUrl',
+		aliases: ['/resolveSongListShareUrl/:url'],
+		description:
+			'Parse a QQ Music playlist share URL (i2.y.qq.com playlist.html?id=..., y.qq.com/n/ryqq/playlist/<id>, etc.) and return the playlist details directly. Only numeric disstid URLs are supported; alphanumeric MID URLs return 400.',
+		queryParams: params([
+			{
+				name: 'url',
+				required: true,
+				description: 'QQ Music playlist share URL. Plain URL or text containing a URL is accepted.',
+				example:
+					'https://i2.y.qq.com/n3/other/pages/details/playlist.html?platform=11&appshare=android_qq&appversion=20040008&hosteuin=oKElNKviowv57n**&id=2029866739&ADTAG=qfshare',
+			},
+		]),
+		examples: [
+			{
+				label: 'Resolve share URL',
+				params: {
+					url: 'https://i2.y.qq.com/n3/other/pages/details/playlist.html?id=2029866739',
+				},
+			},
+			{
+				label: 'Resolve ryqq path URL',
+				params: { url: 'https://y.qq.com/n/ryqq/playlist/2029866739' },
+			},
+		],
+	},
+	{
 		name: 'getAlbumSongs',
 		category: 'album',
 		method: 'GET',
