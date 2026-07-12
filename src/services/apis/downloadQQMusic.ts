@@ -1,5 +1,6 @@
 import { AxiosRequestConfig, Method } from 'axios';
 import request from '../../util/request';
+import { parseJsonp } from '../../util/parseJsonp';
 
 interface DownloadOptions {
 	method?: Method | string;
@@ -25,14 +26,7 @@ export default ({ method = 'get', params = {}, option = {} }: DownloadOptions) =
 	};
 	return request({ url: '/download/download.js', method: method as Method, options, isUUrl: 'y' })
 		.then(res => {
-			let response = res.data;
-			if (typeof response === 'string') {
-				const reg = /^\w+\(({[^()]+})\)$/;
-				const matches = response.match(reg);
-				if (matches) {
-					response = JSON.parse(matches[1]);
-				}
-			}
+			const response = parseJsonp(res.data);
 			return {
 				status: 200,
 				body: {

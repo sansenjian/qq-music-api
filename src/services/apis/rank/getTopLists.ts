@@ -1,5 +1,6 @@
 import request from '../../../util/request';
 import { handleApi } from '../../../util/apiResponse';
+import { parseJsonp } from '../../../util/parseJsonp';
 import type { ApiOptions } from '../../../types/api';
 
 export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) => {
@@ -9,11 +10,11 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
     platform: 'h5',
     needNewCode: 1
   });
-  
+
   const options = Object.assign(option, {
     params: data
   });
-  
+
   return handleApi(
     request({
       url: '/v8/fcg-bin/fcg_myqq_toplist.fcg',
@@ -22,16 +23,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
       isUUrl: 'c'
     }),
     {
-      transformData: (response: unknown) => {
-        if (typeof response === 'string') {
-          const reg = /^\w+\(({[^()]+})\)$/;
-          const matches = response.match(reg);
-          if (matches) {
-            return JSON.parse(matches[1]);
-          }
-        }
-        return response;
-      }
+      transformData: (response: unknown) => parseJsonp(response)
     }
   );
 };
