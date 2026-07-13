@@ -49,12 +49,21 @@ import getUserPlaylistsController from './getUserPlaylists';
 import getUserAvatarController from './getUserAvatar';
 import getUserLikedSongsController from './getUserLikedSongs';
 import {
+	getDislikeListController,
+	getFriendListController,
+	getHideMedalController,
+	getListeningCalendarController,
+	getMedalTabDetailController,
+	getMusicGeneController,
 	getUserCollectedAlbumsController,
 	getUserCollectedSongListsController,
 	getUserDetailController,
 	getUserFansController,
+	getUserFavMvController,
 	getUserFollowSingersController,
 	getUserFollowUsersController,
+	getUserMedalController,
+	getVipInfoController,
 } from './getUserReadonlyExtras';
 import { getDailyRecommendController, getPrivateFMController, getNewSongsController } from './getDailyRecommend';
 import { getPersonalRecommendController, getSimilarSongsController } from './getPersonalRecommend';
@@ -119,6 +128,16 @@ const controllers: Controllers = {
 	getUserFollowSingers: getUserFollowSingersController,
 	getUserFollowUsers: getUserFollowUsersController,
 	getUserFans: getUserFansController,
+	// medal & profile extras
+	getUserMedal: getUserMedalController,
+	getMedalTabDetail: getMedalTabDetailController,
+	getHideMedal: getHideMedalController,
+	getListeningCalendar: getListeningCalendarController,
+	getVipInfo: getVipInfoController,
+	getFriendList: getFriendListController,
+	getMusicGene: getMusicGeneController,
+	getUserFavMv: getUserFavMvController,
+	getDislikeList: getDislikeListController,
 	getDailyRecommend: getDailyRecommendController,
 	getPrivateFM: getPrivateFMController,
 	getNewSongs: getNewSongsController,
