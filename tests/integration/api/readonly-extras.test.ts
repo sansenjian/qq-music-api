@@ -198,4 +198,65 @@ describe('readonly jsososo parity APIs', () => {
 		expect(response.body.error).toBe('缺少 uin 参数');
 		expect(mockFn).not.toHaveBeenCalled();
 	});
+
+	test('GET /user/getVipInfo includes the authenticated uin and key material', async () => {
+		await request(callback)
+			.get('/user/getVipInfo')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key; p_skey=pskey' })
+			.expect(200);
+
+		const payload = getLatestMusicuPayload();
+		expect(payload.comm).toMatchObject({
+			uin: 'o123456',
+			loginUin: 'o123456',
+			authst: 'mock-key',
+		});
+		expect(payload.comm.g_tk).toEqual(expect.any(Number));
+	});
+
+	test('GET /user/getDislikeList uses the signed musics endpoint', async () => {
+		await request(callback)
+			.get('/user/getDislikeList')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key; p_skey=pskey', cmd: '3', page: '2', lastid: '9' })
+			.expect(200);
+
+		const options = getLatestRequestOptions(mockFn) as {
+			url?: string;
+			params?: { sign?: string; _?: number };
+		};
+		const payload = getLatestMusicuPayload();
+		expect(options.url).toBe('https://u.y.qq.com/cgi-bin/musics.fcg');
+		expect(options.params?.sign).toMatch(/^zzc/);
+		expect(options.params?._).toEqual(expect.any(Number));
+		expect(payload.req_1.param).toMatchObject({ Cmd: 3, Page: 2, SongLastid: 9 });
+	});
+
+	test('GET /user/getMusicGene forwards an explicit encrypted uin', async () => {
+		await request(callback)
+			.get('/user/getMusicGene')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key', euin: 'encrypted-uin' })
+			.expect(200);
+
+		expect(getLatestMusicuPayload().req_1.param).toEqual({ VisitAccount: 'encrypted-uin' });
+	});
+
+	test('euin-based user APIs reject requests without an encrypted uin', async () => {
+		const response = await request(callback)
+			.get('/user/getMusicGene')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key' })
+			.expect(400);
+
+		expect(response.body.error).toContain('euin');
+		expect(mockFn).not.toHaveBeenCalled();
+	});
+
+	test('GET /resolveSongListShareUrl preserves an unencoded embedded ampersand', async () => {
+		await request(callback)
+			.get('/resolveSongListShareUrl')
+			.query({ url: 'https://i2.y.qq.com/n3/other/pages/details/playlist.html?appshare=android_qq&id=2029866739' })
+			.expect(200);
+
+		const options = getLatestRequestOptions(mockFn) as { params?: { disstid?: string } };
+		expect(options.params?.disstid).toBe('2029866739');
+	});
 });

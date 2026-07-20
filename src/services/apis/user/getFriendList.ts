@@ -1,5 +1,4 @@
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
+import { callUserMusicu } from './userMusicu';
 
 /**
  * 获取好友列表
@@ -17,22 +16,9 @@ export const getFriendList = async ({
 	limit?: number;
 	cookie?: string;
 }) =>
-	handleApi(
-		request({
-			url: 'https://u.y.qq.com/cgi-bin/musicu.fcg',
-			method: 'POST',
-			isUUrl: 'u',
-			cookie,
-			options: {
-				headers: { 'Content-Type': 'application/json', Referer: 'https://y.qq.com/' },
-				data: JSON.stringify({
-					comm: { uin: '', format: 'json', ct: 24, cv: 4747474, platform: 'yqq.json' },
-					req_1: {
-						module: 'music.homepage.Friendship',
-						method: 'GetFriendList',
-						param: { PageSize: limit, Page: page - 1 },
-					},
-				}),
-			},
-		}),
-	);
+	callUserMusicu({
+		module: 'music.homepage.Friendship',
+		method: 'GetFriendList',
+		param: { PageSize: limit, Page: page - 1 },
+		cookie,
+	});

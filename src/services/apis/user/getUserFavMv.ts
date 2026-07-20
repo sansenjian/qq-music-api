@@ -1,5 +1,4 @@
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
+import { callUserMusicu } from './userMusicu';
 
 /**
  * 获取用户收藏的 MV 列表
@@ -26,23 +25,10 @@ export const getUserFavMv = async ({
 	};
 	if (euin) param.encuin = euin;
 
-	return handleApi(
-		request({
-			url: 'https://u.y.qq.com/cgi-bin/musicu.fcg',
-			method: 'POST',
-			isUUrl: 'u',
-			cookie,
-			options: {
-				headers: { 'Content-Type': 'application/json', Referer: 'https://y.qq.com/' },
-				data: JSON.stringify({
-					comm: { uin: '', format: 'json', ct: 24, cv: 4747474, platform: 'yqq.json' },
-					req_1: {
-						module: 'music.musicasset.MVFavRead',
-						method: 'getMyFavMV_v2',
-						param,
-					},
-				}),
-			},
-		}),
-	);
+	return callUserMusicu({
+		module: 'music.musicasset.MVFavRead',
+		method: 'getMyFavMV_v2',
+		param,
+		cookie,
+	});
 };

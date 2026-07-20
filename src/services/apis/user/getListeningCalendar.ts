@@ -1,5 +1,4 @@
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
+import { callUserMusicu } from './userMusicu';
 
 /**
  * 获取用户听歌日历（连续听歌天数、每日听歌记录）
@@ -20,23 +19,10 @@ export const getListeningCalendar = async ({
 	if (euin) param.HostUin = euin;
 	if (date) param.Date = date;
 
-	return handleApi(
-		request({
-			url: 'https://u.y.qq.com/cgi-bin/musicu.fcg',
-			method: 'POST',
-			isUUrl: 'u',
-			cookie,
-			options: {
-				headers: { 'Content-Type': 'application/json', Referer: 'https://y.qq.com/' },
-				data: JSON.stringify({
-					comm: { uin: '', format: 'json', ct: 24, cv: 4747474, platform: 'yqq.json' },
-					req_1: {
-						module: 'music.medalHall.MedalListeningCalendarSrv',
-						method: 'GetListeningCalendar',
-						param,
-					},
-				}),
-			},
-		}),
-	);
+	return callUserMusicu({
+		module: 'music.medalHall.MedalListeningCalendarSrv',
+		method: 'GetListeningCalendar',
+		param,
+		cookie,
+	});
 };

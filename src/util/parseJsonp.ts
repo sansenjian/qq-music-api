@@ -23,18 +23,21 @@ export function parseJsonp<T = unknown>(response: unknown): T {
 
 	const text = response.trim();
 
-	// 2. 不含 JSONP 包装时,尝试当纯 JSON 解析
+	// 2. 先尝试纯 JSON，避免 JSON 字符串内容中的括号被误判为 JSONP。
+	try {
+		return JSON.parse(text) as T;
+	} catch {
+		// 继续尝试 JSONP 包装。
+	}
+
+	// 3. 不含 JSONP 包装时,保留原始字符串
 	const start = text.indexOf('(');
 	const end = text.lastIndexOf(')');
 	if (start === -1 || end <= start) {
-		try {
-			return JSON.parse(text) as T;
-		} catch {
-			return response as T;
-		}
+		return response as T;
 	}
 
-	// 3. 非正则方案(首选):找第一个 '(' 与最后一个 ')',中间切片后 JSON.parse
+	// 4. 非正则方案(首选):找第一个 '(' 与最后一个 ')',中间切片后 JSON.parse
 	const jsonStr = text.slice(start + 1, end);
 	try {
 		return JSON.parse(jsonStr) as T;
@@ -42,7 +45,7 @@ export function parseJsonp<T = unknown>(response: unknown): T {
 		// fall through 到正则方案
 	}
 
-	// 4. 兼容方案:贪婪正则,捕获 callback 名后第一个 '(' 到末尾最后一个 ')' 之间的内容
+	// 5. 兼容方案:贪婪正则,捕获 callback 名后第一个 '(' 到末尾最后一个 ')' 之间的内容
 	const matches = text.match(/^\w+\(([\s\S]*)\)\s*;?\s*$/);
 	if (matches && matches[1]) {
 		try {
@@ -52,6 +55,6 @@ export function parseJsonp<T = unknown>(response: unknown): T {
 		}
 	}
 
-	// 5. 兜底:原样返回
+	// 6. 兜底:原样返回
 	return response as T;
 }

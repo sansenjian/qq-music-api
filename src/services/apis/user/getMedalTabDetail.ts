@@ -1,5 +1,4 @@
-import request from '../../../util/request';
-import { handleApi } from '../../../util/apiResponse';
+import { callUserMusicu } from './userMusicu';
 
 /**
  * 获取指定勋章分类下的勋章列表
@@ -12,23 +11,10 @@ export const getMedalTabDetail = async ({ tabId, euin, cookie }: { tabId: number
 	const param: Record<string, unknown> = { tabId };
 	if (euin) param.euin = euin;
 
-	return handleApi(
-		request({
-			url: 'https://u.y.qq.com/cgi-bin/musicu.fcg',
-			method: 'POST',
-			isUUrl: 'u',
-			cookie,
-			options: {
-				headers: { 'Content-Type': 'application/json', Referer: 'https://y.qq.com/' },
-				data: JSON.stringify({
-					comm: { uin: '', format: 'json', ct: 24, cv: 4747474, platform: 'yqq.json' },
-					req_1: {
-						module: 'music.medalHall.MedalHallHomepageSrv',
-						method: 'GetHomepageTabDetail',
-						param,
-					},
-				}),
-			},
-		}),
-	);
+	return callUserMusicu({
+		module: 'music.medalHall.MedalHallHomepageSrv',
+		method: 'GetHomepageTabDetail',
+		param,
+		cookie,
+	});
 };

@@ -16,7 +16,8 @@ import {
 	getUserMedal,
 	getVipInfo,
 } from '../services';
-import { extractCookieValue, resolveRequestCookie } from '../util/cookieResolver';
+import { extractEuinFromCookie, resolveRequestCookie } from '../util/cookieResolver';
+import { getUserInfo } from '../config/user-info-store';
 import type { ApiResponse } from '../types/api';
 import { setApiResponse, withErrorHandler } from './util';
 
@@ -40,6 +41,17 @@ const getPaginationValue = (value: unknown, fallback: number) => {
 
 	const parsedValue = Number(rawValue);
 	return Number.isFinite(parsedValue) ? parsedValue : fallback;
+};
+
+const resolveRequestEuin = (ctx: KoaContext, cookie?: string): string | undefined => {
+	const queryEuin = getSingleQueryValue(ctx.query.euin);
+	if (queryEuin) return queryEuin;
+
+	const cookieEuin = extractEuinFromCookie(cookie);
+	if (cookieEuin) return cookieEuin;
+
+	const stored = getUserInfo();
+	return cookie && stored.cookie === cookie && typeof stored.euin === 'string' ? stored.euin : undefined;
 };
 
 const createUserReadonlyController = (service: UserReadonlyService, name: string) =>
@@ -90,9 +102,9 @@ const createEuinController = (
 			setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
 			return;
 		}
-		const euin = extractCookieValue(cookie, 'euin');
+		const euin = resolveRequestEuin(ctx, cookie);
 		if (!euin) {
-			setApiResponse(ctx, { status: 400, body: { error: 'cookie 中缺少 euin 字段' } });
+			setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
 			return;
 		}
 		const result = await service({ euin, cookie });
@@ -116,7 +128,7 @@ export const getUserFollowUsersController = createUserReadonlyController(getUser
 export const getUserFansController = createUserReadonlyController(getUserFans, 'getUserFans');
 
 // Medal & profile extras
-export const getUserMedalController = createCookieOnlyController(getUserMedal, 'getUserMedal');
+export const getUserMedalController = createEuinController(getUserMedal, 'getUserMedal');
 export const getVipInfoController = createCookieOnlyController(getVipInfo, 'getVipInfo');
 export const getHideMedalController = createEuinController(getHideMedal, 'getHideMedal');
 export const getMusicGeneController = createEuinController(getMusicGene, 'getMusicGene');
@@ -127,7 +139,11 @@ export const getMedalTabDetailController = withErrorHandler(async (ctx: KoaConte
 		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
 		return;
 	}
-	const euin = extractCookieValue(cookie, 'euin');
+	const euin = resolveRequestEuin(ctx, cookie);
+	if (!euin) {
+		setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
+		return;
+	}
 	const tabIdRaw = getSingleQueryValue(ctx.query.tabId);
 	if (!tabIdRaw) {
 		setApiResponse(ctx, { status: 400, body: { error: '缺少 tabId 参数' } });
@@ -148,7 +164,11 @@ export const getListeningCalendarController = withErrorHandler(async (ctx: KoaCo
 		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
 		return;
 	}
-	const euin = extractCookieValue(cookie, 'euin');
+	const euin = resolveRequestEuin(ctx, cookie);
+	if (!euin) {
+		setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
+		return;
+	}
 	const date = getSingleQueryValue(ctx.query.date);
 	const result = await getListeningCalendar({ euin, date, cookie });
 	setApiResponse(ctx, result);
@@ -172,7 +192,11 @@ export const getUserFavMvController = withErrorHandler(async (ctx: KoaContext) =
 		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
 		return;
 	}
-	const euin = extractCookieValue(cookie, 'euin');
+	const euin = resolveRequestEuin(ctx, cookie);
+	if (!euin) {
+		setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
+		return;
+	}
 	const page = getPaginationValue(ctx.query.page || ctx.query.pageNo, 1);
 	const limit = getPaginationValue(ctx.query.limit || ctx.query.pageSize, 20);
 	const result = await getUserFavMv({ page, limit, euin, cookie });

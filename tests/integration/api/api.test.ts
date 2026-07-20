@@ -866,6 +866,7 @@ describe('API Integration Tests', () => {
 				)
 				.mockResolvedValueOnce(
 					createFetchResponse({
+						text: JSON.stringify({ data: { encryptUin: 'encrypted-uin' } }),
 						headers: {
 							'Set-Cookie': 'qm_keyst=finalValue; Path=/; HttpOnly',
 						},
@@ -881,6 +882,7 @@ describe('API Integration Tests', () => {
 			expect(response.body.message).toBe('登录成功');
 			expect(response.body.session).toBeDefined();
 			expect(response.body.session.loginUin).toBe('o123456789');
+			expect(response.body.session.euin).toBe('encrypted-uin');
 			expect(response.body.session.cookie).toContain('uin=o123456789');
 			expect(response.body.session.cookie).toContain('qm_keyst=finalValue');
 			expect(Array.isArray(response.body.session.cookieList)).toBe(true);

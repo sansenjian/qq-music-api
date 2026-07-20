@@ -48,14 +48,15 @@ function isAlphaMid(s: string): boolean {
  */
 function extractUrl(input: string): string {
 	const trimmed = input.trim();
+	const trimUrlPunctuation = (value: string) => value.replace(/[.,!?;:)\]}\uFF0C\u3002\uFF01\uFF1F\uFF1B\uFF1A]+$/u, '');
 
 	// 优先匹配 http(s)://
 	const httpMatch = trimmed.match(/https?:\/\/[^\s\u4e00-\u9fa5]+/i);
-	if (httpMatch) return httpMatch[0];
+	if (httpMatch) return trimUrlPunctuation(httpMatch[0]);
 
 	// 其次匹配形如 y.qq.com/... 或 c.y.qq.com/... 的裸域名 URL
 	const bareMatch = trimmed.match(/(?:[a-z0-9-]+\.)?y\.qq\.com\/[^\s\u4e00-\u9fa5]+/i);
-	if (bareMatch) return bareMatch[0];
+	if (bareMatch) return trimUrlPunctuation(bareMatch[0]);
 
 	return trimmed;
 }
@@ -82,7 +83,14 @@ function parseQueryParams(url: string): Record<string, string> {
 			if (eq === -1) {
 				params[pair] = '';
 			} else {
-				params[decodeURIComponent(pair.slice(0, eq))] = decodeURIComponent(pair.slice(eq + 1));
+				const decode = (value: string) => {
+					try {
+						return decodeURIComponent(value);
+					} catch {
+						return value;
+					}
+				};
+				params[decode(pair.slice(0, eq))] = decode(pair.slice(eq + 1));
 			}
 		}
 		return params;
@@ -98,14 +106,30 @@ function getLastPathSegment(url: string): string | undefined {
 		const segs = u.pathname.split('/').filter(Boolean);
 		return segs.length > 0 ? segs[segs.length - 1] : undefined;
 	} catch {
-		// 裸域名,手动切
-		const noQuery = url.split('?')[0].split('#')[0];
-		const segs = noQuery.split('/').filter(Boolean);
-		// 去掉域名段,只看路径段
-		const pathSegs = segs.filter(s => s.includes('.') === false || s.includes('.qq.com') === false);
-		return pathSegs.length > 0 ? pathSegs[pathSegs.length - 1] : undefined;
+		return undefined;
 	}
 }
+
+const isSupportedHost = (url: string): boolean => {
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+		const hostname = parsed.hostname.toLowerCase();
+		return hostname === 'y.qq.com' || hostname.endsWith('.y.qq.com');
+	} catch {
+		return false;
+	}
+};
+
+const hasPlaylistShape = (url: string, params: Record<string, string>): boolean => {
+	if (params.disstid) return true;
+	try {
+		const parsed = new URL(url);
+		return /(?:^|\/)playlist(?:\/|\.html(?:$|[?#]))/i.test(`${parsed.pathname}${parsed.search}`);
+	} catch {
+		return false;
+	}
+};
 
 /**
  * 解析分享链接。
@@ -119,12 +143,23 @@ export function parseShareUrl(input: string): ParsedShareUrl {
 	}
 
 	const raw = input.trim();
-	const url = extractUrl(raw);
+	const explicitScheme = raw.match(/^([a-z][a-z\d+.-]*):\/\//i)?.[1].toLowerCase();
+	if (explicitScheme && explicitScheme !== 'http' && explicitScheme !== 'https') {
+		return { raw, type: 'unknown', error: '仅支持 HTTP(S) QQ 音乐分享链接' };
+	}
+	const extractedUrl = extractUrl(raw);
+	const url = /^[a-z][a-z\d+.-]*:\/\//i.test(extractedUrl) ? extractedUrl : `https://${extractedUrl}`;
+
+	if (!isSupportedHost(url)) {
+		return { raw, type: 'unknown', error: '仅支持 QQ 音乐分享链接' };
+	}
+
 	const params = parseQueryParams(url);
+	const playlistShape = hasPlaylistShape(url, params);
 
 	// 策略 1:从 query 参数提取(`id` 或 `disstid`)
 	const idFromQuery = params.id || params.disstid || params.playlistId;
-	if (idFromQuery) {
+	if (idFromQuery && playlistShape) {
 		if (isNumericId(idFromQuery)) {
 			return { raw, type: 'songlist', disstid: idFromQuery };
 		}
@@ -135,7 +170,7 @@ export function parseShareUrl(input: string): ParsedShareUrl {
 
 	// 策略 2:从路径最后一段提取(如 /n/ryqq/playlist/<id>)
 	const lastSeg = getLastPathSegment(url);
-	if (lastSeg) {
+	if (lastSeg && playlistShape) {
 		if (isNumericId(lastSeg)) {
 			return { raw, type: 'songlist', disstid: lastSeg };
 		}
@@ -145,7 +180,7 @@ export function parseShareUrl(input: string): ParsedShareUrl {
 	}
 
 	// 策略 3:链接中包含 playlist 字样但未提取到 ID
-	if (/playlist/i.test(url) || /diss/i.test(url)) {
+	if (playlistShape || /playlist/i.test(url) || /diss/i.test(url)) {
 		return { raw, type: 'unknown', error: '识别到歌单链接但无法提取 ID' };
 	}
 

@@ -146,6 +146,9 @@ const paramMetadataByName: Record<string, Omit<ApiParamMetadata, 'name'>> = {
 		description: 'Resource or recommendation type.',
 		defaultValue: 1,
 	},
+	euin: {
+		description: 'Encrypted QQ Music UIN returned in the login session. Required by user profile RPCs.',
+	},
 	uin: {
 		description: 'QQ user UIN. Some MCP adapters also accept id as an alias.',
 		example: '123456789',
@@ -287,7 +290,7 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		method: 'GET',
 		path: '/user/getUserMedal',
 		description: 'Fetch the medal hall homepage header (sound power, medal totals, category stats).',
-		queryParams: params([{ name: 'cookie', required: true }]),
+		queryParams: params([{ name: 'euin' }, { name: 'cookie', required: true }]),
 		cookieRequired: true,
 	},
 	{
@@ -295,8 +298,8 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		category: 'user',
 		method: 'GET',
 		path: '/user/getMedalTabDetail',
-		description: 'List medals under a specific medal category tab. euin is read from the cookie.',
-		queryParams: params([{ name: 'tabId', required: true }, { name: 'cookie', required: true }]),
+		description: 'List medals under a specific medal category tab. euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'tabId', required: true }, { name: 'euin' }, { name: 'cookie', required: true }]),
 		cookieRequired: true,
 	},
 	{
@@ -304,8 +307,8 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		category: 'user',
 		method: 'GET',
 		path: '/user/getHideMedal',
-		description: 'List hidden/mystery medals. euin is read from the cookie.',
-		queryParams: params([{ name: 'cookie', required: true }]),
+		description: 'List hidden/mystery medals. euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'euin' }, { name: 'cookie', required: true }]),
 		cookieRequired: true,
 	},
 	{
@@ -313,8 +316,8 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		category: 'user',
 		method: 'GET',
 		path: '/user/getListeningCalendar',
-		description: 'Fetch the listening calendar (consecutive days, daily play records). euin is read from the cookie.',
-		queryParams: params([{ name: 'date' }, { name: 'cookie', required: true }]),
+		description: 'Fetch the listening calendar (consecutive days, daily play records). euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'date' }, { name: 'euin' }, { name: 'cookie', required: true }]),
 		cookieRequired: true,
 	},
 	{
@@ -340,8 +343,8 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		category: 'user',
 		method: 'GET',
 		path: '/user/getMusicGene',
-		description: 'Fetch the music gene report (top singers, music age, genre preferences). euin is read from the cookie.',
-		queryParams: params([{ name: 'cookie', required: true }]),
+		description: 'Fetch the music gene report (top singers, music age, genre preferences). euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'euin' }, { name: 'cookie', required: true }]),
 		cookieRequired: true,
 	},
 	{
@@ -349,8 +352,8 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		category: 'user',
 		method: 'GET',
 		path: '/user/getUserFavMv',
-		description: 'List MVs favorited by the current user. euin is read from the cookie.',
-		queryParams: params([{ name: 'page' }, { name: 'limit' }, { name: 'cookie', required: true }]),
+		description: 'List MVs favorited by the current user. euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'page' }, { name: 'limit' }, { name: 'euin' }, { name: 'cookie', required: true }]),
 		cookieRequired: true,
 	},
 	{

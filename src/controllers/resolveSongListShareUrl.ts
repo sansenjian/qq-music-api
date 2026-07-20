@@ -16,7 +16,17 @@ import { setApiResponse, withErrorHandler } from './util';
  *  - 无法识别为歌单链接的输入
  */
 const resolveSongListShareUrlController = withErrorHandler(async (ctx: KoaContext) => {
-	const url = (ctx.query.url as string) || (ctx.params.url as string) || '';
+	const queryString = (ctx as KoaContext & { querystring?: string }).querystring || '';
+	const rawUrlMatch = queryString.match(/(?:^|&)url=(.*)$/);
+	let rawUrl = rawUrlMatch?.[1];
+	if (rawUrl) {
+		try {
+			rawUrl = decodeURIComponent(rawUrl);
+		} catch {
+			// Keep the raw value so parseShareUrl can return a controlled 400.
+		}
+	}
+	const url = rawUrl || (ctx.query.url as string) || (ctx.params.url as string) || '';
 
 	if (!url || !url.trim()) {
 		setApiResponse(ctx, { status: 400, body: { response: '缺少参数 url:分享链接' } });
@@ -38,7 +48,7 @@ const resolveSongListShareUrlController = withErrorHandler(async (ctx: KoaContex
 		setApiResponse(ctx, {
 			status: 400,
 			body: {
-				response: `识别到字母 MID(${parsed.mid}),当前接口仅支持数字 disstid,请使用 /getSongListDetail 配合字母 MID 调用,或换一个数字 ID 的链接`,
+				response: `识别到字母 MID(${parsed.mid}),当前接口仅支持数字 disstid,请提供包含数字 ID 的歌单链接`,
 			},
 		});
 		return;
