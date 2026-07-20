@@ -7,7 +7,7 @@ import { handleApi } from '../../../util/apiResponse';
 import request from '../../../util/request';
 import type { ApiResponse } from '../../../types/api';
 
-const PART_1_INDEXES = [23, 14, 6, 36, 16, 40, 7, 19];
+const PART_1_INDEXES = [23, 14, 6, 36, 16, 7, 19];
 const PART_2_INDEXES = [16, 1, 32, 12, 19, 27, 8, 5];
 const SCRAMBLE_VALUES = [89, 39, 179, 150, 218, 82, 58, 252, 177, 52, 186, 123, 120, 64, 242, 133, 143, 161, 121, 179];
 
@@ -51,7 +51,13 @@ interface UserMusicuOptions {
 	signed?: boolean;
 }
 
-export const callUserMusicu = ({ module, method, param, cookie, signed = false }: UserMusicuOptions): Promise<ApiResponse> => {
+export const callUserMusicu = ({
+	module,
+	method,
+	param,
+	cookie,
+	signed = false,
+}: UserMusicuOptions): Promise<ApiResponse> => {
 	const payload = {
 		comm: buildComm(cookie),
 		req_1: { module, method, param },
@@ -69,11 +75,11 @@ export const callUserMusicu = ({ module, method, param, cookie, signed = false }
 				data: serializedPayload,
 				...(signed
 					? {
-						params: {
-							_: Date.now(),
-							sign: zzcSign(serializedPayload),
-						},
-					}
+							params: {
+								_: Date.now(),
+								sign: zzcSign(serializedPayload),
+							},
+						}
 					: {}),
 			},
 		}),

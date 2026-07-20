@@ -11,7 +11,7 @@
  *  2. 字符串但不含 JSONP 包装:尝试 `JSON.parse`,失败则原样返回。
  *  3. 字符串含 JSONP 包装:用 `indexOf('(')` 与 `lastIndexOf(')')` 剥离外层包装后 `JSON.parse`。
  *     非正则方案天然支持嵌套括号。
- *  4. 上一步失败:回退到贪婪正则 `/^\w+\(([\s\S]*)\)\s*;?\s*$/`(贪婪量词会捕获到最后一个 `)`)。
+ *  4. JSONP 内容解析失败:原样返回。
  *
  * 注:本函数修复了旧实现 `/^\w+\(([^()]+)\)$/` 在 JSON 内容含括号时匹配失败的问题。
  */
@@ -42,19 +42,6 @@ export function parseJsonp<T = unknown>(response: unknown): T {
 	try {
 		return JSON.parse(jsonStr) as T;
 	} catch {
-		// fall through 到正则方案
+		return response as T;
 	}
-
-	// 5. 兼容方案:贪婪正则,捕获 callback 名后第一个 '(' 到末尾最后一个 ')' 之间的内容
-	const matches = text.match(/^\w+\(([\s\S]*)\)\s*;?\s*$/);
-	if (matches && matches[1]) {
-		try {
-			return JSON.parse(matches[1]) as T;
-		} catch {
-			// fall through
-		}
-	}
-
-	// 6. 兜底:原样返回
-	return response as T;
 }

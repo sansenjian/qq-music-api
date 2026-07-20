@@ -25,7 +25,7 @@ export const getDislikeList = async ({
 		4: 'StyleLastid',
 	};
 	const param: Record<string, unknown> = { Cmd: cmd, Page: page };
-	if (lastid && lastidFields[cmd]) {
+	if (lastid !== undefined && lastidFields[cmd]) {
 		param[lastidFields[cmd]] = lastid;
 	}
 

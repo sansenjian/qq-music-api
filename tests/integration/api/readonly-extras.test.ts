@@ -214,6 +214,64 @@ describe('readonly jsososo parity APIs', () => {
 		expect(payload.comm.g_tk).toEqual(expect.any(Number));
 	});
 
+	test.each([
+		{
+			path: '/user/getUserMedal',
+			query: {},
+			module: 'music.medalHall.MedalHallHomepageSrv',
+			method: 'GetHomepageHeader',
+			param: { uin: 'encrypted-uin', IsQueryTabDetail: 1 },
+		},
+		{
+			path: '/user/getMedalTabDetail',
+			query: { tabId: '2' },
+			module: 'music.medalHall.MedalHallHomepageSrv',
+			method: 'GetHomepageTabDetail',
+			param: { tabId: 2, euin: 'encrypted-uin' },
+		},
+		{
+			path: '/user/getHideMedal',
+			query: {},
+			module: 'music.medalHall.MedalHallHomepageSecondarySrv',
+			method: 'GetHideMedal',
+			param: { euin: 'encrypted-uin' },
+		},
+		{
+			path: '/user/getListeningCalendar',
+			query: { date: '20260720' },
+			module: 'music.medalHall.MedalListeningCalendarSrv',
+			method: 'GetListeningCalendar',
+			param: { HostUin: 'encrypted-uin', Date: '20260720' },
+		},
+		{
+			path: '/user/getUserFavMv',
+			query: { page: '2', limit: '5' },
+			module: 'music.musicasset.MVFavRead',
+			method: 'getMyFavMV_v2',
+			param: { pagesize: 5, num: 1, encuin: 'encrypted-uin' },
+		},
+	])('$path builds the expected euin-authenticated payload', async ({ path, query, module, method, param }) => {
+		await request(callback)
+			.get(path)
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key', euin: 'encrypted-uin', ...query })
+			.expect(200);
+
+		expect(getLatestMusicuPayload().req_1).toMatchObject({ module, method, param });
+	});
+
+	test('GET /user/getFriendList builds a cookie-authenticated paginated payload', async () => {
+		await request(callback)
+			.get('/user/getFriendList')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key', page: '2', limit: '5' })
+			.expect(200);
+
+		expect(getLatestMusicuPayload().req_1).toMatchObject({
+			module: 'music.homepage.Friendship',
+			method: 'GetFriendList',
+			param: { PageSize: 5, Page: 1 },
+		});
+	});
+
 	test('GET /user/getDislikeList uses the signed musics endpoint', async () => {
 		await request(callback)
 			.get('/user/getDislikeList')
@@ -229,6 +287,34 @@ describe('readonly jsososo parity APIs', () => {
 		expect(options.params?.sign).toMatch(/^zzc/);
 		expect(options.params?._).toEqual(expect.any(Number));
 		expect(payload.req_1.param).toMatchObject({ Cmd: 3, Page: 2, SongLastid: 9 });
+	});
+
+	test.each(['1', '5', 'abc'])('GET /user/getDislikeList rejects invalid cmd=%s', async cmd => {
+		const response = await request(callback)
+			.get('/user/getDislikeList')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key', cmd })
+			.expect(400);
+
+		expect(response.body.error).toContain('cmd');
+		expect(mockFn).not.toHaveBeenCalled();
+	});
+
+	test('GET /user/getDislikeList ignores a non-numeric lastid', async () => {
+		await request(callback)
+			.get('/user/getDislikeList')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key', lastid: 'invalid' })
+			.expect(200);
+
+		expect(getLatestMusicuPayload().req_1.param).toEqual({ Cmd: 3, Page: 1 });
+	});
+
+	test('GET /user/getDislikeList preserves lastid=0', async () => {
+		await request(callback)
+			.get('/user/getDislikeList')
+			.query({ cookie: 'uin=o123456; qqmusic_key=mock-key', cmd: '2', lastid: '0' })
+			.expect(200);
+
+		expect(getLatestMusicuPayload().req_1.param).toMatchObject({ Cmd: 2, SingersLastid: 0 });
 	});
 
 	test('GET /user/getMusicGene forwards an explicit encrypted uin', async () => {
@@ -252,11 +338,25 @@ describe('readonly jsososo parity APIs', () => {
 
 	test('GET /resolveSongListShareUrl preserves an unencoded embedded ampersand', async () => {
 		await request(callback)
-			.get('/resolveSongListShareUrl')
-			.query({ url: 'https://i2.y.qq.com/n3/other/pages/details/playlist.html?appshare=android_qq&id=2029866739' })
+			.get(
+				'/resolveSongListShareUrl?url=https://i2.y.qq.com/n3/other/pages/details/playlist.html?appshare=android_qq&id=2029866739&format=json',
+			)
 			.expect(200);
 
 		const options = getLatestRequestOptions(mockFn) as { params?: { disstid?: string } };
 		expect(options.params?.disstid).toBe('2029866739');
+	});
+
+	test.each([
+		['missing URL', undefined],
+		['unsupported domain', 'https://example.com/n/ryqq/playlist/2029866739'],
+		['alphabetic MID', 'https://y.qq.com/n/ryqq/playlist/CBOE123456'],
+	])('GET /resolveSongListShareUrl rejects %s with a consistent error body', async (_label, url) => {
+		const endpoint = url ? `/resolveSongListShareUrl?url=${encodeURIComponent(url)}` : '/resolveSongListShareUrl';
+		const response = await request(callback).get(endpoint).expect(400);
+
+		expect(response.body.error).toEqual(expect.any(String));
+		expect(response.body).not.toHaveProperty('response');
+		expect(mockFn).not.toHaveBeenCalled();
 	});
 });

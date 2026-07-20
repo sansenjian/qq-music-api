@@ -16,7 +16,10 @@ const FALLBACK_REFERER = 'https://y.qq.com';
  * 构建一次请求的完整配置(headers、params、debug 日志)。
  * 抽出来便于失败后用不同 Referer 重试。
  */
-function buildAxiosConfig({ url, method = 'get', options = {}, hasCommonParams = true }: YCommonOptions, referer: string) {
+function buildAxiosConfig(
+	{ url, method = 'get', options = {}, hasCommonParams = true }: YCommonOptions,
+	referer: string,
+) {
 	const opts: AxiosRequestConfig = { ...options };
 
 	// Merge commonParams into params
@@ -30,7 +33,7 @@ function buildAxiosConfig({ url, method = 'get', options = {}, hasCommonParams =
 	opts.headers = {
 		referer: referer,
 		host: 'c.y.qq.com',
-		...opts.headers
+		...opts.headers,
 	};
 
 	if (process.env.DEBUG === 'true') {
@@ -59,7 +62,7 @@ function buildAxiosConfig({ url, method = 'get', options = {}, hasCommonParams =
  * 判定条件(满足任一即视为异常,触发重试):
  *  - 响应为 null / undefined / 空字符串
  *  - 响应为字符串且既不是 JSON 也不是 JSONP(以 '<' 开头通常是 HTML 错误页)
- *  - 响应为对象但为空(无任何可用的键)
+ *  - 响应为普通对象但为空(无任何可用的键)；数组(包括空数组)是合法数据
  */
 function looksValid(response: unknown): boolean {
 	if (response === null || response === undefined) return false;
@@ -77,6 +80,7 @@ function looksValid(response: unknown): boolean {
 	}
 
 	if (typeof response === 'object') {
+		if (Array.isArray(response)) return true;
 		// 空对象(可能是上游返回 {} 表示错误)
 		return Object.keys(response as Record<string, unknown>).length > 0;
 	}
@@ -99,8 +103,11 @@ function isRetryableError(error: unknown): boolean {
 	if (!error || typeof error !== 'object') return false;
 	const err = error as Record<string, unknown>;
 
-	// 网络层错误:ECONNRESET、ETIMEDOUT、ENOTFOUND、EAI_AGAIN、ECONNREFUSED 等
-	if (typeof err.code === 'string' && /^(ECONN|ETIMEDOUT|ENOTFOUND|EAI|EADDR|EHOSTUNREACH|ENETUNREACH)/.test(err.code)) {
+	// 网络层错误:Axios ERR_NETWORK、ECONNRESET、ETIMEDOUT、ENOTFOUND、EAI_AGAIN 等
+	if (
+		typeof err.code === 'string' &&
+		(err.code === 'ERR_NETWORK' || /^(ECONN|ETIMEDOUT|ENOTFOUND|EAI|EADDR|EHOSTUNREACH|ENETUNREACH)/.test(err.code))
+	) {
 		return true;
 	}
 

@@ -28,6 +28,9 @@ type UserReadonlyService = (params: {
 	cookie?: string;
 }) => Promise<ApiResponse>;
 
+const MISSING_COOKIE_ERROR = '缺少 cookie 参数';
+const MISSING_EUIN_ERROR = '缺少 euin 参数或登录凭证中的 encryptUin';
+
 const getSingleQueryValue = (value: unknown): string | undefined => {
 	if (Array.isArray(value)) return getSingleQueryValue(value[0]);
 	if (value === undefined || value === null) return undefined;
@@ -76,40 +79,39 @@ const createUserReadonlyController = (service: UserReadonlyService, name: string
 		setApiResponse(ctx, result);
 	}, name);
 
-// Cookie-only controllers (no uin required, identity derived from cookie)
-const createCookieOnlyController = (
-	service: (params: { cookie?: string }) => Promise<ApiResponse>,
-	name: string,
-) =>
+type AuthenticatedHandler = (
+	ctx: KoaContext,
+	auth: { cookie: string; euin?: string },
+) => Promise<ApiResponse | undefined>;
+
+const createAuthenticatedController = (handler: AuthenticatedHandler, name: string, requireEuin = false) =>
 	withErrorHandler(async (ctx: KoaContext) => {
 		const { cookie } = resolveRequestCookie(ctx);
 		if (!cookie) {
-			setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
+			setApiResponse(ctx, { status: 400, body: { error: MISSING_COOKIE_ERROR } });
 			return;
 		}
-		const result = await service({ cookie });
+
+		const euin = requireEuin ? resolveRequestEuin(ctx, cookie) : undefined;
+		if (requireEuin && !euin) {
+			setApiResponse(ctx, { status: 400, body: { error: MISSING_EUIN_ERROR } });
+			return;
+		}
+
+		const result = await handler(ctx, { cookie, euin });
+		if (!result) return;
 		setApiResponse(ctx, result);
 	}, name);
+
+// Cookie-only controllers (no uin required, identity derived from cookie)
+const createCookieOnlyController = (service: (params: { cookie?: string }) => Promise<ApiResponse>, name: string) =>
+	createAuthenticatedController((_ctx, { cookie }) => service({ cookie }), name);
 
 // Euin-based controllers (extract euin from cookie)
 const createEuinController = (
 	service: (params: { euin?: string; cookie?: string }) => Promise<ApiResponse>,
 	name: string,
-) =>
-	withErrorHandler(async (ctx: KoaContext) => {
-		const { cookie } = resolveRequestCookie(ctx);
-		if (!cookie) {
-			setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
-			return;
-		}
-		const euin = resolveRequestEuin(ctx, cookie);
-		if (!euin) {
-			setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
-			return;
-		}
-		const result = await service({ euin, cookie });
-		setApiResponse(ctx, result);
-	}, name);
+) => createAuthenticatedController((_ctx, { cookie, euin }) => service({ euin, cookie }), name, true);
 
 export const getUserDetailController = createUserReadonlyController(getUserDetail, 'getUserDetail');
 export const getUserCollectedSongListsController = createUserReadonlyController(
@@ -133,86 +135,59 @@ export const getVipInfoController = createCookieOnlyController(getVipInfo, 'getV
 export const getHideMedalController = createEuinController(getHideMedal, 'getHideMedal');
 export const getMusicGeneController = createEuinController(getMusicGene, 'getMusicGene');
 
-export const getMedalTabDetailController = withErrorHandler(async (ctx: KoaContext) => {
-	const { cookie } = resolveRequestCookie(ctx);
-	if (!cookie) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
-		return;
-	}
-	const euin = resolveRequestEuin(ctx, cookie);
-	if (!euin) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
-		return;
-	}
-	const tabIdRaw = getSingleQueryValue(ctx.query.tabId);
-	if (!tabIdRaw) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 tabId 参数' } });
-		return;
-	}
-	const tabId = Number(tabIdRaw);
-	if (!Number.isFinite(tabId)) {
-		setApiResponse(ctx, { status: 400, body: { error: 'tabId 必须为数字' } });
-		return;
-	}
-	const result = await getMedalTabDetail({ tabId, euin, cookie });
-	setApiResponse(ctx, result);
-}, 'getMedalTabDetail');
+export const getMedalTabDetailController = createAuthenticatedController(
+	async (ctx, { cookie, euin }) => {
+		const tabIdRaw = getSingleQueryValue(ctx.query.tabId);
+		if (!tabIdRaw) {
+			setApiResponse(ctx, { status: 400, body: { error: '缺少 tabId 参数' } });
+			return undefined;
+		}
+		const tabId = Number(tabIdRaw);
+		if (!Number.isFinite(tabId)) {
+			setApiResponse(ctx, { status: 400, body: { error: 'tabId 必须为数字' } });
+			return undefined;
+		}
+		return getMedalTabDetail({ tabId, euin, cookie });
+	},
+	'getMedalTabDetail',
+	true,
+);
 
-export const getListeningCalendarController = withErrorHandler(async (ctx: KoaContext) => {
-	const { cookie } = resolveRequestCookie(ctx);
-	if (!cookie) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
-		return;
-	}
-	const euin = resolveRequestEuin(ctx, cookie);
-	if (!euin) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
-		return;
-	}
-	const date = getSingleQueryValue(ctx.query.date);
-	const result = await getListeningCalendar({ euin, date, cookie });
-	setApiResponse(ctx, result);
-}, 'getListeningCalendar');
+export const getListeningCalendarController = createAuthenticatedController(
+	async (ctx, { cookie, euin }) => {
+		const date = getSingleQueryValue(ctx.query.date);
+		return getListeningCalendar({ euin, date, cookie });
+	},
+	'getListeningCalendar',
+	true,
+);
 
-export const getFriendListController = withErrorHandler(async (ctx: KoaContext) => {
-	const { cookie } = resolveRequestCookie(ctx);
-	if (!cookie) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
-		return;
-	}
+export const getFriendListController = createAuthenticatedController(async (ctx, { cookie }) => {
 	const page = getPaginationValue(ctx.query.page || ctx.query.pageNo, 1);
 	const limit = getPaginationValue(ctx.query.limit || ctx.query.pageSize, 20);
-	const result = await getFriendList({ page, limit, cookie });
-	setApiResponse(ctx, result);
+	return getFriendList({ page, limit, cookie });
 }, 'getFriendList');
 
-export const getUserFavMvController = withErrorHandler(async (ctx: KoaContext) => {
-	const { cookie } = resolveRequestCookie(ctx);
-	if (!cookie) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
-		return;
-	}
-	const euin = resolveRequestEuin(ctx, cookie);
-	if (!euin) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 euin 参数或登录凭证中的 encryptUin' } });
-		return;
-	}
-	const page = getPaginationValue(ctx.query.page || ctx.query.pageNo, 1);
-	const limit = getPaginationValue(ctx.query.limit || ctx.query.pageSize, 20);
-	const result = await getUserFavMv({ page, limit, euin, cookie });
-	setApiResponse(ctx, result);
-}, 'getUserFavMv');
+export const getUserFavMvController = createAuthenticatedController(
+	async (ctx, { cookie, euin }) => {
+		const page = getPaginationValue(ctx.query.page || ctx.query.pageNo, 1);
+		const limit = getPaginationValue(ctx.query.limit || ctx.query.pageSize, 20);
+		return getUserFavMv({ page, limit, euin, cookie });
+	},
+	'getUserFavMv',
+	true,
+);
 
-export const getDislikeListController = withErrorHandler(async (ctx: KoaContext) => {
-	const { cookie } = resolveRequestCookie(ctx);
-	if (!cookie) {
-		setApiResponse(ctx, { status: 400, body: { error: '缺少 cookie 参数' } });
-		return;
+export const getDislikeListController = createAuthenticatedController(async (ctx, { cookie }) => {
+	const cmdRaw = getSingleQueryValue(ctx.query.cmd);
+	const cmd = cmdRaw === undefined ? 3 : Number(cmdRaw);
+	if (!Number.isInteger(cmd) || ![2, 3, 4].includes(cmd)) {
+		setApiResponse(ctx, { status: 400, body: { error: 'cmd 必须为 2、3 或 4' } });
+		return undefined;
 	}
-	const cmd = getPaginationValue(ctx.query.cmd, 3);
 	const page = getPaginationValue(ctx.query.page || ctx.query.pageNo, 1);
 	const lastidRaw = getSingleQueryValue(ctx.query.lastid);
-	const lastid = lastidRaw ? Number(lastidRaw) : undefined;
-	const result = await getDislikeList({ cmd, page, lastid, cookie });
-	setApiResponse(ctx, result);
+	const parsedLastid = lastidRaw === undefined ? undefined : Number(lastidRaw);
+	const lastid = parsedLastid !== undefined && Number.isFinite(parsedLastid) ? parsedLastid : undefined;
+	return getDislikeList({ cmd, page, lastid, cookie });
 }, 'getDislikeList');

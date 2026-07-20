@@ -48,7 +48,8 @@ function isAlphaMid(s: string): boolean {
  */
 function extractUrl(input: string): string {
 	const trimmed = input.trim();
-	const trimUrlPunctuation = (value: string) => value.replace(/[.,!?;:)\]}\uFF0C\u3002\uFF01\uFF1F\uFF1B\uFF1A]+$/u, '');
+	const trimUrlPunctuation = (value: string) =>
+		value.replace(/[.,!?;:)\]}"'><《》【】）“”‘’\uFF0C\u3002\uFF01\uFF1F\uFF1B\uFF1A]+$/u, '');
 
 	// 优先匹配 http(s)://
 	const httpMatch = trimmed.match(/https?:\/\/[^\s\u4e00-\u9fa5]+/i);
@@ -125,7 +126,7 @@ const hasPlaylistShape = (url: string, params: Record<string, string>): boolean 
 	if (params.disstid) return true;
 	try {
 		const parsed = new URL(url);
-		return /(?:^|\/)playlist(?:\/|\.html(?:$|[?#]))/i.test(`${parsed.pathname}${parsed.search}`);
+		return /(?:^|\/)playlist(?:$|\/|\.html$)/i.test(parsed.pathname);
 	} catch {
 		return false;
 	}
