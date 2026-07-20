@@ -1,4 +1,5 @@
 import { handleApi } from '../../../util/apiResponse';
+import { parseJsonp } from '../../../util/parseJsonp';
 import y_common from '../y_common';
 import type { ApiOptions } from '../../../types/api';
 
@@ -20,16 +21,7 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
 			options
 		}),
 		{
-			transformData: (response: unknown) => {
-				if (typeof response === 'string') {
-					const reg = /^\w+\(([^()]+)\)$/;
-					const matches = response.match(reg);
-					if (matches) {
-						return JSON.parse(matches[1]);
-					}
-				}
-				return response;
-			}
+			transformData: (response: unknown) => parseJsonp(response)
 		}
 	);
 };

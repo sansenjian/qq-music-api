@@ -5,6 +5,7 @@ import { getConfigDir, resolveConfigPath } from './config-path';
 interface UserInfo {
 	loginUin: string;
 	uin?: string;
+	euin?: string;
 	cookie: string;
 	cookieList: string[];
 	cookieObject: Record<string, string>;
@@ -46,6 +47,7 @@ const normalizeUserInfo = (value: unknown): UserInfo => {
 	return {
 		loginUin: typeof parsed.loginUin === 'string' ? parsed.loginUin : '',
 		cookie: typeof parsed.cookie === 'string' ? parsed.cookie : '',
+		...(typeof parsed.euin === 'string' && parsed.euin.trim() ? { euin: parsed.euin.trim() } : {}),
 		cookieList: [],
 		cookieObject: {},
 		refreshData: () => ({}),

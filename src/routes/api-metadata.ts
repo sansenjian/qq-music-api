@@ -57,6 +57,10 @@ const paramMetadataByName: Record<string, Omit<ApiParamMetadata, 'name'>> = {
 	},
 	cid: { description: 'QQ Music comment topic category ID.', defaultValue: 205360772 },
 	cmd: { description: 'QQ Music comment command.', defaultValue: 8 },
+	date: {
+		description: 'Date string (YYYY-MM-DD). Used by listening calendar to scope the queried month.',
+		example: '2026-07-01',
+	},
 	cookie: {
 		description: 'QQ Music cookie. Used for login-required or member-only data. Values are never shown by MCP.',
 	},
@@ -80,6 +84,9 @@ const paramMetadataByName: Record<string, Omit<ApiParamMetadata, 'name'>> = {
 		example: '周杰伦',
 	},
 	lastId: { description: 'Pagination cursor from the previous related-playlist response.' },
+	lastid: {
+		description: 'Pagination cursor from the previous dislike-list response. Maps to SongLastid/SingersLastid/StyleLastid by cmd.',
+	},
 	lastmvid: { description: 'Pagination cursor from the previous related-MV response.' },
 	limit: { description: 'Maximum number of items to return.', defaultValue: 20 },
 	maxAge: {
@@ -129,11 +136,18 @@ const paramMetadataByName: Record<string, Omit<ApiParamMetadata, 'name'>> = {
 	songType: { description: 'Related playlist song type.', defaultValue: 0 },
 	songtype: { description: 'Related MV song type.', defaultValue: 0 },
 	sortId: { description: 'Playlist sort ID. 5 usually means latest or recommended sort.', defaultValue: 5 },
+	tabId: {
+		description: 'Medal category tab ID. 2 usually means 乐迷 (music fan).',
+		defaultValue: 2,
+	},
 	tagId: { description: 'Playlist tag ID from getPlaylistTags.', defaultValue: 1 },
 	topId: { description: 'Ranking list ID.', defaultValue: 4 },
 	type: {
 		description: 'Resource or recommendation type.',
 		defaultValue: 1,
+	},
+	euin: {
+		description: 'Encrypted QQ Music UIN returned in the login session. Required by user profile RPCs.',
 	},
 	uin: {
 		description: 'QQ user UIN. Some MCP adapters also accept id as an alias.',
@@ -271,6 +285,92 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		cookieRequired: true,
 	},
 	{
+		name: 'getUserMedal',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getUserMedal',
+		description: 'Fetch the medal hall homepage header (sound power, medal totals, category stats).',
+		queryParams: params([{ name: 'euin' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getMedalTabDetail',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getMedalTabDetail',
+		description: 'List medals under a specific medal category tab. euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'tabId', required: true }, { name: 'euin' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getHideMedal',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getHideMedal',
+		description: 'List hidden/mystery medals. euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'euin' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getListeningCalendar',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getListeningCalendar',
+		description: 'Fetch the listening calendar (consecutive days, daily play records). euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'date' }, { name: 'euin' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getVipInfo',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getVipInfo',
+		description: 'Fetch VIP membership details (expiry,豪华VIP, audio effect permissions).',
+		queryParams: params([{ name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getFriendList',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getFriendList',
+		description: 'List QQ Music friends of the current logged-in user.',
+		queryParams: params([{ name: 'page' }, { name: 'limit' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getMusicGene',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getMusicGene',
+		description: 'Fetch the music gene report (top singers, music age, genre preferences). euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'euin' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getUserFavMv',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getUserFavMv',
+		description: 'List MVs favorited by the current user. euin may be passed explicitly or come from the stored login session.',
+		queryParams: params([{ name: 'page' }, { name: 'limit' }, { name: 'euin' }, { name: 'cookie', required: true }]),
+		cookieRequired: true,
+	},
+	{
+		name: 'getDislikeList',
+		category: 'user',
+		method: 'GET',
+		path: '/user/getDislikeList',
+		description: 'List disliked items (songs/singers/styles). cmd selects the category; lastid is the pagination cursor.',
+		queryParams: params([
+			{ name: 'cmd', defaultValue: 3, enumValues: [2, 3, 4], description: '2=歌手 / 3=歌曲 / 4=风格' },
+			{ name: 'page' },
+			{ name: 'lastid' },
+			{ name: 'cookie', required: true },
+		]),
+		cookieRequired: true,
+	},
+	{
 		name: 'getDownloadQQMusic',
 		category: 'download',
 		method: 'GET',
@@ -365,6 +465,36 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		aliases: ['/getSongListDetail/:disstid'],
 		description: 'Fetch playlist details by disstid.',
 		queryParams: params([{ name: 'disstid', required: true }]),
+	},
+	{
+		name: 'resolveSongListShareUrl',
+		category: 'playlist',
+		method: 'GET',
+		path: '/resolveSongListShareUrl',
+		aliases: ['/resolveSongListShareUrl/:url'],
+		description:
+			'Parse a QQ Music playlist share URL (i2.y.qq.com playlist.html?id=..., y.qq.com/n/ryqq/playlist/<id>, etc.) and return the playlist details directly. Only numeric disstid URLs are supported; alphanumeric MID URLs return 400.',
+		queryParams: params([
+			{
+				name: 'url',
+				required: true,
+				description: 'QQ Music playlist share URL. Plain URL or text containing a URL is accepted.',
+				example:
+					'https://i2.y.qq.com/n3/other/pages/details/playlist.html?platform=11&appshare=android_qq&appversion=20040008&hosteuin=oKElNKviowv57n**&id=2029866739&ADTAG=qfshare',
+			},
+		]),
+		examples: [
+			{
+				label: 'Resolve share URL',
+				params: {
+					url: 'https://i2.y.qq.com/n3/other/pages/details/playlist.html?id=2029866739',
+				},
+			},
+			{
+				label: 'Resolve ryqq path URL',
+				params: { url: 'https://y.qq.com/n/ryqq/playlist/2029866739' },
+			},
+		],
 	},
 	{
 		name: 'getAlbumSongs',

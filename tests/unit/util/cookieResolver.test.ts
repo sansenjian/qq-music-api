@@ -1,6 +1,7 @@
 import type { UserInfo } from '../../../src/types';
 import {
   extractCookieValue,
+  extractEuinFromCookie,
   extractUinFromCookie,
   getCookieKeys,
   resolveRequestCookie,
@@ -56,6 +57,11 @@ describe('util/cookieResolver cookie value parsing', () => {
 
   test('should reuse cookie value parsing for uin extraction', () => {
     expect(extractUinFromCookie('qqmusic_key=mock-key; uin=o123456')).toBe('o123456');
+  });
+
+  test('should extract encrypted uin from supported cookie-like names', () => {
+    expect(extractEuinFromCookie('encryptUin=encrypted-uin')).toBe('encrypted-uin');
+    expect(extractEuinFromCookie('encrypt_uin=underscore-uin')).toBe('underscore-uin');
   });
 
   test('should prefer query cookie over headers, request, and global cookie', () => {

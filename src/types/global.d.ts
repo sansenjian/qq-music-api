@@ -6,6 +6,7 @@
 export interface UserInfo {
   loginUin: string;
   uin?: string;
+  euin?: string;
   cookie: string;
   cookieList: string[];
   cookieObject: Record<string, string>;

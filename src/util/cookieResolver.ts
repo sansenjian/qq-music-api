@@ -59,7 +59,19 @@ export const getCookieKeys = (cookie: string | undefined): string[] => {
 };
 
 export const extractUinFromCookie = (cookie?: string): string | undefined => {
-  return extractCookieValue(cookie, 'uin');
+	return extractCookieValue(cookie, 'uin');
+};
+
+/**
+ * Encrypted UIN is returned by the login RPC, but some callers persist it as
+ * a cookie-like value. Support both representations when one is available.
+ */
+export const extractEuinFromCookie = (cookie?: string): string | undefined => {
+	return (
+		extractCookieValue(cookie, 'euin') ||
+		extractCookieValue(cookie, 'encryptUin') ||
+		extractCookieValue(cookie, 'encrypt_uin')
+	);
 };
 
 export const setRequestCookieContext = (ctx: Context, cookie?: string) => {

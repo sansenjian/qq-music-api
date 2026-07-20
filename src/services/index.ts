@@ -71,6 +71,17 @@ import { getUserDetail } from './apis/user/getUserDetail';
 import { getUserCollectedAlbums, getUserCollectedSongLists } from './apis/user/getUserCollections';
 import { getUserFans, getUserFollowSingers, getUserFollowUsers } from './apis/user/getUserSocial';
 
+// user medal & profile extras (L-1124 research)
+import { getUserMedal } from './apis/user/getUserMedal';
+import { getMedalTabDetail } from './apis/user/getMedalTabDetail';
+import { getHideMedal } from './apis/user/getHideMedal';
+import { getListeningCalendar } from './apis/user/getListeningCalendar';
+import { getVipInfo } from './apis/user/getVipInfo';
+import { getFriendList } from './apis/user/getFriendList';
+import { getMusicGene } from './apis/user/getMusicGene';
+import { getUserFavMv } from './apis/user/getUserFavMv';
+import { getDislikeList } from './apis/user/getDislikeList';
+
 export {
 	downloadQQMusic,
 	// search
@@ -132,4 +143,14 @@ export {
 	getUserFollowSingers,
 	getUserFollowUsers,
 	getUserFans,
+	// medal & profile extras
+	getUserMedal,
+	getMedalTabDetail,
+	getHideMedal,
+	getListeningCalendar,
+	getVipInfo,
+	getFriendList,
+	getMusicGene,
+	getUserFavMv,
+	getDislikeList,
 };

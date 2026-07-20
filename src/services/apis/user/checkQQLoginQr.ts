@@ -6,6 +6,7 @@ import { setUserInfo } from '../../../config/user-info-store';
 interface LoginSession {
 	loginUin: string;
 	uin: string;
+	euin?: string;
 	cookie: string;
 	cookieList: string[];
 	cookieObject: Record<string, string>;
@@ -70,6 +71,38 @@ const buildLoginSession = (cookie: string): LoginSession => {
 		cookieList,
 		cookieObject,
 	};
+};
+
+const extractEncryptedUin = (text: string): string | undefined => {
+	if (!text.trim()) return undefined;
+
+	try {
+		const payload = JSON.parse(text) as unknown;
+		const visit = (value: unknown): string | undefined => {
+			if (!value || typeof value !== 'object') return undefined;
+			if (Array.isArray(value)) {
+				for (const item of value) {
+					const result = visit(item);
+					if (result) return result;
+				}
+				return undefined;
+			}
+
+			const record = value as Record<string, unknown>;
+			for (const key of ['encryptUin', 'encrypt_uin', 'euin']) {
+				if (typeof record[key] === 'string' && record[key].trim()) return record[key].trim();
+			}
+			for (const child of Object.values(record)) {
+				const result = visit(child);
+				if (result) return result;
+			}
+			return undefined;
+		};
+
+		return visit(payload);
+	} catch {
+		return undefined;
+	}
 };
 
 const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise<ApiResponse> => {
@@ -208,9 +241,11 @@ const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise
 			},
 		});
 		setCookie(loginRes.headers.get('Set-Cookie'));
+		const loginResponseText = await loginRes.text();
+		const euin = extractEncryptedUin(loginResponseText);
 
 		const sessionCookie = allCookie().join('; ');
-		const session = buildLoginSession(sessionCookie);
+		const session = { ...buildLoginSession(sessionCookie), ...(euin ? { euin } : {}) };
 
 		if (toBooleanParam(persistCookie)) {
 			setUserInfo({ ...session, refreshData: () => ({}) });
