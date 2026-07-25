@@ -62,15 +62,19 @@ const writeTypesFixture = () => {
 		path.join(typesDir, 'esm-consumer.mts'),
 		[
 			"import app from '@sansenjian/qq-music-api';",
+			"import appEntry from '@sansenjian/qq-music-api/app';",
 			"import { getMusicPlay } from '@sansenjian/qq-music-api/services';",
 			"import { checkQQLoginQr, getLyric, getMusicPlay as sdkGetMusicPlay, getQQLoginQr, search } from '@sansenjian/qq-music-api/sdk';",
 			"import type Koa = require('koa');",
 			'',
 			'const typedApp: Koa = app;',
+			'const typedAppEntry: Koa = appEntry;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'const appEntryCallback: ReturnType<typeof typedAppEntry.callback> = typedAppEntry.callback();',
 			'const serviceResult = getMusicPlay({ params: { songmid: "003rJSwm3TechU" } });',
 			'const sdkResult = search({ key: "周杰伦" });',
 			'void callback;',
+			'void appEntryCallback;',
 			'void serviceResult;',
 			'void sdkResult;',
 			'void sdkGetMusicPlay;',
@@ -98,15 +102,19 @@ const writeTypesFixture = () => {
 		path.join(typesDir, 'cjs-consumer.cts'),
 		[
 			"import app = require('@sansenjian/qq-music-api');",
+			"import appEntry = require('@sansenjian/qq-music-api/app');",
 			"import { getMusicPlay } from '@sansenjian/qq-music-api/services';",
 			"import { checkQQLoginQr, getLyric, getMusicPlay as sdkGetMusicPlay, getQQLoginQr, search } from '@sansenjian/qq-music-api/sdk';",
 			"import type Koa = require('koa');",
 			'',
 			'const typedApp: Koa = app;',
+			'const typedAppEntry: Koa = appEntry;',
 			'const callback: ReturnType<typeof typedApp.callback> = typedApp.callback();',
+			'const appEntryCallback: ReturnType<typeof typedAppEntry.callback> = typedAppEntry.callback();',
 			'const serviceResult = getMusicPlay({ params: { songmid: "003rJSwm3TechU" } });',
 			'const sdkResult = search({ key: "周杰伦" });',
 			'void callback;',
+			'void appEntryCallback;',
 			'void serviceResult;',
 			'void sdkResult;',
 			'void sdkGetMusicPlay;',
@@ -298,6 +306,50 @@ describe('Package Entry Compatibility', () => {
 			]);
 
 			expect(stdout.trim()).toBe('cjs ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should load the explicit app subpath through ESM import',
+		async () => {
+			const { stdout } = await runNode([
+				'--input-type=module',
+				'--eval',
+				`
+					const mod = await import('@sansenjian/qq-music-api/app');
+					if (typeof mod.default?.callback !== 'function') {
+						throw new Error('Expected ESM app entry to expose a Koa app');
+					}
+					console.log('esm app ok');
+				`,
+			]);
+
+			expect(stdout.trim()).toBe('esm app ok');
+			expect(fs.existsSync(configDir)).toBe(false);
+		},
+		60_000,
+	);
+
+	test(
+		'should load the explicit app subpath through CJS require',
+		async () => {
+			const { stdout } = await runNode([
+				'--eval',
+				`
+					const mod = require('@sansenjian/qq-music-api/app');
+					if (typeof mod.callback !== 'function') {
+						throw new Error('Expected CJS app entry to expose a Koa app');
+					}
+					if (Object.prototype.hasOwnProperty.call(mod, 'default')) {
+						throw new Error('Expected CJS app entry to work without a .default wrapper');
+					}
+					console.log('cjs app ok');
+				`,
+			]);
+
+			expect(stdout.trim()).toBe('cjs app ok');
 			expect(fs.existsSync(configDir)).toBe(false);
 		},
 		60_000,

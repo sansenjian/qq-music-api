@@ -24,6 +24,16 @@
 				"default": "./dist/index.cjs"
 			}
 		},
+		"./app": {
+			"import": {
+				"types": "./dist/app.d.mts",
+				"default": "./dist/app.js"
+			},
+			"require": {
+				"types": "./dist/app.d.cts",
+				"default": "./dist/app.cjs"
+			}
+		},
 		"./services": {
 			"import": {
 				"types": "./dist/services.d.mts",

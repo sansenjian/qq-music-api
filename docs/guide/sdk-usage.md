@@ -81,5 +81,12 @@ await getMusicPlay({
 ## 与 HTTP 服务的关系
 
 - `@sansenjian/qq-music-api` 默认入口仍然导出 Koa app，现有部署方式不变。
+- `@sansenjian/qq-music-api/app` 显式导出 Koa app，适合嵌入已有 Node.js 或 Electron 进程；不要依赖 `dist/*` 私有路径。
 - `@sansenjian/qq-music-api/sdk` 不启动 HTTP 服务。
 - `@sansenjian/qq-music-api/services` 面向需要底层参数控制的调用方，返回结构与现有 service 层保持一致。
+
+```ts
+import app from '@sansenjian/qq-music-api/app'
+
+app.listen(process.env.PORT || 3200)
+```

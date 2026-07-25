@@ -60,19 +60,30 @@ npm install @sansenjian/qq-music-api
 
 NPM 包默认包含运行所需的 `dist/`、本地交互测试页 `public/`，以及已构建的文档站点 `docs-dist/`。如果你只想在自己的发布产物中保留 API 运行时，可以在你的项目打包配置中自行排除 `node_modules/@sansenjian/qq-music-api/docs-dist/` 或 `node_modules/@sansenjian/qq-music-api/public/`。
 
-在项目中使用：
+### 包入口
+
+- `@sansenjian/qq-music-api`：默认入口，导出 Koa app，适合保持现有部署代码不变。
+- `@sansenjian/qq-music-api/app`：显式的 Koa app 入口，推荐在已有 Node.js 或 Electron 进程中嵌入服务。
+- `@sansenjian/qq-music-api/sdk`：函数式 SDK，不启动 HTTP 服务。
+- `@sansenjian/qq-music-api/services`：底层 service 函数入口。
+
+嵌入已有 Node.js 进程时，使用公开的 `app` 子路径，不要依赖 `dist/*` 私有构建路径：
 
 ```javascript
-const { spawn } = require('child_process');
-const path = require('path');
+// ESM
+import app from '@sansenjian/qq-music-api/app';
 
-const qqMusicPath = path.join(__dirname, 'node_modules', '@sansenjian/qq-music-api', 'dist', 'app.js');
-
-spawn('node', [qqMusicPath], {
-	env: { ...process.env, PORT: '3200' },
-	stdio: 'inherit',
-});
+app.listen(process.env.PORT || 3200);
 ```
+
+```javascript
+// CommonJS
+const app = require('@sansenjian/qq-music-api/app');
+
+app.listen(process.env.PORT || 3200);
+```
+
+如果需要启动独立 HTTP 服务，请使用项目的 `npm run start` 或已发布包提供的 `qq-music-api` CLI，而不是直接拼接 `dist/app.js` 路径。
 
 也可以直接在 Node.js 项目中函数式调用，不需要单独启动 HTTP 服务：
 
