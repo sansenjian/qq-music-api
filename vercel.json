@@ -3,7 +3,7 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 30,
-      "includeFiles": "src/**,dist/**,public/**,config/**"
+      "includeFiles": "src/**,config/**"
     }
   },
   "routes": [
