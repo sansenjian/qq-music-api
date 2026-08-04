@@ -2,7 +2,8 @@
   "buildCommand": "npm run vercel-build",
   "functions": {
     "api/index.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "src/**,dist/**,public/**,config/**"
     }
   },
   "routes": [

@@ -2,9 +2,6 @@
 	"name": "@sansenjian/qq-music-api",
 	"version": "2.4.0",
 	"packageManager": "npm@11.14.1",
-	"workspaces": [
-		"packages/mcp"
-	],
 	"publishConfig": {
 		"access": "public"
 	},
