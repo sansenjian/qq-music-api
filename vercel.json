@@ -11,6 +11,10 @@
       "handle": "filesystem"
     },
     {
+      "src": "/favicon.ico",
+      "dest": "/docs-dist/logo.svg"
+    },
+    {
       "src": "/",
       "dest": "/docs-dist/index.html"
     },
