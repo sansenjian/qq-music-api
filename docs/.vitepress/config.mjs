@@ -5,7 +5,7 @@ export default defineConfig({
   lang: 'zh-CN',
   title: 'QQ Music API',
   description: 'QQ 音乐 API 接口文档',
-  base: '/qq-music-api/',
+  base: process.env.VERCEL ? '/' : '/qq-music-api/',
   outDir: '../docs-dist',
   lastUpdated: true,
 
