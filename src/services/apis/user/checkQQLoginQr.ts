@@ -1,7 +1,6 @@
 import type { ApiFunction, ApiOptions, ApiResponse } from '../../../types/api';
 import { customResponse, errorResponse } from '../../../util/apiResponse';
-import { getGtk, getGuid, toBooleanParam } from '../../../util/loginUtils';
-import { setUserInfo } from '../../../config/user-info-store';
+import { getGtk, getGuid } from '../../../util/loginUtils';
 
 interface LoginSession {
 	loginUin: string;
@@ -106,7 +105,7 @@ const extractEncryptedUin = (text: string): string | undefined => {
 };
 
 const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise<ApiResponse> => {
-	const { ptqrtoken, qrsig, setCookie: persistCookie } = params;
+	const { ptqrtoken, qrsig } = params;
 	if (!ptqrtoken || !qrsig) {
 		return errorResponse('参数错误', 400);
 	}
@@ -246,10 +245,6 @@ const checkQQLoginQr: ApiFunction = async ({ params = {} }: ApiOptions): Promise
 
 		const sessionCookie = allCookie().join('; ');
 		const session = { ...buildLoginSession(sessionCookie), ...(euin ? { euin } : {}) };
-
-		if (toBooleanParam(persistCookie)) {
-			setUserInfo({ ...session, refreshData: () => ({}) });
-		}
 
 		return customResponse(
 			{

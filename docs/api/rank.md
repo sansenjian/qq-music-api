@@ -73,7 +73,9 @@ curl "http://localhost:3200/getRanks?topId=4&limit=20&resolveMid=true"
 
 QQ 音乐的播放链接 (`/getMusicPlay`) 需要 `songmid` 参数，而榜单接口通常只返回 `songid`。有两种方式：
 
-### 方式一：推荐 — 手动两步调用（默认、零额外请求）
+### 方式一：推荐 — 手动两步调用（默认、服务端零额外请求）
+
+这里的“零额外请求”是指 `/getRanks` 服务端不会自动请求歌曲详情；客户端仍需按需调用 `/getSongInfo` 获取 `songmid`。
 
 ```bash
 # Step 1: 先拿榜单
@@ -88,15 +90,15 @@ curl "http://localhost:3200/getSongInfo?songid=123456"
 curl "http://localhost:3200/getMusicPlay?songmid=0039MnYb0qxYhV"
 ```
 
-**优点：** 按需查询，不多发一次请求；客户端可以控制并发和缓存策略。
+**优点：** 服务端不会自动多发详情请求；客户端可以只查询需要的歌曲，并控制并发和缓存策略。
 
-### 方式二：一步到位 — `resolveMid=true`（N+1 请求）
+### 方式二：一步到位 — `resolveMid=true`（最多 N+1 请求）
 
 ```bash
 curl "http://localhost:3200/getRanks?topId=4&limit=20&resolveMid=true"
 ```
 
-服务端会对列表里每首缺少 `mid` 的歌曲额外调用一次详情接口，把 `song_mid` / `mid` 字段补上。
+服务端会按 `songId` 去重，并以最多 5 个并发请求查询缺少 `mid` 的歌曲详情，再补全 `song_mid` / `mid` 字段。
 
 **优点：** 调用方便，一步到位  
 **缺点：** N 首歌多 N 次请求，榜单较大时会明显变慢。请谨慎使用。

@@ -19,6 +19,13 @@ export const getUserFavMv = async ({
 	euin?: string;
 	cookie?: string;
 }) => {
+	if (!Number.isSafeInteger(page) || page < 1) {
+		throw new RangeError('page must be a positive integer');
+	}
+	if (!Number.isSafeInteger(limit) || limit < 1) {
+		throw new RangeError('limit must be a positive integer');
+	}
+
 	const param: Record<string, unknown> = {
 		pagesize: limit,
 		num: page - 1,

@@ -838,6 +838,7 @@ describe('API Integration Tests', () => {
 		});
 
 		test('POST /checkQQLoginQr should return session on success', async () => {
+			const originalUserInfo = global.userInfo;
 			(global as unknown as { fetch: Mock }).fetch = vi
 				.fn()
 				.mockResolvedValueOnce(
@@ -875,7 +876,7 @@ describe('API Integration Tests', () => {
 
 			const response = await request(callback)
 				.post('/checkQQLoginQr')
-				.send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig' })
+				.send({ ptqrtoken: 'mockToken', qrsig: 'mockQrSig', setCookie: true })
 				.expect(200);
 
 			expect(response.body.isOk).toBe(true);
@@ -892,6 +893,7 @@ describe('API Integration Tests', () => {
 				p_skey: 'mockPSkey',
 				qm_keyst: 'finalValue',
 			});
+			expect(global.userInfo).toBe(originalUserInfo);
 		});
 
 		test('POST /checkQQLoginQr should return 502 when checkSigUrl cannot be extracted', async () => {

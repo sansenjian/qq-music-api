@@ -24,6 +24,8 @@ interface SongDetailResponse {
   };
 }
 
+const MID_RESOLVE_CONCURRENCY = 5;
+
 /**
  * Fetch song mid by song id using the song detail API.
  * Logs errors so upstream / network issues remain visible while returning
@@ -35,7 +37,7 @@ const fetchSongMidBySongId = async (songId: number): Promise<string | undefined>
       method: 'get',
       params: {
         format: 'json',
-        data: {
+        data: JSON.stringify({
           comm: {
             ct: 24,
             cv: 0,
@@ -49,7 +51,7 @@ const fetchSongMidBySongId = async (songId: number): Promise<string | undefined>
             },
             module: 'music.pf_song_detail_svr',
           },
-        },
+        }),
       },
       option: {},
     });
@@ -63,6 +65,33 @@ const fetchSongMidBySongId = async (songId: number): Promise<string | undefined>
     console.error('[getRanks] Failed to resolve song mid by song id:', error);
     return undefined;
   }
+};
+
+const resolveSongMids = async (songs: NormalizedSong[]): Promise<Map<number, string>> => {
+  const songIds = [
+    ...new Set(
+      songs.flatMap(song => {
+        if (song.song_mid || song.mid || song.songId === undefined) return [];
+        const songId = Number(song.songId);
+        return Number.isFinite(songId) ? [songId] : [];
+      }),
+    ),
+  ];
+  const midBySongId = new Map<number, string>();
+  let nextIndex = 0;
+
+  const worker = async (): Promise<void> => {
+    while (nextIndex < songIds.length) {
+      const songId = songIds[nextIndex];
+      nextIndex += 1;
+      const mid = await fetchSongMidBySongId(songId);
+      if (mid) midBySongId.set(songId, mid);
+    }
+  };
+
+  const workerCount = Math.min(MID_RESOLVE_CONCURRENCY, songIds.length);
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  return midBySongId;
 };
 
 const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
@@ -126,26 +155,18 @@ const getRanksController = withErrorHandler(async (ctx: KoaContext) => {
   if (location) {
     const songList = location.container[location.key] as NormalizedSong[];
 
-    const normalizedList: NormalizedSong[] = await Promise.all(
-      songList.map(async (song) => {
-        const normalized = normalizeSongItem(song);
+    const normalizedList = songList.map(normalizeSongItem);
 
-        if (
-          resolveMid &&
-          !normalized.song_mid &&
-          !normalized.mid &&
-          normalized.songId !== undefined
-        ) {
-          const fetchedMid = await fetchSongMidBySongId(Number(normalized.songId));
-          if (fetchedMid) {
-            normalized.song_mid = fetchedMid;
-            normalized.mid = fetchedMid;
-          }
-        }
-
-        return normalized;
-      }),
-    );
+    if (resolveMid) {
+      const midBySongId = await resolveSongMids(normalizedList);
+      normalizedList.forEach(song => {
+        if (song.song_mid || song.mid || song.songId === undefined) return;
+        const fetchedMid = midBySongId.get(Number(song.songId));
+        if (!fetchedMid) return;
+        song.song_mid = fetchedMid;
+        song.mid = fetchedMid;
+      });
+    }
 
     location.container[location.key] = normalizedList;
   }

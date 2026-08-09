@@ -89,6 +89,7 @@ describe('routes/api-metadata', () => {
 		const limit = searchParams.find(param => param.name === 'limit');
 		const remoteplace = searchParams.find(param => param.name === 'remoteplace');
 		const imageSize = (getMetadataItem('getImageUrl').queryParams || []).find(param => param.name === 'size');
+		const avatarSize = (getMetadataItem('getUserAvatar').queryParams || []).find(param => param.name === 'size');
 		const musicQuality = (getMetadataItem('getMusicPlay').queryParams || []).find(param => param.name === 'quality');
 
 		expect(getMetadataItem('getSearchByKey').description).toContain('Search QQ Music');
@@ -104,6 +105,11 @@ describe('routes/api-metadata', () => {
 			defaultValue: '300x300',
 			example: '300x300',
 			enumValues: expect.arrayContaining(['150x150', '300x300', '800x800']),
+		});
+		expect(avatarSize).toMatchObject({
+			defaultValue: 140,
+			example: 140,
+			enumValues: [40, 100, 140, 640],
 		});
 		expect(musicQuality).toMatchObject({
 			defaultValue: '128',

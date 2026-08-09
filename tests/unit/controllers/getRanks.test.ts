@@ -337,6 +337,9 @@ describe('controllers/getRanks', () => {
     await getRanksController(mockCtx, mockNext);
 
     expect(UCommon).toHaveBeenCalledTimes(2);
+    const detailCall = (UCommon as Mock).mock.calls[1][0];
+    expect(detailCall.params.data).toEqual(expect.any(String));
+    expect(JSON.parse(detailCall.params.data).songinfo.param.song_id).toBe(123);
     const songList = mockCtx.body.response.req_1.data.data.songInfoList;
     expect(songList[0].songId).toBe(123);
     expect(songList[0].song_mid).toBe('detail_mid_123');
@@ -512,6 +515,40 @@ describe('controllers/getRanks', () => {
     expect(songList[0].songId).toBe(0);
     expect(songList[0].song_mid).toBe('mid_for_zero');
     expect(songList[0].mid).toBe('mid_for_zero');
+  });
+
+  test('should deduplicate song detail requests and cap resolveMid concurrency', async () => {
+    mockCtx.query = { resolveMid: 'true' };
+
+    const songInfoList = [1, 2, 3, 4, 5, 6, 7, 1].map(songId => ({ songId }));
+    const rankResponse = { req_1: { data: { data: { songInfoList } } } };
+    let activeRequests = 0;
+    let maxActiveRequests = 0;
+
+    (UCommon as Mock).mockResolvedValueOnce({ data: rankResponse }).mockImplementation(async ({ params }) => {
+      activeRequests += 1;
+      maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      activeRequests -= 1;
+
+      const songId = JSON.parse(params.data).songinfo.param.song_id;
+      return { data: { songinfo: { data: { track_info: { mid: `mid_${songId}` } } } } };
+    });
+
+    await getRanksController(mockCtx, mockNext);
+
+    expect(UCommon).toHaveBeenCalledTimes(8);
+    expect(maxActiveRequests).toBe(5);
+    expect(mockCtx.body.response.req_1.data.data.songInfoList.map((song: any) => song.mid)).toEqual([
+      'mid_1',
+      'mid_2',
+      'mid_3',
+      'mid_4',
+      'mid_5',
+      'mid_6',
+      'mid_7',
+      'mid_1',
+    ]);
   });
 });
 

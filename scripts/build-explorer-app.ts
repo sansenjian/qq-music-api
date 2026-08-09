@@ -10,7 +10,7 @@ await build({
 		emptyOutDir: false,
 		minify: false,
 		lib: {
-			entry: resolve(process.cwd(), 'src/explorer/explorerApp.ts'),
+			entry: resolve(process.cwd(), 'src/explorer/explorerBootstrap.ts'),
 			formats: ['iife'],
 			name: 'QqMusicApiExplorer',
 			fileName: () => 'app.js',
@@ -19,7 +19,7 @@ await build({
 		copyPublicDir: false,
 		rollupOptions: {
 			output: {
-				banner: '/* Generated from src/explorer/explorerApp.ts. Do not edit manually. */',
+				banner: '/* Generated from src/explorer/explorerBootstrap.ts. Do not edit manually. */',
 				extend: true,
 			},
 		},

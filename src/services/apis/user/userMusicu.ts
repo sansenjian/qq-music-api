@@ -22,14 +22,19 @@ export const zzcSign = (payload: string): string => {
 	return `zzc${part1}${base64}${part2}`.toLowerCase();
 };
 
+const getEffectiveCookie = (cookie?: string): string | undefined =>
+	cookie === undefined ? getUserInfo().cookie : cookie;
+
 const resolveUin = (cookie?: string): string => {
-	return extractUinFromCookie(cookie) || extractUinFromCookie(getUserInfo().cookie) || getUserUin('');
+	const effectiveCookie = getEffectiveCookie(cookie);
+	return extractUinFromCookie(effectiveCookie) || (cookie === undefined ? getUserUin('') : '');
 };
 
 const buildComm = (cookie?: string): Record<string, unknown> => {
+	const effectiveCookie = getEffectiveCookie(cookie);
 	const uin = resolveUin(cookie);
-	const authst = extractCookieValue(cookie, 'qqmusic_key') || extractCookieValue(getUserInfo().cookie, 'qqmusic_key');
-	const pSkey = extractCookieValue(cookie, 'p_skey') || extractCookieValue(getUserInfo().cookie, 'p_skey');
+	const authst = extractCookieValue(effectiveCookie, 'qqmusic_key');
+	const pSkey = extractCookieValue(effectiveCookie, 'p_skey');
 
 	return {
 		uin,

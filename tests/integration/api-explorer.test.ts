@@ -77,6 +77,8 @@ describe('API Explorer', () => {
 		expect(script.text).toContain('param.defaultValue');
 		expect(script.text).toContain('param.enumValues');
 		expect(script.text).toContain('field-help');
+		expect(script.text).toContain('requestSubmit()');
+		expect(script.text).toContain('DOMContentLoaded');
 	});
 
 	test('does not handle non-GET explorer metadata requests', async () => {

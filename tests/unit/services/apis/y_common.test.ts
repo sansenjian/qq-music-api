@@ -27,4 +27,13 @@ describe('services/apis/y_common', () => {
 		expect(requestMock.mock.calls[0][0].options.headers.referer).toBe('https://c.y.qq.com/');
 		expect(requestMock.mock.calls[1][0].options.headers.referer).toBe('https://y.qq.com');
 	});
+
+	test.each(['{invalid', 'callback(invalid)'])('retries malformed JSON or JSONP response: %s', async malformed => {
+		const fallbackResponse = { data: { code: 0 } };
+		requestMock.mockResolvedValueOnce({ data: malformed }).mockResolvedValueOnce(fallbackResponse);
+
+		await expect(yCommon({ url: '/test' })).resolves.toBe(fallbackResponse);
+		expect(requestMock).toHaveBeenCalledTimes(2);
+		expect(requestMock.mock.calls[1][0].options.headers.referer).toBe('https://y.qq.com');
+	});
 });

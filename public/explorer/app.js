@@ -1,4 +1,4 @@
-/* Generated from src/explorer/explorerApp.ts. Do not edit manually. */
+/* Generated from src/explorer/explorerBootstrap.ts. Do not edit manually. */
 (function(exports) {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	//#region src/explorer/explorerApp.ts
@@ -464,10 +464,7 @@
 		elements.requestForm.addEventListener("keydown", (event) => {
 			if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !elements.sendButton.disabled) {
 				event.preventDefault();
-				submitRequest(new SubmitEvent("submit", {
-					bubbles: true,
-					cancelable: true
-				}));
+				elements.requestForm.requestSubmit();
 			}
 		});
 		elements.resetButton.addEventListener("click", resetActiveEndpoint);
@@ -486,8 +483,19 @@
 			setResponse("加载失败", error instanceof Error ? error.message : String(error), "error");
 		});
 	};
-	initExplorerApp();
+	//#endregion
+	//#region src/explorer/explorerBootstrap.ts
+	var startExplorerApp = () => {
+		if (typeof document === "undefined") return;
+		const requestForm = document.getElementById("request-form");
+		const metadataPath = document.querySelector("script[data-metadata-path]")?.dataset.metadataPath;
+		if (!requestForm || !metadataPath) return;
+		initExplorerApp({ metadataPath });
+	};
+	if (typeof document !== "undefined") if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startExplorerApp, { once: true });
+	else startExplorerApp();
 	//#endregion
 	exports.getDeepLinkParams = getDeepLinkParams;
 	exports.initExplorerApp = initExplorerApp;
+	exports.startExplorerApp = startExplorerApp;
 })(this.QqMusicApiExplorer = this.QqMusicApiExplorer || {});

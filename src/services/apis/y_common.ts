@@ -1,5 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import request from '../../util/request';
+import { parseJsonp } from '../../util/parseJsonp';
 import * as config from '../config';
 
 interface YCommonOptions {
@@ -70,13 +71,8 @@ function looksValid(response: unknown): boolean {
 	if (typeof response === 'string') {
 		const trimmed = response.trim();
 		if (trimmed === '') return false;
-		// HTML 错误页通常以 '<' 开头
 		if (trimmed.startsWith('<')) return false;
-		// 既不是 JSON 也不是 JSONP 包装
-		const looksJson = trimmed.startsWith('{') || trimmed.startsWith('[');
-		const looksJsonp = /^\w+\(/.test(trimmed);
-		if (!looksJson && !looksJsonp) return false;
-		return true;
+		return parseJsonp(response) !== response;
 	}
 
 	if (typeof response === 'object') {

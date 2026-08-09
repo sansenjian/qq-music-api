@@ -98,9 +98,9 @@ const waitForHttpServer = async (server: ChildProcessWithoutNullStreams, getLogs
 			if (response.ok) {
 				return;
 			}
-		} catch {
-			await delay(250);
-		}
+		} catch {}
+
+		await delay(250);
 	}
 
 	throw new Error(`HTTP server did not become ready on ${baseUrl}.\n${getLogs()}`);
@@ -175,7 +175,12 @@ class JsonRpcStdioClient {
 				continue;
 			}
 
-			const response = JSON.parse(line) as JsonRpcResponse;
+			let response: JsonRpcResponse;
+			try {
+				response = JSON.parse(line) as JsonRpcResponse;
+			} catch {
+				continue;
+			}
 			const pending = this.pending.get(response.id);
 			if (!pending) {
 				continue;

@@ -683,7 +683,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 	elements.requestForm.addEventListener('keydown', event => {
 		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !elements.sendButton.disabled) {
 			event.preventDefault();
-			void submitRequest(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+			elements.requestForm.requestSubmit();
 		}
 	});
 	elements.resetButton.addEventListener('click', resetActiveEndpoint);
@@ -703,5 +703,3 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 		setResponse('加载失败', error instanceof Error ? error.message : String(error), 'error');
 	});
 };
-
-initExplorerApp();

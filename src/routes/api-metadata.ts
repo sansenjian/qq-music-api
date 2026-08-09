@@ -267,7 +267,7 @@ const rawApiMetadata: ApiMetadataItem[] = [
 		queryParams: params([
 			{ name: 'uin' },
 			{ name: 'k' },
-			{ name: 'size', defaultValue: 140, enumValues: [40, 100, 140, 640] },
+			{ name: 'size', defaultValue: 140, example: 140, enumValues: [40, 100, 140, 640] },
 		]),
 	},
 	{
