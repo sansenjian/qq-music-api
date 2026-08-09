@@ -3,7 +3,6 @@
 type ApiMethod = 'GET' | 'POST' | 'DELETE';
 type ParamValue = string | number | boolean;
 type ParamKind = 'path' | 'query';
-type ResponseBody = string | Record<string, unknown> | unknown[];
 
 interface ApiParamMetadata {
 	name: string;
@@ -36,6 +35,11 @@ interface RequestLog {
 	url: string;
 	status: number | 'ERR';
 	duration: number;
+	pathParams: Record<string, string>;
+	queryParams: Record<string, string>;
+	body: string;
+	responseMeta: string;
+	responseText: string;
 }
 
 interface ExplorerState {
@@ -63,8 +67,10 @@ interface ExplorerElements {
 	requestUrl: HTMLElement;
 	sendButton: HTMLButtonElement;
 	resetButton: HTMLButtonElement;
+	copyUrlButton: HTMLButtonElement;
 	responseMeta: HTMLElement;
 	responseOutput: HTMLElement;
+	copyResponseButton: HTMLButtonElement;
 	requestLogs: HTMLElement;
 	clearLogsButton: HTMLButtonElement;
 }
@@ -102,8 +108,10 @@ const getElements = (): ExplorerElements => ({
 	requestUrl: getRequiredElement('request-url'),
 	sendButton: getRequiredElement<HTMLButtonElement>('send-button'),
 	resetButton: getRequiredElement<HTMLButtonElement>('reset-button'),
+	copyUrlButton: getRequiredElement<HTMLButtonElement>('copy-url-button'),
 	responseMeta: getRequiredElement('response-meta'),
 	responseOutput: getRequiredElement('response-output'),
+	copyResponseButton: getRequiredElement<HTMLButtonElement>('copy-response-button'),
 	requestLogs: getRequiredElement('request-logs'),
 	clearLogsButton: getRequiredElement<HTMLButtonElement>('clear-logs-button'),
 });
@@ -164,6 +172,52 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 	};
 	const elements = getElements();
 
+	const setResponse = (meta: string, text: string, responseState: 'idle' | 'loading' | 'success' | 'error'): void => {
+		elements.responseMeta.textContent = meta;
+		elements.responseMeta.dataset.state = responseState;
+		elements.responseOutput.textContent = text;
+		elements.responseOutput.dataset.state = responseState;
+		elements.copyResponseButton.disabled = responseState === 'idle' || responseState === 'loading';
+	};
+
+	const clearResponse = (): void => {
+		setResponse('等待请求', '发送请求后，响应会显示在这里。', 'idle');
+	};
+
+	const copyText = async (value: string): Promise<void> => {
+		if (navigator.clipboard?.writeText) {
+			await navigator.clipboard.writeText(value);
+			return;
+		}
+
+		const textarea = document.createElement('textarea');
+		textarea.value = value;
+		textarea.style.position = 'fixed';
+		textarea.style.opacity = '0';
+		document.body.append(textarea);
+		try {
+			textarea.select();
+			if (!document.execCommand('copy')) throw new Error('当前浏览器不支持复制');
+		} finally {
+			textarea.remove();
+		}
+	};
+
+	const withCopyFeedback = async (button: HTMLButtonElement, value: string): Promise<void> => {
+		const defaultLabel = button.dataset.defaultLabel || button.textContent || '复制';
+		button.dataset.defaultLabel = defaultLabel;
+		try {
+			await copyText(value);
+			button.textContent = '已复制';
+		} catch {
+			button.textContent = '复制失败';
+		} finally {
+			window.setTimeout(() => {
+				button.textContent = defaultLabel;
+			}, 1400);
+		}
+	};
+
 	const setEndpointCount = () => {
 		const total = state.endpoints.length;
 		const visible = state.filteredEndpoints.length;
@@ -204,6 +258,17 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 	const updateRequestUrl = (): void => {
 		elements.requestUrl.textContent = buildUrl();
 	};
+
+	const captureParamValues = (endpoint: ApiMetadataItem): { pathParams: Record<string, string>; queryParams: Record<string, string> } => ({
+		pathParams: Object.fromEntries(
+			getPathParams(getActivePath(endpoint)).map(name => [name, getInputValue('path', name)]),
+		),
+		queryParams: Object.fromEntries(
+			(endpoint.queryParams || [])
+				.map(param => [param.name, getInputValue('query', param.name)] as const)
+				.filter(([, value]) => value),
+		),
+	});
 
 	const createField = (kind: ParamKind, param: ApiParamMetadata): HTMLLabelElement => {
 		const label = document.createElement('label');
@@ -274,6 +339,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 		const endpoint = state.activeEndpoint;
 		elements.sendButton.disabled = !endpoint;
 		elements.resetButton.disabled = !endpoint;
+		elements.copyUrlButton.disabled = !endpoint;
 
 		if (!endpoint) {
 			elements.activeCategory.textContent = '未选择';
@@ -285,6 +351,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 			elements.bodySection.classList.add('hidden');
 			elements.bodyInput.value = '';
 			updateRequestUrl();
+			clearResponse();
 			return;
 		}
 
@@ -393,6 +460,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 				state.activeEndpoint = endpoint;
 				renderEndpointList();
 				renderActiveEndpoint();
+				clearResponse();
 			});
 			elements.endpointList.append(button);
 		}
@@ -446,6 +514,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 			const item = document.createElement('button');
 			item.type = 'button';
 			item.className = 'log-item';
+			item.dataset.state = log.status === 'ERR' || (typeof log.status === 'number' && log.status >= 400) ? 'error' : 'success';
 
 			const summary = document.createElement('strong');
 			summary.textContent = `${log.method} ${log.endpointName}`;
@@ -455,8 +524,17 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 
 			item.append(summary, meta);
 			item.addEventListener('click', () => {
-				elements.responseMeta.textContent = `${log.status} · ${log.duration}ms`;
-				elements.requestUrl.textContent = log.url;
+				const endpoint = state.endpoints.find(candidate => candidate.name === log.endpointName);
+				if (!endpoint) return;
+
+				state.activeEndpoint = endpoint;
+				renderEndpointList();
+				renderActiveEndpoint();
+				Object.entries(log.pathParams).forEach(([name, value]) => setInputValue('path', name, value));
+				Object.entries(log.queryParams).forEach(([name, value]) => setInputValue('query', name, value));
+				elements.bodyInput.value = log.body;
+				updateRequestUrl();
+				setResponse(log.responseMeta, log.responseText, log.status === 'ERR' || (typeof log.status === 'number' && log.status >= 400) ? 'error' : 'success');
 			});
 			elements.requestLogs.append(item);
 		});
@@ -467,11 +545,21 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 		url,
 		status,
 		duration,
+		pathParams,
+		queryParams,
+		body,
+		responseMeta,
+		responseText,
 	}: {
 		endpoint: ApiMetadataItem;
 		url: string;
 		status: number | 'ERR';
 		duration: number;
+		pathParams: Record<string, string>;
+		queryParams: Record<string, string>;
+		body: string;
+		responseMeta: string;
+		responseText: string;
 	}): void => {
 		state.logs.unshift({
 			id: Date.now(),
@@ -480,6 +568,11 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 			url,
 			status,
 			duration,
+			pathParams,
+			queryParams,
+			body,
+			responseMeta,
+			responseText,
 		});
 		state.logs = state.logs.slice(0, 30);
 		renderLogs();
@@ -492,6 +585,8 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 
 		const url = buildUrl();
 		const init: RequestInit = { method: endpoint.method };
+		const requestParams = captureParamValues(endpoint);
+		const requestBody = elements.bodyInput.value;
 
 		if (endpoint.method !== 'GET') {
 			const rawBody = elements.bodyInput.value.trim();
@@ -500,32 +595,58 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 					init.body = JSON.stringify(JSON.parse(rawBody)) as BodyInit;
 					init.headers = { 'Content-Type': 'application/json' };
 				} catch (error) {
-					elements.responseMeta.textContent = 'JSON 格式错误';
-					elements.responseOutput.textContent = error instanceof Error ? error.message : String(error);
+					const responseMeta = 'JSON 格式错误';
+					const responseText = error instanceof Error ? error.message : String(error);
+					setResponse(responseMeta, responseText, 'error');
 					return;
 				}
 			}
 		}
 
 		elements.sendButton.disabled = true;
-		elements.responseMeta.textContent = '请求中...';
+		setResponse('请求中...', '正在等待服务响应...', 'loading');
 		const startedAt = performance.now();
 
 		try {
 			const response = await fetch(url, init);
 			const duration = Math.round(performance.now() - startedAt);
 			const contentType = response.headers.get('content-type') || '';
-			const body = (
-				contentType.includes('application/json') ? await response.json() : await response.text()
-			) as ResponseBody;
-			elements.responseMeta.textContent = `${response.status} ${response.statusText} · ${duration}ms`;
-			elements.responseOutput.textContent = typeof body === 'string' ? body : formatJson(body);
-			addLog({ endpoint, url, status: response.status, duration });
+			const rawBody = await response.text();
+			let responseText = rawBody;
+			if (contentType.includes('application/json') && rawBody) {
+				try {
+					responseText = formatJson(JSON.parse(rawBody));
+				} catch {
+					responseText = rawBody;
+				}
+			}
+			const responseMeta = `${response.status} ${response.statusText} · ${duration}ms`;
+			setResponse(responseMeta, responseText, response.ok ? 'success' : 'error');
+			addLog({
+				endpoint,
+				url,
+				status: response.status,
+				duration,
+				...requestParams,
+				body: requestBody,
+				responseMeta,
+				responseText,
+			});
 		} catch (error) {
 			const duration = Math.round(performance.now() - startedAt);
-			elements.responseMeta.textContent = `请求失败 · ${duration}ms`;
-			elements.responseOutput.textContent = error instanceof Error ? error.message : String(error);
-			addLog({ endpoint, url, status: 'ERR', duration });
+			const responseMeta = `请求失败 · ${duration}ms`;
+			const responseText = error instanceof Error ? error.message : String(error);
+			setResponse(responseMeta, responseText, 'error');
+			addLog({
+				endpoint,
+				url,
+				status: 'ERR',
+				duration,
+				...requestParams,
+				body: requestBody,
+				responseMeta,
+				responseText,
+			});
 		} finally {
 			elements.sendButton.disabled = false;
 		}
@@ -533,6 +654,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 
 	const resetActiveEndpoint = (): void => {
 		renderActiveEndpoint();
+		clearResponse();
 	};
 
 	const loadMetadata = async (): Promise<void> => {
@@ -558,7 +680,19 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 	elements.requestForm.addEventListener('submit', event => {
 		void submitRequest(event as SubmitEvent);
 	});
+	elements.requestForm.addEventListener('keydown', event => {
+		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !elements.sendButton.disabled) {
+			event.preventDefault();
+			void submitRequest(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+		}
+	});
 	elements.resetButton.addEventListener('click', resetActiveEndpoint);
+	elements.copyUrlButton.addEventListener('click', () => {
+		void withCopyFeedback(elements.copyUrlButton, buildUrl());
+	});
+	elements.copyResponseButton.addEventListener('click', () => {
+		void withCopyFeedback(elements.copyResponseButton, elements.responseOutput.textContent || '');
+	});
 	elements.clearLogsButton.addEventListener('click', () => {
 		state.logs = [];
 		renderLogs();
@@ -566,8 +700,7 @@ export const initExplorerApp = (options: ExplorerAppOptions = {}): void => {
 
 	loadMetadata().catch(error => {
 		elements.endpointCount.textContent = '接口加载失败';
-		elements.responseMeta.textContent = '加载失败';
-		elements.responseOutput.textContent = error instanceof Error ? error.message : String(error);
+		setResponse('加载失败', error instanceof Error ? error.message : String(error), 'error');
 	});
 };
 
