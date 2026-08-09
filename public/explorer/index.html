@@ -67,7 +67,8 @@
 						</label>
 
 						<div class="url-box">
-							<span id="request-url">/</span>
+							<code id="request-url">/</code>
+							<button id="copy-url-button" type="button" title="复制当前请求地址">复制 URL</button>
 						</div>
 
 						<div class="actions">
@@ -78,12 +79,15 @@
 				</section>
 
 				<section class="result-panel" aria-label="响应和日志">
-					<div class="response-box">
+				<div class="response-box">
 						<div class="section-heading">
 							<h2>响应</h2>
-							<span id="response-meta">等待请求</span>
+							<div class="section-actions">
+								<span id="response-meta" aria-live="polite" data-state="idle">等待请求</span>
+								<button id="copy-response-button" type="button" title="复制响应内容" disabled>复制响应</button>
+							</div>
 						</div>
-						<pre id="response-output">{}</pre>
+						<pre id="response-output">发送请求后，响应会显示在这里。</pre>
 					</div>
 
 					<div class="log-box">

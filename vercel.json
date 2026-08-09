@@ -1,33 +1,35 @@
 {
   "buildCommand": "npm run vercel-build",
+  "outputDirectory": "docs-dist",
   "functions": {
     "api/index.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "{src,config,public}/**"
     }
   },
   "routes": [
     {
-      "handle": "filesystem"
+      "src": "/favicon.ico",
+      "dest": "/logo.svg"
     },
     {
       "src": "/",
-      "dest": "/docs-dist/index.html"
+      "dest": "/index.html"
     },
     {
-      "src": "/(guide|api|reference)",
-      "dest": "/docs-dist/$1/index.html"
+      "src": "/(guide|api|reference)/?",
+      "dest": "/$1/index.html"
+    },
+    {
+      "src": "/(guide|api|reference)/(.*\\.html)",
+      "dest": "/$1/$2"
     },
     {
       "src": "/(guide|api|reference)/(.*)",
-      "dest": "/docs-dist/$1/$2"
+      "dest": "/$1/$2.html"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/docs-dist/assets/$1"
-    },
-    {
-      "src": "\\.(html|css|js|png|jpg|svg|woff2|json)$",
-      "dest": "/docs-dist$&"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
