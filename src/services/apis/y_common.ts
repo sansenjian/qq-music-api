@@ -72,7 +72,9 @@ function looksValid(response: unknown): boolean {
 		const trimmed = response.trim();
 		if (trimmed === '') return false;
 		if (trimmed.startsWith('<')) return false;
-		return parseJsonp(response) !== response;
+		const parsed = parseJsonp(response);
+		if (parsed === response) return false;
+		return parsed === null || typeof parsed === 'object' ? looksValid(parsed) : true;
 	}
 
 	if (typeof response === 'object') {

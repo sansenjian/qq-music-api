@@ -1,5 +1,6 @@
 import { setUserInfo } from '../../../../../src/config/user-info-store';
 import { callUserMusicu, zzcSign } from '../../../../../src/services/apis/user/userMusicu';
+import { getGtk } from '../../../../../src/util/loginUtils';
 
 const { requestMock } = vi.hoisted(() => ({ requestMock: vi.fn() }));
 
@@ -34,5 +35,21 @@ describe('services/apis/user/userMusicu', () => {
 		expect(payload.comm).toMatchObject({ uin: 'request-user', loginUin: 'request-user' });
 		expect(payload.comm).not.toHaveProperty('authst');
 		expect(payload.comm).not.toHaveProperty('g_tk');
+	});
+
+	test('uses default-session credentials when no explicit cookie is provided', async () => {
+		await callUserMusicu({
+			module: 'test.module',
+			method: 'TestMethod',
+			param: {},
+		});
+
+		const payload = JSON.parse(requestMock.mock.calls[0][0].options.data);
+		expect(payload.comm).toMatchObject({
+			uin: 'global-cookie',
+			loginUin: 'global-cookie',
+			authst: 'global-key',
+			g_tk: getGtk('global-skey'),
+		});
 	});
 });

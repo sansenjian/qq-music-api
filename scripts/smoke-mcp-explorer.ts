@@ -1,17 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
-
-interface JsonRpcResponse<T = unknown> {
-	jsonrpc: '2.0';
-	id: number;
-	result?: T;
-	error?: {
-		code: number;
-		message: string;
-		data?: unknown;
-	};
-}
+import { parseJsonRpcResponse } from './smoke-mcp-explorer-utils';
 
 interface McpTool {
 	name: string;
@@ -175,12 +165,8 @@ class JsonRpcStdioClient {
 				continue;
 			}
 
-			let response: JsonRpcResponse;
-			try {
-				response = JSON.parse(line) as JsonRpcResponse;
-			} catch {
-				continue;
-			}
+			const response = parseJsonRpcResponse(line);
+			if (response === undefined) continue;
 			const pending = this.pending.get(response.id);
 			if (!pending) {
 				continue;
