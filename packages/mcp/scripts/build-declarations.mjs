@@ -10,7 +10,9 @@ const packageRoot = resolve(scriptDir, '..');
 const projectRoot = resolve(packageRoot, '..', '..');
 const tempDir = join(packageRoot, 'dist', '.types-temp');
 const generatedSourceDir = join(tempDir, 'packages', 'mcp', 'src');
-const tscBin = require.resolve('typescript/bin/tsc');
+// TypeScript 7 (native port) no longer exports "./bin/tsc" via "exports",
+// so resolve the package root through the allowed "./package.json" subpath.
+const tscBin = join(dirname(require.resolve('typescript/package.json')), 'bin', 'tsc');
 
 rmSync(tempDir, { recursive: true, force: true });
 

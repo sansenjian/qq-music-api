@@ -6,6 +6,9 @@ export default defineConfig({
 		globals: true,
 		environment: 'node',
 		include: ['tests/**/*.test.ts'],
+		// Vitest 5 defaults `clearMocks` to true; keep the previous behavior
+		// (mock call history is asserted across test boundaries in this suite).
+		clearMocks: false,
 		coverage: {
 			provider: 'v8',
 			include: ['src/**/*.ts'],

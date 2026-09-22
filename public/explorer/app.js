@@ -390,7 +390,9 @@
 					init.body = JSON.stringify(JSON.parse(rawBody));
 					init.headers = { "Content-Type": "application/json" };
 				} catch (error) {
-					setResponse("JSON 格式错误", error instanceof Error ? error.message : String(error), "error");
+					const responseMeta = "JSON 格式错误";
+					const responseText = error instanceof Error ? error.message : String(error);
+					setResponse(responseMeta, responseText, "error");
 					return;
 				}
 			}
@@ -446,7 +448,8 @@
 		const loadMetadata = async () => {
 			const response = await fetch(metadataPath);
 			if (!response.ok) throw new Error(`Metadata request failed: ${response.status}`);
-			state.endpoints = [...(await response.json()).endpoints].sort((a, b) => `${a.category}.${a.name}`.localeCompare(`${b.category}.${b.name}`));
+			const metadata = await response.json();
+			state.endpoints = [...metadata.endpoints].sort((a, b) => `${a.category}.${a.name}`.localeCompare(`${b.category}.${b.name}`));
 			state.filteredEndpoints = state.endpoints;
 			state.activeEndpoint = findDeepLinkedEndpoint(state.endpoints) || state.endpoints[0] || null;
 			populateFilters();
@@ -492,8 +495,10 @@
 		if (!requestForm || !metadataPath) return;
 		initExplorerApp({ metadataPath });
 	};
-	if (typeof document !== "undefined") if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startExplorerApp, { once: true });
-	else startExplorerApp();
+	if (typeof document !== "undefined") {
+		if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startExplorerApp, { once: true });
+		else startExplorerApp();
+	}
 	//#endregion
 	exports.getDeepLinkParams = getDeepLinkParams;
 	exports.initExplorerApp = initExplorerApp;
