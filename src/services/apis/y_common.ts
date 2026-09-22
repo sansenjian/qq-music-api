@@ -13,13 +13,19 @@ interface YCommonOptions {
 const PRIMARY_REFERER = 'https://c.y.qq.com/';
 const FALLBACK_REFERER = 'https://y.qq.com';
 
+/** c.y.qq.com 网页 API 的备用镜像域名(同路径 fcgi-bin 接口,实测数据一致)。 */
+const FALLBACK_HOST = 'i.y.qq.com';
+
+type YCommonBase = 'c' | 'i';
+
 /**
  * 构建一次请求的完整配置(headers、params、debug 日志)。
- * 抽出来便于失败后用不同 Referer 重试。
+ * 抽出来便于失败后用不同 Referer / 镜像域名重试。
  */
 function buildAxiosConfig(
 	{ url, method = 'get', options = {}, hasCommonParams = true }: YCommonOptions,
 	referer: string,
+	base: YCommonBase = 'c',
 ) {
 	const opts: AxiosRequestConfig = { ...options };
 
@@ -33,7 +39,7 @@ function buildAxiosConfig(
 
 	opts.headers = {
 		referer: referer,
-		host: 'c.y.qq.com',
+		host: base === 'i' ? FALLBACK_HOST : 'c.y.qq.com',
 		...opts.headers,
 	};
 
@@ -51,7 +57,7 @@ function buildAxiosConfig(
 
 		console.log(url, { opts: logOpts });
 	}
-	return { url, method: method as Method, options: opts };
+	return { url, method: method as Method, options: opts, isUUrl: base };
 }
 
 /**
@@ -119,35 +125,35 @@ function isRetryableError(error: unknown): boolean {
 }
 
 export default async function y_common(yCommonOptions: YCommonOptions): Promise<AxiosResponse> {
-	// 第一次:用主 Referer (c.y.qq.com)
-	let primaryError: unknown;
-	try {
-		const result = await request(buildAxiosConfig(yCommonOptions, PRIMARY_REFERER));
-		if (looksValid(result?.data)) {
-			return result;
-		}
-		// 数据看起来异常(可能是 Referer 校验失败返回空/HTML),触发重试
-		if (process.env.DEBUG === 'true') {
-			console.log(`[y_common] 主 Referer 响应异常,使用备用 Referer 重试: ${yCommonOptions.url}`);
-		}
-	} catch (error) {
-		primaryError = error;
-		if (isRetryableError(error)) {
-			// 可重试的网络/服务端错误,用备用 Referer 重试
-			if (process.env.DEBUG === 'true') {
-				console.log(`[y_common] 主 Referer 请求失败(可重试),使用备用 Referer 重试: ${yCommonOptions.url}`, error);
+	const attempts: Array<{ label: string; referer: string; base: YCommonBase }> = [
+		{ label: `主 Referer (${PRIMARY_REFERER})`, referer: PRIMARY_REFERER, base: 'c' },
+		{ label: `备用 Referer (${FALLBACK_REFERER})`, referer: FALLBACK_REFERER, base: 'c' },
+		{ label: `镜像域名 (${FALLBACK_HOST})`, referer: FALLBACK_REFERER, base: 'i' },
+	];
+
+	let lastError: unknown;
+
+	for (const { label, referer, base } of attempts) {
+		try {
+			const result = await request(buildAxiosConfig(yCommonOptions, referer, base));
+			if (looksValid(result?.data)) {
+				return result;
 			}
-		} else {
-			// 不可重试的错误(业务错误/普通 Error/4xx),直接抛出给上层
-			throw error;
+			// 数据看起来异常(可能是 Referer 校验失败返回空/HTML),尝试下一层
+			if (process.env.DEBUG === 'true') {
+				console.log(`[y_common] ${label} 响应异常,尝试下一层: ${yCommonOptions.url}`);
+			}
+		} catch (error) {
+			if (!isRetryableError(error)) {
+				// 不可重试的错误(业务错误/普通 Error/4xx):优先抛出原始错误(更有诊断价值)
+				throw lastError ?? error;
+			}
+			lastError = error;
+			if (process.env.DEBUG === 'true') {
+				console.log(`[y_common] ${label} 请求失败(可重试),尝试下一层: ${yCommonOptions.url}`, error);
+			}
 		}
 	}
 
-	// 第二次:用备用 Referer (y.qq.com) 重试
-	try {
-		return await request(buildAxiosConfig(yCommonOptions, FALLBACK_REFERER));
-	} catch (fallbackError) {
-		// 备用 Referer 也失败:优先抛出原始错误(更有诊断价值),无原始错误时抛备用错误
-		throw primaryError ?? fallbackError;
-	}
+	throw lastError ?? new Error(`y_common: 所有请求尝试均失败: ${yCommonOptions.url}`);
 }

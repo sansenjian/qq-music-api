@@ -53,8 +53,9 @@ service.interceptors.response.use(
 
 const yURL = 'https://y.qq.com';
 const cURL = 'https://c.y.qq.com';
+const iURL = 'https://i.y.qq.com';
 
-export type RequestBaseUrl = 'c' | 'y' | 'u';
+export type RequestBaseUrl = 'c' | 'y' | 'u' | 'i';
 
 export interface RequestConfig {
 	url?: string;
@@ -68,6 +69,7 @@ export interface RequestConfig {
 const BASE_URL_MAP: Record<string, string> = {
 	y: yURL,
 	c: cURL,
+	i: iURL,
 };
 
 function request<TResponse = any>(config: RequestConfig): Promise<AxiosResponse<TResponse>> {
