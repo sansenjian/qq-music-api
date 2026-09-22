@@ -58,7 +58,7 @@ function nodeBinShebang(): Plugin {
 export default defineConfig({
 	plugins: [oxcTransform(), nodeBinShebang()],
 	build: {
-		target: 'node20',
+		target: 'node22',
 		ssr: true,
 		lib: {
 			entry: {

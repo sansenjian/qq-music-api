@@ -20,7 +20,7 @@
 
 ## 项目概览
 
-- 运行时：Node.js 20+
+- 运行时：Node.js 22+
 - 服务框架：Koa 2
 - 开发语言：TypeScript
 - 路由系统：[@koa/router](package.json:53)
@@ -36,7 +36,7 @@
 
 ## 环境要求
 
-本项目基于 `Koa 2 + TypeScript`，需要 Node.js 20.0.0+。
+本项目基于 `Koa 2 + TypeScript`，需要 Node.js 22.22.1+。
 
 ```bash
 node -v
