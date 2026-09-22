@@ -10,7 +10,7 @@ QQ Music API 是一个基于 Koa 2 和 TypeScript 的 QQ 音乐 API 服务，包
 
 ## Quick Reference
 
-- Runtime: Node.js `^20.17.0 || >=22.9.0`
+- Runtime: Node.js `>=22.22.1`
 - Package manager: `npm@11.14.1`
 - App entry: `src/app.ts`
 - Package entry: `src/index.ts`

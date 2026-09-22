@@ -29,7 +29,7 @@ title: 使用指南
 
 ### 安装与部署
 
-- [安装指南](/guide/installation) - Node.js 20+ 环境要求、安装与运行方式
+- [安装指南](/guide/installation) - Node.js >=22.22.1 环境要求、安装与运行方式
 - [Docker 部署](/guide/installation#docker-部署) - 使用 Docker 运行服务
 
 ### 使用与调试

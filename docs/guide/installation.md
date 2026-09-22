@@ -4,7 +4,7 @@
 
 ## 环境要求
 
-- Node.js >= 20.0.0
+- Node.js >= 22.22.1
 - npm >= 9
 - 操作系统：Windows、macOS、Linux 均可
 

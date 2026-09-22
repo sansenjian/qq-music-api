@@ -41,17 +41,17 @@
 	"author": "sansenjian",
 	"license": "MIT",
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.29.0",
-		"axios": "^1.16.1",
-		"zod": "^4.4.3"
+		"@modelcontextprotocol/sdk": "^1.30.0",
+		"axios": "^1.20.0",
+		"zod": "^4.6.5"
 	},
 	"devDependencies": {
-		"tsx": "^4.22.3",
-		"vite": "^8.0.13",
-		"typescript": "6.0.3"
+		"tsx": "^4.23.15",
+		"vite": "^8.3.0",
+		"typescript": "7.0.2"
 	},
 	"engines": {
-		"node": "^20.17.0 || >=22.9.0",
+		"node": ">=22.22.1",
 		"npm": "^11.0.0"
 	}
 }

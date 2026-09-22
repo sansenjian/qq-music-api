@@ -159,33 +159,33 @@
 	},
 	"homepage": "https://github.com/sansenjian/qq-music-api#readme",
 	"dependencies": {
-		"@koa/router": "^15.5.0",
-		"axios": "^1.16.1",
+		"@koa/router": "^15.7.0",
+		"axios": "^1.20.0",
 		"koa": "^2.16.4"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^20.5.3",
-		"@commitlint/config-conventional": "^20.5.3",
+		"@commitlint/cli": "^21.2.3",
+		"@commitlint/config-conventional": "^21.2.3",
 		"@types/koa": "^3.0.3",
 		"@types/koa__router": "^12.0.5",
-		"@types/node": "^25.3.3",
-		"@types/supertest": "^7.2.0",
-		"@vitest/coverage-v8": "^4.1.6",
+		"@types/node": "^26.6.2",
+		"@types/supertest": "^7.2.1",
+		"@vitest/coverage-v8": "^5.0.1",
 		"husky": "^9.0.0",
-		"lint-staged": "^16.4.0",
-		"node-modules-inspector": "^1.4.2",
+		"lint-staged": "^17.5.1",
+		"node-modules-inspector": "^2.7.0",
 		"nodemon": "^3.1.14",
-		"oxc-transform": "^0.132.0",
-		"oxlint": "^1.65.0",
-		"prettier": "^3.8.3",
-		"sinon": "^21.0.1",
-		"supertest": "^7.2.2",
-		"tsx": "^4.22.3",
-		"typescript": "6.0.3",
-		"vite": "^8.0.13",
-		"vitepress": "^2.0.0-alpha.17",
-		"vitest": "^4.1.6",
-		"vue": "^3.5.29"
+		"oxc-transform": "^0.151.0",
+		"oxlint": "^1.85.0",
+		"prettier": "^3.9.8",
+		"sinon": "^22.1.0",
+		"supertest": "^7.3.0",
+		"tsx": "^4.23.15",
+		"typescript": "7.0.2",
+		"vite": "^8.3.0",
+		"vitepress": "^2.0.0-alpha.20",
+		"vitest": "^5.0.1",
+		"vue": "^3.5.43"
 	},
 	"overrides": {
 		"anymatch": {
@@ -201,7 +201,7 @@
 		"semver": "7.8.0"
 	},
 	"engines": {
-		"node": "^20.17.0 || >=22.9.0",
+		"node": ">=22.22.1",
 		"npm": "^11.0.0"
 	}
 }
