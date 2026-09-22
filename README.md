@@ -20,7 +20,7 @@
 
 ## 项目概览
 
-- 运行时：Node.js 22+
+- 运行时：Node.js >=22.22.1
 - 服务框架：Koa 2
 - 开发语言：TypeScript
 - 路由系统：[@koa/router](package.json:53)
