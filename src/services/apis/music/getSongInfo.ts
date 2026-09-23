@@ -1,0 +1,41 @@
+import u_common from '../u_common';
+
+interface GetSongInfoParams {
+	songmid?: string;
+	songid?: string;
+}
+
+/**
+ * 获取单曲详情
+ */
+export default async ({ songmid, songid = '' }: GetSongInfoParams = {}) => {
+	const params = {
+		format: 'json',
+		inCharset: 'utf8',
+		outCharset: 'utf-8',
+		notice: 0,
+		platform: 'yqq.json',
+		needNewCode: 0,
+		data: {
+			comm: {
+				ct: 24,
+				cv: 0,
+			},
+			songinfo: {
+				method: 'get_song_detail_yqq',
+				param: {
+					song_type: 0,
+					song_mid: songmid,
+					song_id: songid,
+				},
+				module: 'music.pf_song_detail_svr',
+			},
+		},
+	};
+
+	const response = await u_common({
+		method: 'get',
+		params,
+	});
+	return response.data;
+};

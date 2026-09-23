@@ -1,5 +1,5 @@
 import type { Method } from 'axios';
-import UCommon from '../UCommon/UCommon';
+import u_common from '../u_common';
 import { _guid } from '../../config';
 import { getUserUin } from '../../../config/user-info-store';
 import { extractCookieValue, extractUinFromCookie } from '../../../util/cookieResolver';
@@ -195,10 +195,10 @@ export default async ({
   };
 
   try {
-    const response = await UCommon({
+    const response = await u_common({
       method: method as Method,
       params: upstreamParams,
-      option
+      options: option
     });
 
     const upstreamData = response.data as Record<string, any>;

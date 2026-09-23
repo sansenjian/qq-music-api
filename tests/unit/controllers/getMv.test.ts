@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import getMvController from '../../../src/controllers/getMv';
-import { UCommon } from '../../../src/services';
+import { getMv } from '../../../src/services';
 
 vi.mock('../../../src/services');
 
@@ -24,122 +24,57 @@ describe('controllers/getMv', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  test('should call UCommon when both version_id and area_id are provided', async () => {
-    mockCtx.query = { version_id: '7', area_id: '15' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
+  test('should return 400 when version_id is empty', async () => {
+    mockCtx.query = { version_id: '', area_id: '15' };
 
     await getMvController(mockCtx, mockNext);
 
-    expect(UCommon).toHaveBeenCalledWith({
-      method: 'get',
-      params: {
-        format: 'json',
-        data: expect.any(String)
-      },
-      option: {}
-    });
+    expect(mockCtx.status).toBe(400);
+    expect(mockCtx.body).toEqual({ response: 'version_id or area_id is null' });
+    expect(getMv).not.toHaveBeenCalled();
   });
 
-  test('should use default values when parameters are not provided', async () => {
-    mockCtx.query = {};
-    (UCommon as Mock).mockResolvedValue({ data: {} });
+  test('should return 400 when area_id is empty', async () => {
+    mockCtx.query = { version_id: '7', area_id: '' };
 
     await getMvController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.mv_list.param).toMatchObject({
-      version_id: 7,
-      area_id: 15
-    });
+    expect(mockCtx.status).toBe(400);
+    expect(mockCtx.body).toEqual({ response: 'version_id or area_id is null' });
+    expect(getMv).not.toHaveBeenCalled();
   });
 
-  test('should use default limit and page values', async () => {
-    mockCtx.query = { version_id: '7', area_id: '15' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
+  test('should call getMv with default values when parameters are not provided', async () => {
+    (getMv as Mock).mockResolvedValue({});
 
     await getMvController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.mv_list.param).toMatchObject({
-      start: 0,
+    expect(getMv).toHaveBeenCalledWith({
+      areaId: 15,
+      versionId: 7,
       limit: 20,
-      version_id: '7',
-      area_id: '15',
-      order: 1
+      page: 0
     });
   });
 
-  test('should accept custom limit parameter', async () => {
-    mockCtx.query = { version_id: '7', area_id: '15', limit: '50' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
+  test('should accept custom parameters preserving original value types', async () => {
+    mockCtx.query = { version_id: '10', area_id: '20', limit: '50', page: '3' };
+    (getMv as Mock).mockResolvedValue({});
 
     await getMvController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.mv_list.param.limit).toBe(50);
-  });
-
-  test('should accept custom page parameter', async () => {
-    mockCtx.query = { version_id: '7', area_id: '15', page: '3' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getMvController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    // start = (page - 1) * limit = (3 - 1) * 20 = 40
-    expect(dataParam.mv_list.param.start).toBe(40);
-  });
-
-  test('should calculate start correctly based on page and limit', async () => {
-    mockCtx.query = { version_id: '7', area_id: '15', page: '5', limit: '10' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getMvController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    // start = (5 - 1) * 10 = 40
-    expect(dataParam.mv_list.param.start).toBe(40);
-    expect(dataParam.mv_list.param.limit).toBe(10);
-  });
-
-  test('should accept custom area_id parameter', async () => {
-    mockCtx.query = { version_id: '7', area_id: '20' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getMvController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.mv_list.param.area_id).toBe('20');
-  });
-
-  test('should accept custom version_id parameter', async () => {
-    mockCtx.query = { version_id: '10', area_id: '15' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getMvController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.mv_list.param.version_id).toBe('10');
+    expect(getMv).toHaveBeenCalledWith({
+      areaId: '20',
+      versionId: '10',
+      limit: 50,
+      page: 3
+    });
   });
 
   test('should set response on successful API call', async () => {
     mockCtx.query = { version_id: '7', area_id: '15' };
     const mockResponse = { code: 0, data: { mvList: [] } };
-    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+    (getMv as Mock).mockResolvedValue(mockResponse);
 
     await getMvController(mockCtx, mockNext);
 
@@ -151,44 +86,12 @@ describe('controllers/getMv', () => {
 
   test('should handle API errors gracefully', async () => {
     mockCtx.query = { version_id: '7', area_id: '15' };
-    (UCommon as Mock).mockRejectedValue(new Error('API error'));
+    (getMv as Mock).mockRejectedValue(new Error('API error'));
 
     await getMvController(mockCtx, mockNext);
 
     expect(consoleErrorSpy).not.toHaveBeenCalled();
     expect(mockCtx.status).toBe(502);
     expect(mockCtx.body).toEqual({ error: '上游服务异常' });
-  });
-
-  test('should have correct data structure', async () => {
-    mockCtx.query = { version_id: '7', area_id: '15' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getMvController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam).toMatchObject({
-      comm: {
-        ct: 24
-      },
-      mv_tag: {
-        module: 'MvService.MvInfoProServer',
-        method: 'GetAllocTag',
-        param: {}
-      },
-      mv_list: {
-        module: 'MvService.MvInfoProServer',
-        method: 'GetAllocMvInfo',
-        param: {
-          start: 0,
-          limit: 20,
-          version_id: '7',
-          area_id: '15',
-          order: 1
-        }
-      }
-    });
   });
 });

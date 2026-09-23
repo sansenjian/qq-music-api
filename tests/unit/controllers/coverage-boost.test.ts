@@ -6,7 +6,7 @@ import getSingerMvController from '../../../src/controllers/getSingerMv';
 import getSmartboxController from '../../../src/controllers/getSmartbox';
 import getTicketInfoController from '../../../src/controllers/getTicketInfo';
 import getUserLikedSongsController from '../../../src/controllers/getUserLikedSongs';
-import { UCommon, getSingerMv, getSmartbox, getUserLikedSongs } from '../../../src/services';
+import { getNewDisks, getSingerMv, getSmartbox, getTicketInfo, getUserLikedSongs } from '../../../src/services';
 
 vi.mock('../../../src/services');
 
@@ -107,32 +107,23 @@ describe('controllers coverage boost', () => {
   });
 
   describe('getNewDisks', () => {
-    it('includes area tags on first page', async () => {
-      (UCommon as Mock).mockResolvedValue({ data: { code: 0 } });
+    it('passes first page defaults to service', async () => {
+      (getNewDisks as Mock).mockResolvedValue({ code: 0 });
       const ctx = { query: {}, status: 0, body: null } as any;
 
       await getNewDisksController(ctx, next);
 
-      const props = (UCommon as Mock).mock.calls[0][0];
-      const data = JSON.parse(props.params.data);
-      expect(data.new_album.param).toMatchObject({ area: 1, start: 0, num: 20 });
-      expect(data.new_album_tag).toMatchObject({
-        module: 'newalbum.NewAlbumServer',
-        method: 'get_new_album_area',
-      });
+      expect(getNewDisks).toHaveBeenCalledWith({ page: 1, num: 20 });
       expect(ctx.body).toEqual({ response: { code: 0 } });
     });
 
-    it('omits area tags after first page', async () => {
-      (UCommon as Mock).mockResolvedValue({ data: { code: 0 } });
+    it('passes custom page and limit to service', async () => {
+      (getNewDisks as Mock).mockResolvedValue({ code: 0 });
       const ctx = { query: { page: '2', limit: '10' }, status: 0, body: null } as any;
 
       await getNewDisksController(ctx, next);
 
-      const props = (UCommon as Mock).mock.calls[0][0];
-      const data = JSON.parse(props.params.data);
-      expect(data.new_album.param).toMatchObject({ area: 1, start: 10, num: 10 });
-      expect(data.new_album_tag).toBeUndefined();
+      expect(getNewDisks).toHaveBeenCalledWith({ page: 2, num: 10 });
     });
   });
 
@@ -202,33 +193,13 @@ describe('controllers coverage boost', () => {
   });
 
   describe('getTicketInfo', () => {
-    it('builds ticket index request payload', async () => {
-      (UCommon as Mock).mockResolvedValue({ data: { ticket: [] } });
+    it('delegates to ticket info service', async () => {
+      (getTicketInfo as Mock).mockResolvedValue({ ticket: [] });
       const ctx = { query: {}, status: 0, body: null } as any;
 
       await getTicketInfoController(ctx, next);
 
-      const props = (UCommon as Mock).mock.calls[0][0];
-      const data = JSON.parse(props.params.data);
-      expect(props.params).toMatchObject({
-        format: 'json',
-        inCharset: 'utf8',
-        outCharset: 'GB2312',
-        platform: 'yqq.json',
-      });
-      expect(data).toMatchObject({
-        comm: { ct: 24, cv: 0 },
-        getFirstData: {
-          module: 'mall.ticket_index_page_svr',
-          method: 'GetTicketIndexPage',
-          param: { city_id: -1 },
-        },
-        getTag: {
-          module: 'mall.ticket_index_page_svr',
-          method: 'GetShowTypeList',
-          param: {},
-        },
-      });
+      expect(getTicketInfo).toHaveBeenCalledWith();
       expect(ctx.body).toEqual({ response: { ticket: [] } });
     });
   });
