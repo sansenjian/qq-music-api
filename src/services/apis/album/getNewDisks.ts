@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 interface GetNewDisksParams {
 	page?: number;
@@ -29,6 +29,6 @@ export default async ({ page = 1, num = 20 }: GetNewDisksParams = {}) => {
 	}
 
 	const params = { format: 'json', data: JSON.stringify(data) };
-	const res = await UCommon({ method: 'get', params, option: {} });
+	const res = await u_common({ method: 'get', params });
 	return res.data;
 };

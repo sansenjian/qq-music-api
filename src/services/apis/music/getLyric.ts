@@ -3,7 +3,7 @@ import y_common from '../y_common';
 import type { ApiOptions } from '../../../types/api';
 import { getUserUin } from '../../../config/user-info-store';
 import { extractUinFromCookie } from '../../../util/cookieResolver';
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 import { observeService } from '../../../util/observability';
 
 type LyricPayload = Record<string, any>;
@@ -97,7 +97,7 @@ const resolveSongIdBySongmid = async ({
   songmid: string;
   loginUin: string;
 }): Promise<string | undefined> => {
-  const response = await UCommon({
+  const response = await u_common({
     method: 'get',
     params: {
       format: 'json',
@@ -117,8 +117,7 @@ const resolveSongIdBySongmid = async ({
           module: 'music.pf_song_detail_svr'
         }
       }
-    },
-    option: {}
+    }
   });
 
   const data = (response?.data || {}) as LyricPayload;

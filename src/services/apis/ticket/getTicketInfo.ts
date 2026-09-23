@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 /**
  * 获取票务（演出）首页信息
@@ -26,6 +26,6 @@ export default async () => {
 		data: JSON.stringify(data),
 	};
 
-	const res = await UCommon({ method: 'get', params, option: {} });
+	const res = await u_common({ method: 'get', params });
 	return res.data;
 };

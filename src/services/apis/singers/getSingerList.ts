@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 interface GetSingerListParams {
 	area?: number;
@@ -37,6 +37,6 @@ export default async ({ area = -100, sex = -100, genre = -100, index = -100, pag
 		data: JSON.stringify(data),
 	};
 
-	const response = await UCommon({ method: 'get', params, option: {} });
+	const response = await u_common({ method: 'get', params });
 	return response.data;
 };

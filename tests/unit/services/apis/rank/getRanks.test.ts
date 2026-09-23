@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import getRanks from '../../../../../src/services/apis/rank/getRanks';
-import { UCommon } from '../../../../../src/services/apis/u_common';
+import u_common from '../../../../../src/services/apis/u_common';
 
 vi.mock('../../../../../src/services/apis/u_common');
 
@@ -10,41 +10,40 @@ describe('services/apis/rank/getRanks', () => {
 	});
 
 	test('should request rank detail with default parameters', async () => {
-		(UCommon as Mock).mockResolvedValue({ data: {} });
+		(u_common as Mock).mockResolvedValue({ data: {} });
 
 		await getRanks();
 
-		expect(UCommon).toHaveBeenCalledWith({
+		expect(u_common).toHaveBeenCalledWith({
 			method: 'get',
 			params: {
 				format: 'json',
 				data: expect.any(String),
 			},
-			option: {},
 		});
 
-		const callArgs = (UCommon as Mock).mock.calls[0][0];
+		const callArgs = (u_common as Mock).mock.calls[0][0];
 		const dataParam = JSON.parse(callArgs.params.data);
 		expect(dataParam.req_1.param).toMatchObject({ topId: 4, num: 20, offset: 0 });
 		expect(dataParam.req_1.param.period).toEqual(expect.any(String));
 	});
 
 	test('should accept custom topId, num, and offset', async () => {
-		(UCommon as Mock).mockResolvedValue({ data: {} });
+		(u_common as Mock).mockResolvedValue({ data: {} });
 
 		await getRanks({ topId: 10, num: 50, offset: 5 });
 
-		const callArgs = (UCommon as Mock).mock.calls[0][0];
+		const callArgs = (u_common as Mock).mock.calls[0][0];
 		const dataParam = JSON.parse(callArgs.params.data);
 		expect(dataParam.req_1.param).toMatchObject({ topId: 10, num: 50, offset: 5 });
 	});
 
 	test('should build correct comm and req_1 module config', async () => {
-		(UCommon as Mock).mockResolvedValue({ data: {} });
+		(u_common as Mock).mockResolvedValue({ data: {} });
 
 		await getRanks({ topId: 10, num: 30, offset: 2 });
 
-		const callArgs = (UCommon as Mock).mock.calls[0][0];
+		const callArgs = (u_common as Mock).mock.calls[0][0];
 		const dataParam = JSON.parse(callArgs.params.data);
 		expect(dataParam.comm).toMatchObject({
 			ct: 24,
@@ -70,7 +69,7 @@ describe('services/apis/rank/getRanks', () => {
 		const mockResponse = {
 			req_1: { data: { data: { songInfoList: [{ songId: 123, mid: 'test_mid_1', songName: 'Song 1' }] } } },
 		};
-		(UCommon as Mock).mockResolvedValue({ data: mockResponse });
+		(u_common as Mock).mockResolvedValue({ data: mockResponse });
 
 		const result = await getRanks();
 
@@ -85,11 +84,11 @@ describe('services/apis/rank/getRanks', () => {
 		const mockResponse = {
 			req_1: { data: { data: { songInfoList: [{ songId: 123, songName: 'Song without mid' }] } } },
 		};
-		(UCommon as Mock).mockResolvedValue({ data: mockResponse });
+		(u_common as Mock).mockResolvedValue({ data: mockResponse });
 
 		const result = await getRanks();
 
-		expect(UCommon).toHaveBeenCalledTimes(1);
+		expect(u_common).toHaveBeenCalledTimes(1);
 		const songList = result.req_1!.data!.data!.songInfoList!;
 		expect(songList[0].song_mid).toBeUndefined();
 	});
@@ -102,12 +101,12 @@ describe('services/apis/rank/getRanks', () => {
 			songinfo: { data: { track_info: { mid: 'detail_mid_123' } } },
 		};
 
-		(UCommon as Mock).mockResolvedValueOnce({ data: rankResponse }).mockResolvedValueOnce({ data: detailResponse });
+		(u_common as Mock).mockResolvedValueOnce({ data: rankResponse }).mockResolvedValueOnce({ data: detailResponse });
 
 		const result = await getRanks({ resolveMid: true });
 
-		expect(UCommon).toHaveBeenCalledTimes(2);
-		const detailCall = (UCommon as Mock).mock.calls[1][0];
+		expect(u_common).toHaveBeenCalledTimes(2);
+		const detailCall = (u_common as Mock).mock.calls[1][0];
 		expect(JSON.parse(detailCall.params.data).songinfo.param.song_id).toBe(123);
 		const songList = result.req_1!.data!.data!.songInfoList!;
 		expect(songList[0].song_mid).toBe('detail_mid_123');
@@ -120,7 +119,7 @@ describe('services/apis/rank/getRanks', () => {
 		let activeRequests = 0;
 		let maxActiveRequests = 0;
 
-		(UCommon as Mock).mockResolvedValueOnce({ data: rankResponse }).mockImplementation(async ({ params }) => {
+		(u_common as Mock).mockResolvedValueOnce({ data: rankResponse }).mockImplementation(async ({ params }) => {
 			activeRequests += 1;
 			maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
 			await new Promise(resolve => setTimeout(resolve, 5));
@@ -132,7 +131,7 @@ describe('services/apis/rank/getRanks', () => {
 
 		const result = await getRanks({ resolveMid: true });
 
-		expect(UCommon).toHaveBeenCalledTimes(8);
+		expect(u_common).toHaveBeenCalledTimes(8);
 		expect(maxActiveRequests).toBe(5);
 		expect(result.req_1!.data!.data!.songInfoList!.map(song => song.mid)).toEqual([
 			'mid_1',

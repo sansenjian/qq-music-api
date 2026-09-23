@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 const DEFAULT_REQUIRED_FIELDS = [
 	'vid',
@@ -81,6 +81,6 @@ export default async (vid: string) => {
 		data: JSON.stringify(data),
 	};
 
-	const response = await UCommon({ method: 'get', params, option: {} });
+	const response = await u_common({ method: 'get', params });
 	return response.data;
 };

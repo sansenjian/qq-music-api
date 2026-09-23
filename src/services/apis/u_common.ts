@@ -4,22 +4,16 @@ import * as config from '../config';
 
 export interface UCommonOptions {
 	options?: AxiosRequestConfig;
-	/** 查询参数/请求体，合并进 options.params（兼容原 UCommon 的扁平形态） */
+	/** 查询参数/请求体，合并进 options.params */
 	params?: AxiosRequestConfig['params'];
 	method?: Method | string;
 	customCookie?: string;
 }
 
-interface UCommonCallParams {
-	method?: Method | string;
-	params?: AxiosRequestConfig['params'];
-	option?: AxiosRequestConfig;
-}
-
 const u_common = ({ options = {}, params, method = 'get', customCookie }: UCommonOptions) => {
 	const opts: AxiosRequestConfig = { ...options };
 
-	// Merge explicit params (原 UCommon 形态) before common params
+	// Merge explicit params before common params
 	if (params !== undefined) {
 		opts.params = params;
 	}
@@ -49,7 +43,3 @@ const u_common = ({ options = {}, params, method = 'get', customCookie }: UCommo
 };
 
 export default u_common;
-
-/** 兼容导出：原 UCommon/UCommon.ts 的扁平形态（{ method, params, option }） */
-export const UCommon = ({ method = 'get', params = {}, option = {} }: UCommonCallParams) =>
-	u_common({ method, options: { ...option, params } });

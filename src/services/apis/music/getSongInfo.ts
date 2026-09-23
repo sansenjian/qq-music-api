@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 interface GetSongInfoParams {
 	songmid?: string;
@@ -33,10 +33,9 @@ export default async ({ songmid, songid = '' }: GetSongInfoParams = {}) => {
 		},
 	};
 
-	const response = await UCommon({
+	const response = await u_common({
 		method: 'get',
 		params,
-		option: {},
 	});
 	return response.data;
 };

@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 interface GetMvParams {
 	areaId?: number | string;
@@ -40,6 +40,6 @@ export default async ({ areaId = 15, versionId = 7, limit = 20, page = 0 }: GetM
 		data: JSON.stringify(data),
 	};
 
-	const response = await UCommon({ method: 'get', params, option: {} });
+	const response = await u_common({ method: 'get', params });
 	return response.data;
 };

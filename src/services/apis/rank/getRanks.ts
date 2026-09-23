@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 import {
 	findSongListLocation,
 	normalizeSongItem,
@@ -34,7 +34,7 @@ interface SongDetailResponse {
 const MID_RESOLVE_CONCURRENCY = 5;
 
 const fetchSongMidBySongId = async (songId: number): Promise<string | undefined> => {
-	const response = await UCommon({
+	const response = await u_common({
 		method: 'get',
 		params: {
 			format: 'json',
@@ -47,7 +47,6 @@ const fetchSongMidBySongId = async (songId: number): Promise<string | undefined>
 				},
 			}),
 		},
-		option: {},
 	});
 
 	const data = response.data as SongDetailResponse;
@@ -118,7 +117,7 @@ export default async ({
 		data: JSON.stringify(data),
 	};
 
-	const response = await UCommon({ method: 'get', params, option: {} });
+	const response = await u_common({ method: 'get', params });
 	const responseData = response.data as RankResponseShape;
 
 	const location = findSongListLocation(responseData);

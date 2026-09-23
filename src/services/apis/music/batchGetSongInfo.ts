@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 /**
  * 批量获取歌曲详情
@@ -16,9 +16,8 @@ export default async (songs: Array<[string, string?]> = []) => {
 
 	const data = await Promise.all(
 		songs.map(async ([song_mid, song_id = '']) => {
-			const response = await UCommon({
+			const response = await u_common({
 				method: 'get',
-				option: {},
 				params: {
 					...params,
 					data: {

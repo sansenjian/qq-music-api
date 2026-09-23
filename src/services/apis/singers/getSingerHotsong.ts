@@ -1,4 +1,4 @@
-import { UCommon } from '../u_common';
+import u_common from '../u_common';
 
 interface GetSingerHotsongParams {
 	singermid?: string;
@@ -30,6 +30,6 @@ export default async ({ singermid, num = 5, page = 0 }: GetSingerHotsongParams =
 		data: JSON.stringify(data),
 	};
 
-	const response = await UCommon({ method: 'get', params, option: {} });
+	const response = await u_common({ method: 'get', params });
 	return response.data;
 };
