@@ -1,4 +1,4 @@
-import request from '../../../util/request';
+import y_common from '../y_common';
 import { handleApi } from '../../../util/apiResponse';
 import { parseJsonp } from '../../../util/parseJsonp';
 import type { ApiOptions } from '../../../types/api';
@@ -18,11 +18,12 @@ export default async ({ method = 'get', params = {}, option = {} }: ApiOptions) 
 	};
 
 	return handleApi(
-		request({
+		y_common({
 			url: '/v8/fcg-bin/fcg_myqq_toplist.fcg',
 			method: method as import('axios').Method,
 			options,
-			isUUrl: 'c',
+			// 保持原有请求参数,不注入公共参数(commonParams)
+			hasCommonParams: false,
 		}),
 		{
 			transformData: (response: unknown) => parseJsonp(response),
