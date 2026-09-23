@@ -1,44 +1,23 @@
 import { KoaContext } from '../routes/types';
-import { UCommon } from '../services';
+import { getSingerList } from '../services';
 import { setApiResponse, withErrorHandler } from './util';
 import { customResponse } from '../util/apiResponse';
 
 const getSingerListController = withErrorHandler(async (ctx: KoaContext) => {
-  const { area = -100, sex = -100, genre = -100, index = -100, page = 1 } = ctx.query;
+	const area = ctx.query.area ?? -100;
+	const sex = ctx.query.sex ?? -100;
+	const genre = ctx.query.genre ?? -100;
+	const index = ctx.query.index ?? -100;
+	const page = ctx.query.page ?? 1;
 
-  const pageNum = Number(page);
-  const data = {
-    comm: {
-      ct: 24,
-      cv: 0
-    },
-    singerList: {
-      module: 'Music.SingerListServer',
-      method: 'get_singer_list',
-      param: {
-        area: Number(area),
-        sex: Number(sex),
-        genre: Number(genre),
-        index: Number(index),
-        sin: (pageNum - 1) * 80,
-        cur_page: pageNum
-      }
-    }
-  };
-  
-  const params = {
-    format: 'json',
-    data: JSON.stringify(data)
-  };
-  
-  const props = {
-    method: 'get',
-    params,
-    option: {}
-  };
-  
-  const response = await UCommon(props);
-  setApiResponse(ctx, customResponse({ response: response.data }, 200));
+	const response = await getSingerList({
+		area: Number(area),
+		sex: Number(sex),
+		genre: Number(genre),
+		index: Number(index),
+		page: Number(page),
+	});
+	setApiResponse(ctx, customResponse({ response }, 200));
 });
 
 export default getSingerListController;

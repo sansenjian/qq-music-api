@@ -4,7 +4,7 @@ type Controllers = Record<string, Controller>;
 
 // Import refactored controllers
 import getDownloadQQMusicController from './getDownloadQQMusic';
-import getHotkeyController from './getHotkey';
+import getHotkeyController from './getHotKey';
 import getSearchByKeyController from './getSearchByKey';
 import getSmartboxController from './getSmartbox';
 import getSongListCategoriesController from './getSongListCategories';

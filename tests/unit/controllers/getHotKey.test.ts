@@ -1,10 +1,10 @@
 import type { Mock } from 'vitest';
-import getHotkeyController from '../../../src/controllers/getHotkey';
+import getHotkeyController from '../../../src/controllers/getHotKey';
 import { getHotKey } from '../../../src/services';
 
 vi.mock('../../../src/services');
 
-describe('controllers/getHotkey', () => {
+describe('controllers/getHotKey', () => {
   let mockCtx: any;
   let mockNext: Mock;
   let consoleErrorSpy: any;

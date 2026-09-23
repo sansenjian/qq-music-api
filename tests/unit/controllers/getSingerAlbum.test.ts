@@ -1,6 +1,6 @@
 import type { Mock } from 'vitest';
 import getSingerAlbumController from '../../../src/controllers/getSingerAlbum';
-import { UCommon } from '../../../src/services';
+import { getSingerAlbum } from '../../../src/services';
 
 vi.mock('../../../src/services');
 
@@ -31,7 +31,7 @@ describe('controllers/getSingerAlbum', () => {
 
     expect(mockCtx.status).toBe(400);
     expect(mockCtx.body).toEqual({ response: 'no singermid' });
-    expect(UCommon).not.toHaveBeenCalled();
+    expect(getSingerAlbum).not.toHaveBeenCalled();
   });
 
   test('should return 400 when singermid is empty string', async () => {
@@ -40,70 +40,39 @@ describe('controllers/getSingerAlbum', () => {
     await getSingerAlbumController(mockCtx, mockNext);
 
     expect(mockCtx.status).toBe(400);
-    expect(UCommon).not.toHaveBeenCalled();
+    expect(getSingerAlbum).not.toHaveBeenCalled();
   });
 
-  test('should call UCommon with correct data structure when singermid is provided', async () => {
+  test('should call getSingerAlbum with parsed singermid and defaults', async () => {
     mockCtx.query = { singermid: 'test123' };
-    (UCommon as Mock).mockResolvedValue({ data: { code: 0, data: {} } });
+    (getSingerAlbum as Mock).mockResolvedValue({});
 
     await getSingerAlbumController(mockCtx, mockNext);
 
-    expect(UCommon).toHaveBeenCalledWith({
-      method: 'get',
-      params: {
-        format: 'json',
-        singermid: 'test123',
-        data: expect.any(String)
-      },
-      option: {}
-    });
-  });
-
-  test('should use default limit and page values', async () => {
-    mockCtx.query = { singermid: 'test123' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getSingerAlbumController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.singer.param).toMatchObject({
+    expect(getSingerAlbum).toHaveBeenCalledWith({
       singermid: 'test123',
-      begin: 0,
-      num: 5
+      num: 5,
+      begin: 0
     });
   });
 
-  test('should accept custom limit parameter', async () => {
-    mockCtx.query = { singermid: 'test123', limit: '10' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
+  test('should accept custom limit and page', async () => {
+    mockCtx.query = { singermid: 'test123', limit: '10', page: '3' };
+    (getSingerAlbum as Mock).mockResolvedValue({});
 
     await getSingerAlbumController(mockCtx, mockNext);
 
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.singer.param.num).toBe(10);
-  });
-
-  test('should accept custom page parameter', async () => {
-    mockCtx.query = { singermid: 'test123', page: '3' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getSingerAlbumController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam.singer.param.begin).toBe(3);
+    expect(getSingerAlbum).toHaveBeenCalledWith({
+      singermid: 'test123',
+      num: 10,
+      begin: 3
+    });
   });
 
   test('should set response on successful API call', async () => {
     mockCtx.query = { singermid: 'test123' };
     const mockResponse = { code: 0, data: { albums: [] } };
-    (UCommon as Mock).mockResolvedValue({ data: mockResponse });
+    (getSingerAlbum as Mock).mockResolvedValue(mockResponse);
 
     await getSingerAlbumController(mockCtx, mockNext);
 
@@ -113,39 +82,12 @@ describe('controllers/getSingerAlbum', () => {
 
   test('should handle API errors gracefully', async () => {
     mockCtx.query = { singermid: 'test123' };
-    (UCommon as Mock).mockRejectedValue(new Error('API error'));
+    (getSingerAlbum as Mock).mockRejectedValue(new Error('API error'));
 
     await getSingerAlbumController(mockCtx, mockNext);
 
     expect(consoleErrorSpy).not.toHaveBeenCalled();
     expect(mockCtx.status).toBe(502);
     expect(mockCtx.body).toEqual({ error: '上游服务异常' });
-  });
-
-  test('should construct correct data structure for UCommon', async () => {
-    mockCtx.query = { singermid: 'test123', limit: '10', page: '2' };
-    (UCommon as Mock).mockResolvedValue({ data: {} });
-
-    await getSingerAlbumController(mockCtx, mockNext);
-
-    const callArgs = (UCommon as Mock).mock.calls[0][0];
-    const dataParam = JSON.parse(callArgs.params.data);
-
-    expect(dataParam).toMatchObject({
-      comm: {
-        ct: 24,
-        cv: 0
-      },
-      singer: {
-        method: 'GetAlbumList',
-        param: {
-          sort: 5,
-          singermid: 'test123',
-          begin: 2,
-          num: 10
-        },
-        module: 'music.musichallAlbum.AlbumListServer'
-      }
-    });
   });
 });
