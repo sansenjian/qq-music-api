@@ -3,7 +3,7 @@ import y_common from '../y_common';
 import type { ApiOptions } from '../../../types/api';
 import { getUserUin } from '../../../config/user-info-store';
 import { extractUinFromCookie } from '../../../util/cookieResolver';
-import UCommon from '../UCommon/UCommon';
+import { UCommon } from '../u_common';
 import { observeService } from '../../../util/observability';
 
 type LyricPayload = Record<string, any>;

@@ -9,7 +9,7 @@ export * from './apis/digitalAlbum';
 export * from './apis/music';
 export * from './apis/album';
 export * from './apis/comments';
-export * from './apis/UCommon';
+export * from './apis/u_common';
 export * from './apis/rank';
 export * from './apis/recommend';
 export * from './apis/extend';

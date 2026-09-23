@@ -1,4 +1,4 @@
-import UCommon from '../UCommon/UCommon';
+import { UCommon } from '../u_common';
 
 /**
  * 批量获取歌曲详情

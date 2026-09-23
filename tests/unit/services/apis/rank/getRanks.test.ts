@@ -1,8 +1,8 @@
 import type { Mock } from 'vitest';
 import getRanks from '../../../../../src/services/apis/rank/getRanks';
-import UCommon from '../../../../../src/services/apis/UCommon/UCommon';
+import { UCommon } from '../../../../../src/services/apis/u_common';
 
-vi.mock('../../../../../src/services/apis/UCommon/UCommon');
+vi.mock('../../../../../src/services/apis/u_common');
 
 describe('services/apis/rank/getRanks', () => {
 	beforeEach(() => {

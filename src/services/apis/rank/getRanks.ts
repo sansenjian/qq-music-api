@@ -1,4 +1,4 @@
-import UCommon from '../UCommon/UCommon';
+import { UCommon } from '../u_common';
 import {
 	findSongListLocation,
 	normalizeSongItem,

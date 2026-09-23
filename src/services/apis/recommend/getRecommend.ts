@@ -1,4 +1,4 @@
-import UCommon from '../UCommon/UCommon';
+import { UCommon } from '../u_common';
 
 /**
  * 推荐页聚合数据（热门分类 / 推荐歌单 / 新歌 / 新专辑 / 排行榜 / 焦点图）

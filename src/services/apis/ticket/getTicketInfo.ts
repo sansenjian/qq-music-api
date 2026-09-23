@@ -1,4 +1,4 @@
-import UCommon from '../UCommon/UCommon';
+import { UCommon } from '../u_common';
 
 /**
  * 获取票务（演出）首页信息

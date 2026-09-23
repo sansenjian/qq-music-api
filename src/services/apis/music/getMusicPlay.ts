@@ -1,5 +1,5 @@
 import type { Method } from 'axios';
-import UCommon from '../UCommon/UCommon';
+import { UCommon } from '../u_common';
 import { _guid } from '../../config';
 import { getUserUin } from '../../../config/user-info-store';
 import { extractCookieValue, extractUinFromCookie } from '../../../util/cookieResolver';
