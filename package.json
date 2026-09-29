@@ -184,15 +184,15 @@
 		"typescript": "6.0.3",
 		"vite": "^8.0.13",
 		"vitepress": "^2.0.0-alpha.17",
-		"vitest": "^4.1.6",
+		"vitest": "^5.0.2",
 		"vue": "^3.5.29"
 	},
 	"overrides": {
 		"anymatch": {
 			"picomatch": "^2.3.2"
 		},
-		"brace-expansion": "^5.0.6",
-		"fast-uri": "^3.1.2",
+		"brace-expansion": "^5.0.12",
+		"fast-uri": "^3.1.8",
 		"lodash": "^4.18.1",
 		"readdirp": {
 			"picomatch": "^2.3.2"
